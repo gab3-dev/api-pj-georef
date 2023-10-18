@@ -38,7 +38,7 @@ use serde::{Serialize, Deserialize};
 use std::sync::Mutex;
 
 struct AppStateWithCounter {
-    counter: Mutex<i32>, // <- Mutex is necessary to mutate safely across threads
+    counter: Mutex<Vec<Player>>, // <- Mutex is necessary to mutate safely across threads
 }
 
 #[derive(Serialize, Deserialize)]
@@ -58,6 +58,14 @@ struct Player {
     player_state: PlayerState,
     user_ref: Box<User>,
 }
+
+const USER_NAME: String = String::new();
+
+const GABE: User = User {
+    user_name: USER_NAME,
+    user_id: 13,
+    user_character: 13
+};
 
 #[derive(Serialize, Deserialize)]
 enum PlayerState {
@@ -92,10 +100,10 @@ impl Player {
 
 async fn index(data: web::Data<AppStateWithCounter>) -> String {
     let mut counter = data.counter.lock().unwrap(); // <- get counter's MutexGuard
-    *counter += 1; // <- access counter inside MutexGuard
+    // *counter += 1; // <- access counter inside MutexGuard
     dbg!("{counter}");
     
-    format!("Request number: {counter}") // <- response with count
+    format!("Request number: {counter[0]}") // <- response with count
 }
 
 #[actix_web::main]
@@ -105,10 +113,14 @@ async fn main() -> std::io::Result<()> {
         counter: Mutex::new(0),
     });
 
+    let mut list = [
+        Player {player_name: String::from("Satoru Gojo"), player_id: 15, player_level: 1099, player_state: PlayerState::Dead, user_ref: Box::new(GABE)}
+    ];
+
     HttpServer::new(move || {
         // move counter into the closure
         App::new()
-            .app_data(counter.clone()) // <- register the created data
+            .app_data(list) // <- register the created data
             .service(new)
             .route("/", web::get().to(index))
     })
