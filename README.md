@@ -31,7 +31,7 @@ curl http://localhost:8080/ \
 ```
 POST
 ```bash
-curl http://localhost:8080/ \
+curl http://localhost:8080/create \
     --include \
     --header "Content-Type: application/json" \
     --request "POST" \
