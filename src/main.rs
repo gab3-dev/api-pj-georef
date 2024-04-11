@@ -1,39 +1,4 @@
-// Basic get and post methods
-
-/* 
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-
-// This is the function called on the get method
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
-
-// This is the function called on the post method
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
-
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
-
-#[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
-        App::new()
-            .service(hello)
-            .service(echo)
-            .route("/hey", web::get().to(manual_hello))
-    })
-    .bind(("127.0.0.1", 8080))?
-    .run()
-    .await
-}
-*/
-
-use actix_web::{post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{post, web, App, HttpResponse, HttpServer, Responder, http::KeepAlive};
 use serde::{Serialize, Deserialize};
 use std::sync::Mutex;
 
@@ -42,53 +7,72 @@ struct AppStateWithCounter {
 }
 
 #[derive(Serialize, Deserialize)]
-#[serde(tag = "User")]
-struct User {
-    user_name: String,
-    user_id: i64,
-    user_character: i64,
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(tag = "Player")]
-struct Player {
-    player_name: String,
-    player_id: i64,
-    player_level: i64,
-    player_state: PlayerState,
-    user_ref: Box<User>,
-}
-
-#[derive(Serialize, Deserialize)]
-enum PlayerState {
-    Live,
-    Dead,
+#[serde(tag = "operadora")]
+struct Operadora {
+    id: String,
+    data_operacao: String,
+    responsavel: String,
+    grupo: String,
+    codigo_operadora: i32,
+    operadora: String,
+    razao_social: String,
+    cnpj: String,
+    email: String,
+    telefone: String,
 }
 
 #[post("/create")]
-async fn new(data: String) -> impl Responder {
-    let player = serde_json::to_string(&new_player(data)).unwrap();
-    HttpResponse::Ok().body(player)
+async fn create_operadora(data: String) -> impl Responder {
+    let operadora = serde_json::to_string(&new_operadora(data)).unwrap();
+    HttpResponse::Ok().body(operadora)
 }
 
-fn new_player(json: String) -> Player {
+fn new_operadora(json: String) -> Operadora {
     println!("{}", json);
-    let test: Player = serde_json::from_str(&json.as_str()).unwrap();
+    let result: Operadora = serde_json::from_str(&json.as_str()).unwrap();
 
-    return test;
+    return result;
 }
-/**
-impl Player {
-    fn kill(mut self: Player) -> Player {
-        match self.player_state {
-            PlayerState::Live => {
-                self.player_state = PlayerState::Dead;
-                return self;
-            },
-            PlayerState::Dead => {return self},
-        }
-    }
-}*/
+
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "praca")]
+struct Praca {
+    id: String,
+    longitude: i32,
+    latitude: i32,
+    id_operadora: String,
+    nome: String,
+    situacao: String,
+    rodovia: String,
+    km: i32,
+    sentido: String,
+    cidade: String,
+    estado: String,
+    codigo_praca: i8,
+    orientacao: String,
+    tipo: String,
+    jurisdicao: String,
+    cobranca_especial: bool,
+    categoria: String,
+    data_de_alteracao: String,
+    razao_social: String,
+    cnpj: String,
+    email: String,
+    telefone: String,
+}
+
+#[post("/create")]
+async fn create_praca(data: String) -> impl Responder {
+    let praca = serde_json::to_string(&new_praca(data)).unwrap();
+    HttpResponse::Ok().body(praca)
+}
+
+fn new_praca(json: String) -> Praca {
+    println!("{}", json);
+    let result: Praca = serde_json::from_str(&json.as_str()).unwrap();
+
+    return result;
+}
 
 async fn index(data: web::Data<AppStateWithCounter>) -> String {
     let mut counter = data.counter.lock().unwrap(); // <- get counter's MutexGuard
@@ -109,10 +93,13 @@ async fn main() -> std::io::Result<()> {
         // move counter into the closure
         App::new()
             .app_data(counter.clone()) // <- register the created data
-            .service(new)
+            .service(create_operadora)
+            .service(create_praca)
             .route("/", web::get().to(index))
     })
-    .bind(("127.0.0.1", 8080))?
+    .keep_alive(KeepAlive::Os)
+    .bind(("0.0.0.0", 8080))?
     .run()
     .await
+
 }
