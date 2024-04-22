@@ -1,4 +1,4 @@
-use actix_web::{post, HttpResponse, Responder};
+use actix_web::{post, web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 use tokio_postgres::Row;
 
@@ -35,9 +35,32 @@ impl Operadora {
 }
 
 #[post("/create-operadora")]
-async fn create_operadora(data: String) -> impl Responder {
-    let operadora = serde_json::to_string(&new_operadora(data)).unwrap();
-    HttpResponse::Ok().body(operadora)
+async fn create_operadora(data: String, conn: web::Data<deadpool_postgres::Client>) -> impl Responder {
+    let operadora: Operadora = new_operadora(data);
+    match conn.query(
+        "INSERT INTO operadora (id, data_operacao, responsavel, grupo, codigo_operadora, operadora, razao_social, cnpj, email, telefone) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+        &[
+            &operadora.id,
+            &operadora.data_operacao,
+            &operadora.responsavel,
+            &operadora.grupo,
+            &operadora.codigo_operadora,
+            &operadora.operadora,
+            &operadora.razao_social,
+            &operadora.cnpj,
+            &operadora.email,
+            &operadora.telefone,
+        ],
+    ).await {
+        Ok(_) => {
+            let operadora_json: String = serde_json::to_string(&operadora).unwrap();
+            return HttpResponse::Ok().body(operadora_json);
+        },
+        Err(e) => {
+            println!("{}", e);
+            return HttpResponse::InternalServerError().body("Erro ao inserir operadora");
+        }    
+    };    
 }
 
 fn new_operadora(json: String) -> Operadora {
@@ -104,9 +127,44 @@ impl Praca {
 }
 
 #[post("/create-praca")]
-async fn create_praca(data: String) -> impl Responder {
-    let praca = serde_json::to_string(&new_praca(data)).unwrap();
-    HttpResponse::Ok().body(praca)
+async fn create_praca(data: String, conn: web::Data<deadpool_postgres::Client>) -> impl Responder {
+    let praca: Praca = new_praca(data);
+    match conn.query(
+        "INSERT INTO praca (id, longitude, latitude, id_operadora, nome, situacao, rodovia, km, sentido, cidade, estado, codigo_praca, orientacao, tipo, jurisdicao, cobranca_especial, categoria, data_de_alteracao, razao_social, cnpj, email, telefone) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)",
+        &[
+            &praca.id,
+            &praca.longitude,
+            &praca.latitude,
+            &praca.id_operadora,
+            &praca.nome,
+            &praca.situacao,
+            &praca.rodovia,
+            &praca.km,
+            &praca.sentido,
+            &praca.cidade,
+            &praca.estado,
+            &praca.codigo_praca,
+            &praca.orientacao,
+            &praca.tipo,
+            &praca.jurisdicao,
+            &praca.cobranca_especial,
+            &praca.categoria,
+            &praca.data_de_alteracao,
+            &praca.razao_social,
+            &praca.cnpj,
+            &praca.email,
+            &praca.telefone,
+        ],
+    ).await {
+        Ok(_) => {
+            let praca_json: String = serde_json::to_string(&praca).unwrap();
+            return HttpResponse::Ok().body(praca_json);
+        },
+        Err(e) => {
+            println!("{}", e);
+            return HttpResponse::InternalServerError().body("Erro ao inserir praça");
+        }
+    };
 }
 
 fn new_praca(json: String) -> Praca {
