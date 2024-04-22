@@ -46,6 +46,8 @@ async fn main() -> std::io::Result<()> {
     let pool = cfg.create_pool(Some(Runtime::Tokio1), NoTls).unwrap();
     println!("postgres pool succesfully created");
 
+    let http_port = env::var("HTTP_PORT").unwrap_or("80".into());
+
     HttpServer::new(move || {
         // move counter into the closure
         App::new()
@@ -56,7 +58,7 @@ async fn main() -> std::io::Result<()> {
             .route("/", web::get().to(index))
     })
     .keep_alive(KeepAlive::Os)
-    .bind(("0.0.0.0", 8080))?
+    .bind(format!("0.0.0.0:{http_port}"))?
     .run()
     .await
 
