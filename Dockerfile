@@ -16,4 +16,4 @@ RUN cargo build --release
 
 EXPOSE 80
 
-CMD ./target/release/rinha-backend-rust
+CMD ./target/release/api-pj-georef

@@ -1,5 +1,3 @@
-version: '3.5'
-
 services:
   api01: &api
     build: .
@@ -15,7 +13,7 @@ services:
         limits:
           cpus: '0.15'
           memory: '0.4GB'
-    network_mode: "host"
+    network_mode: "bridge"
 
   api02:
     <<: *api
@@ -45,7 +43,7 @@ services:
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: 1234
-      POSTGRES_DB: pj-georef
+      POSTGRES_DB: pj_georef
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./postgresql.conf:/docker-entrypoint-initdb.d/postgresql.conf
