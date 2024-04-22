@@ -3,7 +3,7 @@ CREATE DATABASE IF NOT EXISTS pj_georef;
 USE pj_georef;  
 
 CREATE TABLE operadora (
-    id VARCHAR(255),
+    id SERIAL PRIMARY KEY,
     data_operacao VARCHAR(100),
     responsavel VARCHAR(100),
     grupo VARCHAR(100),
@@ -15,8 +15,11 @@ CREATE TABLE operadora (
     telefone VARCHAR(100)
 );
 
+-- INSERT INTO operadora (data_operacao, responsavel, grupo, codigo_operadora, operadora, razao_social, cnpj, email, telefone)
+-- VALUES ('2022-01-01', 'John Doe', 'Group A', 123, 'ABC Telecom', 'ABC Company', '1234567890', 'john.doe@example.com', '123-456-7890');
+
 CREATE TABLE praca (
-    id VARCHAR(255),
+    id SERIAL PRIMARY KEY,
     longitude INT,
     latitude INT,
     id_operadora VARCHAR(100),
@@ -39,3 +42,28 @@ CREATE TABLE praca (
     email VARCHAR(100),
     telefone VARCHAR(100)
 );
+
+SELECT JSON_OBJECT(
+    'id', id,
+    'longitude', longitude,
+    'latitude', latitude,
+    'id_operadora', id_operadora,
+    'nome', nome,
+    'situacao', situacao,
+    'rodovia', rodovia,
+    'km', km,
+    'sentido', sentido,
+    'cidade', cidade,
+    'estado', estado,
+    'codigo_praca', codigo_praca,
+    'orientacao', orientacao,
+    'tipo', tipo,
+    'jurisdicao', jurisdicao,
+    'cobranca_especial', cobranca_especial,
+    'categoria', categoria,
+    'data_de_alteracao', data_de_alteracao,
+    'razao_social', razao_social,
+    'cnpj', cnpj,
+    'email', email,
+    'telefone', telefone
+) FROM praca;
