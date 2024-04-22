@@ -31,9 +31,20 @@ curl http://localhost:8080/ \
 ```
 POST
 ```bash
-curl http://localhost:8080/create \
+curl http://localhost:9999/create-operadora \
     --include \
     --header "Content-Type: application/json" \
     --request "POST" \
-    --data '{"player_name": "String", "player_id": 64, "player_level": 64, "player_state": "Dead", "user_ref": {"user_name": "String", "user_id": 64, "user_character": 64}}'
+    --data '{
+	"id": "asjhdahjkdhasklh",
+	"data_operacao": "26/03/2024 13:46:159",
+	"responsavel": "teste",
+	"grupo": "teste grupo",
+	"codigo_operadora": 30,
+	"operadora": "Operadoro",
+	"razao_social": "soci Razao",
+	"cnpj": "30/93781 - 99978",
+	"email": "teste@teste.com",
+	"telefone": "12 8766-9877"
+}'
 ```
