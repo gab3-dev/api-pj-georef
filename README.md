@@ -48,3 +48,22 @@ curl http://localhost:9999/create-operadora \
 	"telefone": "12 8766-9877"
 }'
 ```
+
+POST
+```bash
+curl http://localhost:9999/create-operadora \
+    --include \
+    --header "Content-Type: application/json" \
+    --request "POST" \
+    --data '{
+	"data_operacao": "26/03/2024 13:46:159",
+	"responsavel": "John Doe",
+	"grupo": "Grupo A",
+	"codigo_operadora": 30,
+	"operadora": "ABC Telecom",
+	"razao_social": "ABC Company",
+	"cnpj": "1234567890",
+	"email": "teste@teste.com",
+	"telefone": "123-456-7890"
+}'
+```
