@@ -1,29 +1,15 @@
-use actix_web::{web, App, HttpServer, http::KeepAlive};
+use actix_web::{http::KeepAlive, web::{self, Data}, App, HttpServer};
 use deadpool_postgres::{Config, PoolConfig, Runtime};
 use tokio_postgres::NoTls;
-use std::{env, sync::Mutex};
+use std::env;
 
 mod db;
 use db::*;
 
-struct AppStateWithCounter {
-    counter: Mutex<i32>, // <- Mutex is necessary to mutate safely across threads
-}
-
-async fn index(data: web::Data<AppStateWithCounter>) -> String {
-    let mut counter = data.counter.lock().unwrap(); // <- get counter's MutexGuard
-    *counter += 1; // <- access counter inside MutexGuard
-    dbg!("{counter}");
-    
-    format!("Request number: {counter}") // <- response with count
-}
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    // Note: web::Data created _outside_ HttpServer::new closure
-    let counter = web::Data::new(AppStateWithCounter {
-        counter: Mutex::new(0),
-    });
+    std::env::set_var("RUST_LOG", "debug");
+    env_logger::init();
 
     let mut cfg = Config::new();
     cfg.host = Some(
@@ -49,17 +35,17 @@ async fn main() -> std::io::Result<()> {
     let http_port = env::var("HTTP_PORT").unwrap_or("80".into());
 
     HttpServer::new(move || {
-        // move counter into the closure
-        App::new()
-            .app_data(counter.clone()) // <- register the created data
-            .app_data(pool.clone())
+        App::new() // <- register the created data
+            .app_data(web::Data::new(pool.clone()))
             .service(create_operadora)
             .service(create_praca)
-            .route("/", web::get().to(index))
+            .route("/", web::get().to(|| async { "Hello, world!" }))
     })
     .keep_alive(KeepAlive::Os)
     .bind(format!("0.0.0.0:{http_port}"))?
     .run()
-    .await
+    .await?;
+
+    Ok(())
 
 }
