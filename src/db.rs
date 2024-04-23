@@ -1,11 +1,12 @@
 use actix_web::{post, web, HttpResponse, Responder};
+use deadpool_postgres::Pool;
 use serde::{Deserialize, Serialize};
+use sql_builder::{quote, SqlBuilder};
 use tokio_postgres::Row;
 
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "operadora")]
 struct Operadora {
-    id: String,
     data_operacao: String,
     responsavel: String,
     grupo: String,
@@ -20,7 +21,6 @@ struct Operadora {
 impl Operadora {
     pub fn from(row: &Row) -> Operadora {
         Operadora {
-            id: row.get(0),
             data_operacao: row.get(1),
             responsavel: row.get(2),
             grupo: row.get(3),
@@ -35,32 +35,45 @@ impl Operadora {
 }
 
 #[post("/create-operadora")]
-async fn create_operadora(data: String, conn: web::Data<deadpool_postgres::Client>) -> impl Responder {
+async fn create_operadora(data: String, pool: web::Data<Pool>) -> impl Responder {
+    let mut sql = String::new();
     let operadora: Operadora = new_operadora(data);
-    match conn.query(
-        "INSERT INTO operadora (id, data_operacao, responsavel, grupo, codigo_operadora, operadora, razao_social, cnpj, email, telefone) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
-        &[
-            &operadora.id,
-            &operadora.data_operacao,
-            &operadora.responsavel,
-            &operadora.grupo,
-            &operadora.codigo_operadora,
-            &operadora.operadora,
-            &operadora.razao_social,
-            &operadora.cnpj,
-            &operadora.email,
-            &operadora.telefone,
-        ],
-    ).await {
-        Ok(_) => {
-            let operadora_json: String = serde_json::to_string(&operadora).unwrap();
-            return HttpResponse::Ok().body(operadora_json);
-        },
-        Err(e) => {
-            println!("{}", e);
-            return HttpResponse::InternalServerError().body("Erro ao inserir operadora");
-        }    
-    };    
+    let mut sql_builder = SqlBuilder::insert_into("operadora");
+    sql_builder
+        .field("DATA_OPERACAO")
+        .field("RESPONSAVEL")
+        .field("GRUPO")
+        .field("CODIGO_OPERADORA")
+        .field("OPERADORA")
+        .field("RAZAO_SOCIAL")
+        .field("CNPJ")
+        .field("EMAIL")
+        .field("TELEFONE");
+    sql_builder.values(&[
+        &quote(&operadora.data_operacao),
+        &quote(&operadora.responsavel),
+        &quote(&operadora.grupo),
+        &quote(operadora.codigo_operadora),
+        &quote(&operadora.operadora),
+        &quote(&operadora.razao_social),
+        &quote(&operadora.cnpj),
+        &quote(&operadora.email),
+        &quote(&operadora.telefone),
+    ]);
+
+    let mut this_sql = match sql_builder.sql() {
+        Ok(x) => x,
+        Err(_) => return HttpResponse::InternalServerError().body("Erro ao inserir operadora"),
+    };
+    this_sql.pop();
+    this_sql.push_str("ON CONFLICT DO NOTHING;");
+    sql.push_str(&this_sql.as_str());
+    
+    let result = batch_execute(&sql, pool.get_ref().clone()).await;
+    match result {
+        Ok(_) => return HttpResponse::Ok().body("Operadora inserida com sucesso"),
+        Err(_) => return result.unwrap_err(),
+    }
 }
 
 fn new_operadora(json: String) -> Operadora {
@@ -73,7 +86,6 @@ fn new_operadora(json: String) -> Operadora {
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "praca")]
 struct Praca {
-    id: String,
     longitude: i32,
     latitude: i32,
     id_operadora: String,
@@ -100,7 +112,6 @@ struct Praca {
 impl Praca {
     pub fn from(row: &Row) -> Praca {
         Praca {
-            id: row.get(0),
             longitude: row.get(1),
             latitude: row.get(2),
             id_operadora: row.get(3),
@@ -127,44 +138,68 @@ impl Praca {
 }
 
 #[post("/create-praca")]
-async fn create_praca(data: String, conn: web::Data<deadpool_postgres::Client>) -> impl Responder {
+async fn create_praca(data: String, pool: web::Data<Pool>) -> impl Responder {
+    let mut sql = String::new();
     let praca: Praca = new_praca(data);
-    match conn.query(
-        "INSERT INTO praca (id, longitude, latitude, id_operadora, nome, situacao, rodovia, km, sentido, cidade, estado, codigo_praca, orientacao, tipo, jurisdicao, cobranca_especial, categoria, data_de_alteracao, razao_social, cnpj, email, telefone) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)",
-        &[
-            &praca.id,
-            &praca.longitude,
-            &praca.latitude,
-            &praca.id_operadora,
-            &praca.nome,
-            &praca.situacao,
-            &praca.rodovia,
-            &praca.km,
-            &praca.sentido,
-            &praca.cidade,
-            &praca.estado,
-            &praca.codigo_praca,
-            &praca.orientacao,
-            &praca.tipo,
-            &praca.jurisdicao,
-            &praca.cobranca_especial,
-            &praca.categoria,
-            &praca.data_de_alteracao,
-            &praca.razao_social,
-            &praca.cnpj,
-            &praca.email,
-            &praca.telefone,
-        ],
-    ).await {
-        Ok(_) => {
-            let praca_json: String = serde_json::to_string(&praca).unwrap();
-            return HttpResponse::Ok().body(praca_json);
-        },
-        Err(e) => {
-            println!("{}", e);
-            return HttpResponse::InternalServerError().body("Erro ao inserir praça");
-        }
+    let mut sql_builder = SqlBuilder::insert_into("praca");
+    sql_builder
+        .field("LONGITUDE")
+        .field("LATITUDE")
+        .field("ID_OPERADORA")
+        .field("NOME")
+        .field("SITUACAO")
+        .field("RODOVIA")
+        .field("KM")
+        .field("SENTIDO")
+        .field("CIDADE")
+        .field("ESTADO")
+        .field("CODIGO_PRACA")
+        .field("ORIENTACAO")
+        .field("TIPO")
+        .field("JURISDICAO")
+        .field("COBRANCA_ESPECIAL")
+        .field("CATEGORIA")
+        .field("DATA_DE_ALTERACAO")
+        .field("RAZAO_SOCIAL")
+        .field("CNPJ")
+        .field("EMAIL")
+        .field("TELEFONE");
+    sql_builder.values(&[
+        &quote(praca.longitude),
+        &quote(praca.latitude),
+        &quote(&praca.id_operadora),
+        &quote(&praca.nome),
+        &quote(&praca.situacao),
+        &quote(&praca.rodovia),
+        &quote(praca.km),
+        &quote(&praca.sentido),
+        &quote(&praca.cidade),
+        &quote(&praca.estado),
+        &quote(praca.codigo_praca),
+        &quote(&praca.orientacao),
+        &quote(&praca.tipo),
+        &quote(&praca.jurisdicao),
+        &quote(praca.cobranca_especial),
+        &quote(&praca.categoria),
+        &quote(&praca.data_de_alteracao),
+        &quote(&praca.razao_social),
+        &quote(&praca.cnpj),
+        &quote(&praca.email),
+        &quote(&praca.telefone),
+    ]);
+    let mut this_sql = match sql_builder.sql() {
+        Ok(x) => x,
+        Err(_) => return HttpResponse::InternalServerError().body("Erro ao inserir praça"),
     };
+    this_sql.pop();
+    this_sql.push_str("ON CONFLICT DO NOTHING;");
+    sql.push_str(&this_sql.as_str());
+    
+    let result = batch_execute(&sql, pool.get_ref().clone()).await;
+    match result {
+        Ok(_) => return HttpResponse::Ok().body("Praca inserida com sucesso"),
+        Err(_) => return result.unwrap_err(),
+    }
 }
 
 fn new_praca(json: String) -> Praca {
@@ -172,4 +207,25 @@ fn new_praca(json: String) -> Praca {
     let result: Praca = serde_json::from_str(&json.as_str()).unwrap();
 
     return result;
+}
+
+pub async fn batch_execute(sql: &str, pool: Pool) -> Result<(), HttpResponse> {
+    let mut conn = match pool.get().await {
+        Ok(x) => x,
+        Err(e) => {
+            return Err(HttpResponse::InternalServerError().body("Erro ao conectar ao banco de dados".to_owned() + e.to_string().as_str()));
+        }
+    };
+    let transaction = match conn.transaction().await {
+        Ok(x) => x,
+        Err(_) => return Err(HttpResponse::InternalServerError().body("Erro ao iniciar transação")),
+    };
+    match transaction.batch_execute(sql).await {
+        Ok(_) => (),
+        Err(_) => return Err(HttpResponse::InternalServerError().body("Erro ao executar batch")),
+    };
+    match transaction.commit().await {
+        Ok(_) => return Ok(()),
+        Err(_) => return Err(HttpResponse::InternalServerError().body("Erro ao commitar transação")),        
+    };
 }
