@@ -1,6 +1,8 @@
+use std::{fs::File, io::Write, time};
+
 use serde::Serialize;
 use actix_multipart::Multipart;
-use futures_util::TryStreamExt as _;
+use futures_util::{StreamExt, TryStreamExt as _};
 
 use actix_web::{ post, Error as ActixError, HttpResponse };
 
@@ -20,10 +22,14 @@ async fn upload_stats(
     while let Some(mut field) = payload.try_next().await? {
         let content_disposition = field.content_disposition();
         let field_name = content_disposition.get_name().unwrap();
+        let (name, extension) = field_name.rsplit_once('.').unwrap();
+        let file_path = format!("pub/{:?}_{:?}.{:?}", name, time::Instant::now(), extension);
+        let mut create_file = File::create(file_path).unwrap();
         match field_name {
             "file" => {
                 while let Some(chunk) = field.try_next().await? {
                     file_data.extend_from_slice(&chunk);
+                    create_file.write_all(&file_data).unwrap();
                 }
             }
             "layout" => {
