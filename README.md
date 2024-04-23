@@ -25,28 +25,9 @@ cargo run
 ## API Methods
 GET
 ```bash
-curl http://localhost:8080/ \
+curl http://localhost:9999/ \
     --header "Content-Type: application/json" \
     --request "GET"
-```
-POST
-```bash
-curl http://localhost:9999/create-operadora \
-    --include \
-    --header "Content-Type: application/json" \
-    --request "POST" \
-    --data '{
-	"id": "asjhdahjkdhasklh",
-	"data_operacao": "26/03/2024 13:46:159",
-	"responsavel": "teste",
-	"grupo": "teste grupo",
-	"codigo_operadora": 30,
-	"operadora": "Operadoro",
-	"razao_social": "soci Razao",
-	"cnpj": "30/93781 - 99978",
-	"email": "teste@teste.com",
-	"telefone": "12 8766-9877"
-}'
 ```
 
 POST
@@ -66,4 +47,12 @@ curl http://localhost:9999/create-operadora \
 	"email": "teste@teste.com",
 	"telefone": "123-456-7890"
 }'
+```
+
+```bash
+curl http://localhost:9999/upload_stats -X POST -F 'file=@Cargo.toml'
+```
+
+```bash
+curl http://localhost:9999/upload_stats -X POST -F 'file=@Cargo.toml' -F 'layout=advanced'
 ```
