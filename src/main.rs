@@ -5,6 +5,8 @@ use std::env;
 
 mod db;
 use db::*;
+mod files;
+use files::*;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -39,6 +41,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(pool.clone()))
             .service(create_operadora)
             .service(create_praca)
+            .service(upload_stats)
             .route("/", web::get().to(|| async { "Hello, world!" }))
     })
     .keep_alive(KeepAlive::Os)
