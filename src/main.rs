@@ -1,4 +1,4 @@
-use actix_web::{http::KeepAlive, web::{self, Data}, App, HttpServer};
+use actix_web::{http::KeepAlive, web::{self}, App, HttpServer};
 use deadpool_postgres::{Config, PoolConfig, Runtime};
 use tokio_postgres::NoTls;
 use std::env;
@@ -18,7 +18,7 @@ async fn main() -> std::io::Result<()> {
             .to_string(),
     );
     cfg.port = Some(5432);
-    cfg.dbname = Some("pj-georef".to_string());
+    cfg.dbname = Some("pj_georef".to_string());
     cfg.user = Some("root".to_string());
     cfg.password = Some("1234".to_string());
 
