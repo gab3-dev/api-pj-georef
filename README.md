@@ -1,36 +1,60 @@
-# Rust API-RESTful with Actix
-## Rust Lang
-Rust is a multi-paradigm, general-purpose programming language that emphasizes performance, type safety, and concurrency. It enforces memory safety, meaning that all references point to valid memory, without requiring the use of automated memory management techniques such as garbage collection. To simultaneously enforce memory safety and prevent data races, its "borrow checker" tracks the object lifetime of all references in a program during compilation.
-**[Learn more about Rust](https://www.rust-lang.org/)**.
-## Actix Framework
-Actix Web is a powerful, pragmatic, and extremely fast web framework for Rust
-**[Learn more about Actix](https://actix.rs/)**.
-## Creating my Rust RESTful API
-To contribute to my Back-End studies, I decided to develop two APIs in different technologies. In the future I intend to use both APIs developed in a personal project related to games. 
-For now both are being done in the REST architecture, because it is the most common and easier to work with, later one of the architectures will change to RPC.
-## Run
-***For this tutorial, I conclude that you already has installed the Rust Lang. If it isn't your case, you can download and install it at this link:*** **[Rust Lang Download](https://www.rust-lang.org/tools/install)**
-<br>If you are using a linux distribution and have the curl installed, you can install Rust just running this command:
-```
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-<br>First you must build the project with this command:
-```
-cargo build
-```
-Now just run with:
-```
-cargo run
-```
-## API Methods
-GET
+# Projeto Georef
+
+## Informações Principais
+Este projeto tem todas as configurações e arquivos necessários para ser executado em um container **[Docker](https://www.docker.com/)**.
+
+### Links de Instalação
+**[Docker Desktop Windows](https://docs.docker.com/desktop/install/windows-install/)**
+**[Docker Desktop Linux](https://docs.docker.com/desktop/install/linux-install/)**
+
+### Package Manager
+Caso você esteja utilizando uma distribuição linux pode instalar o docker e docker compose via linha de comando.
+Os comandos que deixei de exemplo podem gerar erros variando de máquina para máquina.
+
+#### Ubuntu
 ```bash
-curl http://localhost:9999/ \
-    --header "Content-Type: application/json" \
-    --request "GET"
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
 ```
 
-POST
+#### Arch
+```bash
+sudo pacman -S docker docker-compose
+sudo systemctl start docker.service
+sudo systemctl enable docker.service
+```
+
+### Próximos passos
+Agora com o docker instalado você já pode executar o container.
+Abra um terminal e navegue até a pasta desse projeto, em seguida rode o comando abaixo.
+
+```bash
+docker compose up -d
+```
+
+Após isso rode ```docker ps``` e verifique se todos os containers estão rodando.
+```bash
+CONTAINER ID   IMAGE                 COMMAND                  CREATED      STATUS                    PORTS     NAMES
+ca3db8011f55   nginx:latest          "/docker-entrypoint.…"   6 days ago   Up 38 seconds                       api-pj-georef-nginx-1
+7b2f3c5dd7c7   api-pj-georef-api01   "/bin/sh -c ./target…"   6 days ago   Up 39 seconds                       api-pj-georef-api01-1
+cd0988c04b9c   api-pj-georef-api02   "/bin/sh -c ./target…"   6 days ago   Up 39 seconds                       api-pj-georef-api02-1
+bafac24683f2   postgres              "docker-entrypoint.s…"   6 days ago   Up 39 seconds (healthy)             api-pj-georef-db-1
+```
+Acima temos um exemplo de todos os containers rodando, deve haver 4 containers listados.
+
+## Vamos para os Testes - API Methods
+POST - Para criar operadora, passe o json como o exemplo.
 ```bash
 curl http://localhost:9999/create-operadora \
     --include \
@@ -46,6 +70,45 @@ curl http://localhost:9999/create-operadora \
 	"cnpj": "1234567890",
 	"email": "teste@teste.com",
 	"telefone": "123-456-7890"
+}'
+```
+
+POST - Para criar praça, passe o json como o exemplo.
+```bash
+# Create variables with random values
+longitude=$(shuf -i 180-180 -n 1)
+latitude=$(shuf -i 90-90 -n 1)
+id_operadora=$(openssl rand -hex 4)
+km=$(shuf -i 0-100 -n 1)
+codigo_praca=$(shuf -i 0-180 -n 1)
+
+# Send POST request
+curl http://localhost:9999/create-praca \
+    --include \
+    --header "Content-Type: application/json" \
+    --request "POST" \
+    --data '{
+    "longitude": '$longitude',
+    "latitude": '$latitude',
+    "id_operadora": "'"$id_operadora"'",
+    "nome": "random_nome",
+    "situacao": "random_situacao",
+    "rodovia": "random_rodovia",
+    "km": '$km',
+    "sentido": "random_sentido",
+    "cidade": "random_cidade",
+    "estado": "random_estado",
+    "codigo_praca": '$codigo_praca',
+    "orientacao": "random_orientacao",
+    "tipo": "random_tipo",
+    "jurisdicao": "random_jurisdicao",
+    "cobranca_especial": false,
+    "categoria": "random_categoria",
+    "data_de_alteracao": "random_data_de_alteracao",
+    "razao_social": "ABC Company",
+    "cnpj": "1234567890",
+    "email": "teste@teste.com",
+    "telefone": "123-456-7890"
 }'
 ```
 
