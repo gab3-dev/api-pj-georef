@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS operadora (
-    id SERIAL PRIMARY KEY,
+    id_operadora INT GENERATED ALWAYS AS IDENTITY,
     data_operacao VARCHAR(100),
     responsavel VARCHAR(100),
     grupo VARCHAR(100),
@@ -8,17 +8,18 @@ CREATE TABLE IF NOT EXISTS operadora (
     razao_social VARCHAR(100),
     cnpj VARCHAR(100),
     email VARCHAR(100),
-    telefone VARCHAR(100)
+    telefone VARCHAR(100),
+    PRIMARY KEY(id_operadora)
 );
 
 -- INSERT INTO operadora (data_operacao, responsavel, grupo, codigo_operadora, operadora, razao_social, cnpj, email, telefone)
 -- VALUES ('2022-01-01', 'John Doe', 'Group A', 123, 'ABC Telecom', 'ABC Company', '1234567890', 'john.doe@example.com', '123-456-7890');
 
 CREATE TABLE IF NOT EXISTS praca (
-    id SERIAL PRIMARY KEY,
+    id_praca INT GENERATED ALWAYS AS IDENTITY,
     longitude INT,
     latitude INT,
-    id_operadora VARCHAR(100),
+    id_operadora INT,
     nome VARCHAR(255),
     situacao VARCHAR(100),
     rodovia VARCHAR(100),
@@ -36,7 +37,11 @@ CREATE TABLE IF NOT EXISTS praca (
     razao_social VARCHAR(100),
     cnpj VARCHAR(100),
     email VARCHAR(100),
-    telefone VARCHAR(100)
+    telefone VARCHAR(100),
+    PRIMARY KEY(id_operadora),
+    CONSTRAINT fk_operadora
+      FOREIGN KEY(id_operadora) 
+        REFERENCES operadora(id_operadora)
 );
 
 -- SELECT JSON_OBJECT(
