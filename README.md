@@ -4,7 +4,7 @@
 Este projeto tem todas as configurações e arquivos necessários para ser executado em um container **[Docker](https://www.docker.com/)**.
 
 ### Links de Instalação
-**[Docker Desktop Windows](https://docs.docker.com/desktop/install/windows-install/)**
+**[Docker Desktop Windows](https://docs.docker.com/desktop/install/windows-install/)** <br>
 **[Docker Desktop Linux](https://docs.docker.com/desktop/install/linux-install/)**
 
 ### Package Manager
@@ -118,4 +118,15 @@ curl http://localhost:9999/upload_stats -X POST -F 'file=@Cargo.toml'
 
 ```bash
 curl http://localhost:9999/upload_stats -X POST -F 'file=@Cargo.toml' -F 'layout=advanced'
+```
+
+## Executar comandos direto no banco de dados(Terminal)
+
+Abri o terminal do container do banco de dados
+```bash
+docker exec -it api-pj-georef-db-1 sh
+```
+
+```bash
+psql -U root -h localhost -p 5432 -d pj_georef
 ```
