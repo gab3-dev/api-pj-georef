@@ -56,21 +56,21 @@ Acima temos um exemplo de todos os containers rodando, deve haver 4 containers l
 ## Vamos para os Testes - API Methods
 POST - Para criar operadora, passe o json como o exemplo.
 ```bash
-curl http://localhost:9999/create-operadora \
+curl https://zany-halibut-9xjwppwwxwfp7w-9999.app.github.dev/create-operadora \
     --include \
     --header "Content-Type: application/json" \
     --request "POST" \
     --data '{
-	"data_operacao": "26/03/2024 13:46:159",
-	"responsavel": "John Doe",
-	"grupo": "Grupo A",
-	"codigo_operadora": 30,
-	"operadora": "ABC Telecom",
-	"razao_social": "ABC Company",
-	"cnpj": "1234567890",
-	"email": "teste@teste.com",
-	"telefone": "123-456-7890"
-}'
+      "data_operacao": "26/03/2024 13:46:159",
+      "responsavel": "John Doe",
+      "grupo": "Grupo A",
+      "codigo_operadora": 30,
+      "operadora": "ABC Telecom",
+      "razao_social": "ABC Company",
+      "cnpj": "1234567890",
+      "email": "teste@teste.com",
+      "telefone": "123-456-7890"
+    }'
 ```
 
 POST - Para criar praça, passe o json como o exemplo.

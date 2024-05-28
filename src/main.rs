@@ -1,4 +1,5 @@
-use actix_web::{http::KeepAlive, web::{self}, App, HttpServer};
+use actix_web::{http, http::KeepAlive, web::{self}, App, HttpServer};
+use actix_cors::Cors;
 use deadpool_postgres::{Config, PoolConfig, Runtime};
 use tokio_postgres::NoTls;
 use std::env;
@@ -37,7 +38,9 @@ async fn main() -> std::io::Result<()> {
     let http_port = env::var("HTTP_PORT").unwrap_or("80".into());
 
     HttpServer::new(move || {
+        let cors = Cors::permissive();
         App::new() // <- register the created data
+            .wrap(cors)
             .app_data(web::Data::new(pool.clone()))
             .service(create_operadora)
             .service(create_praca)

@@ -2,7 +2,7 @@ use std::{fs::File, io::Write, time};
 
 use serde::Serialize;
 use actix_multipart::Multipart;
-use futures_util::{StreamExt, TryStreamExt as _};
+use futures_util::TryStreamExt as _;
 
 use actix_web::{ post, Error as ActixError, HttpResponse };
 
