@@ -38,7 +38,14 @@ async fn main() -> std::io::Result<()> {
     let http_port = env::var("HTTP_PORT").unwrap_or("80".into());
 
     HttpServer::new(move || {
-        let cors = Cors::permissive();
+        let cors = Cors::default()
+            .send_wildcard()
+            .allow_any_origin()
+            .block_on_origin_mismatch(false)
+            .allowed_methods(vec!["GET", "POST"])
+            .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+            .allowed_header(http::header::CONTENT_TYPE)
+            .max_age(3600);
         App::new() // <- register the created data
             .wrap(cors)
             .app_data(web::Data::new(pool.clone()))
