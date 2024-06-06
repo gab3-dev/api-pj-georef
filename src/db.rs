@@ -77,7 +77,7 @@ async fn create_operadora(data: String, pool: web::Data<Pool>) -> impl Responder
 }
 
 fn new_operadora(json: String) -> Operadora {
-    println!("{}", json);
+    println!("{}", json);    
     let result: Operadora = serde_json::from_str(&json.as_str()).unwrap();
 
     return result;
@@ -88,7 +88,7 @@ fn new_operadora(json: String) -> Operadora {
 struct Praca {
     longitude: i32,
     latitude: i32,
-    id_operadora: String,
+    codigo_operadora: i32,
     nome: String,
     situacao: String,
     rodovia: String,
@@ -102,7 +102,7 @@ struct Praca {
     jurisdicao: String,
     cobranca_especial: bool,
     categoria: String,
-    data_de_alteracao: String,
+    data_alteracao: String,
     razao_social: String,
     cnpj: String,
     email: String,
@@ -114,7 +114,7 @@ impl Praca {
         Praca {
             longitude: row.get(1),
             latitude: row.get(2),
-            id_operadora: row.get(3),
+            codigo_operadora: row.get(3),
             nome: row.get(4),
             situacao: row.get(5),
             rodovia: row.get(6),
@@ -128,7 +128,7 @@ impl Praca {
             jurisdicao: row.get(14),
             cobranca_especial: row.get(15),
             categoria: row.get(16),
-            data_de_alteracao: row.get(17),
+            data_alteracao: row.get(17),
             razao_social: row.get(18),
             cnpj: row.get(19),
             email: row.get(20),
@@ -145,7 +145,7 @@ async fn create_praca(data: String, pool: web::Data<Pool>) -> impl Responder {
     sql_builder
         .field("LONGITUDE")
         .field("LATITUDE")
-        .field("ID_OPERADORA")
+        .field("CODIGO_OPERADORA")
         .field("NOME")
         .field("SITUACAO")
         .field("RODOVIA")
@@ -159,7 +159,7 @@ async fn create_praca(data: String, pool: web::Data<Pool>) -> impl Responder {
         .field("JURISDICAO")
         .field("COBRANCA_ESPECIAL")
         .field("CATEGORIA")
-        .field("DATA_DE_ALTERACAO")
+        .field("DATA_ALTERACAO")
         .field("RAZAO_SOCIAL")
         .field("CNPJ")
         .field("EMAIL")
@@ -167,7 +167,7 @@ async fn create_praca(data: String, pool: web::Data<Pool>) -> impl Responder {
     sql_builder.values(&[
         &quote(praca.longitude),
         &quote(praca.latitude),
-        &quote(&praca.id_operadora),
+        &quote(&praca.codigo_operadora),
         &quote(&praca.nome),
         &quote(&praca.situacao),
         &quote(&praca.rodovia),
@@ -181,7 +181,7 @@ async fn create_praca(data: String, pool: web::Data<Pool>) -> impl Responder {
         &quote(&praca.jurisdicao),
         &quote(praca.cobranca_especial),
         &quote(&praca.categoria),
-        &quote(&praca.data_de_alteracao),
+        &quote(&praca.data_alteracao),
         &quote(&praca.razao_social),
         &quote(&praca.cnpj),
         &quote(&praca.email),

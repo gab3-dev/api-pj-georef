@@ -3,10 +3,10 @@ CREATE TABLE IF NOT EXISTS operadora (
     data_operacao VARCHAR(100),
     responsavel VARCHAR(100),
     grupo VARCHAR(100),
-    codigo_operadora INT,
+    codigo_operadora INT UNIQUE,
     operadora VARCHAR(255),
     razao_social VARCHAR(100),
-    cnpj VARCHAR(100),
+    cnpj VARCHAR(100) UNIQUE,
     email VARCHAR(100),
     telefone VARCHAR(100),
     PRIMARY KEY(id_operadora)
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS praca (
     id_praca INT GENERATED ALWAYS AS IDENTITY,
     longitude INT,
     latitude INT,
-    id_operadora INT,
+    codigo_operadora INT,
     nome VARCHAR(255),
     situacao VARCHAR(100),
     rodovia VARCHAR(100),
@@ -27,21 +27,21 @@ CREATE TABLE IF NOT EXISTS praca (
     sentido VARCHAR(100),
     cidade VARCHAR(100),
     estado VARCHAR(100),
-    codigo_praca SMALLINT,
+    codigo_praca INT,
     orientacao VARCHAR(100),
     tipo VARCHAR(100),
     jurisdicao VARCHAR(100),
     cobranca_especial BOOLEAN,
     categoria VARCHAR(100),
-    data_de_alteracao VARCHAR(100),
+    data_alteracao VARCHAR(100),
     razao_social VARCHAR(100),
-    cnpj VARCHAR(100),
+    cnpj VARCHAR(100) UNIQUE,
     email VARCHAR(100),
     telefone VARCHAR(100),
-    PRIMARY KEY(id_operadora),
+    PRIMARY KEY(id_praca),
     CONSTRAINT fk_operadora
-      FOREIGN KEY(id_operadora) 
-        REFERENCES operadora(id_operadora)
+      FOREIGN KEY(codigo_operadora) 
+        REFERENCES operadora(codigo_operadora)
 );
 
 -- SELECT JSON_OBJECT(
