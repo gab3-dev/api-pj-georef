@@ -18,7 +18,8 @@ struct Operadora {
     telefone: String,
 }
 
-impl Operadora {
+#[allow(unused)]
+impl Operadora {    
     pub fn from(row: &Row) -> Operadora {
         Operadora {
             data_operacao: row.get(1),
@@ -109,7 +110,8 @@ struct Praca {
     telefone: String,
 }
 
-impl Praca {
+#[allow(unused)]
+impl Praca {    
     pub fn from(row: &Row) -> Praca {
         Praca {
             longitude: row.get(1),

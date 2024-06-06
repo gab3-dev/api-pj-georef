@@ -1,4 +1,5 @@
-use actix_web::{http, http::KeepAlive, web::{self}, App, HttpServer};
+use actix_web::{http, middleware, http::KeepAlive, web::{self}, App, HttpServer};
+use actix_multipart::form::tempfile::TempFileConfig;
 use actix_cors::Cors;
 use deadpool_postgres::{Config, PoolConfig, Runtime};
 use tokio_postgres::NoTls;
@@ -6,13 +7,16 @@ use std::env;
 
 mod db;
 use db::*;
-mod files;
 use files::*;
+mod files;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "debug");
     env_logger::init();
+
+    log::info!("creating temporary upload directory");
+    std::fs::create_dir_all("./tmp")?;
 
     let mut cfg = Config::new();
     cfg.host = Some(
@@ -37,6 +41,8 @@ async fn main() -> std::io::Result<()> {
 
     let http_port = env::var("HTTP_PORT").unwrap_or("80".into());
 
+    log::info!("Running on port {http_port}");
+
     HttpServer::new(move || {
         let cors = Cors::default()
             .send_wildcard()
@@ -48,11 +54,16 @@ async fn main() -> std::io::Result<()> {
             .max_age(3600);
         App::new() // <- register the created data
             .wrap(cors)
+            .wrap(middleware::Logger::default())
+            .app_data(TempFileConfig::default().directory("./tmp"))
             .app_data(web::Data::new(pool.clone()))
             .service(create_operadora)
             .service(create_praca)
-            .service(upload_stats)
-            .route("/", web::get().to(|| async { "Hello, world!" }))
+            .service(
+                web::resource("/")
+                    .route(web::get().to(index))
+                    .route(web::post().to(save_files)),
+                )
     })
     .keep_alive(KeepAlive::Os)
     .bind(format!("0.0.0.0:{http_port}"))?
@@ -60,5 +71,4 @@ async fn main() -> std::io::Result<()> {
     .await?;
 
     Ok(())
-
 }
