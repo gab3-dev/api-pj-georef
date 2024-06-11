@@ -1,6 +1,8 @@
 services:
   api01: &api
     build: .
+    volumes:
+      - ./tmp:/actix/tmp
     environment:
       HTTP_PORT: 8080
       DB_HOST: localhost
@@ -43,6 +45,7 @@ services:
       POSTGRES_PASSWORD: 1234
       POSTGRES_DB: pj_georef
     volumes:
+      - ./tmp:/uploaded
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./postgresql.conf:/docker-entrypoint-initdb.d/postgresql.conf
     command: postgres -c config_file=/docker-entrypoint-initdb.d/postgresql.conf
