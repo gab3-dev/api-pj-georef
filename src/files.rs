@@ -5,7 +5,7 @@ use actix_multipart::{
     },
 };
 
-use actix_web::{post, Error, HttpResponse, Responder};
+use actix_web::{Error, HttpResponse, Responder};
 
 pub async fn index() -> HttpResponse {
     let html = r#"<html>
