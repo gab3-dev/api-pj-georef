@@ -130,3 +130,15 @@ docker exec -it api-pj-georef-db-1 sh
 ```bash
 psql -U root -h localhost -p 5432 -d pj_georef
 ```
+
+```bash
+\copy operadora from '/uploaded/pedagios-modelo.csv' delimiter ';' csv header;
+```
+
+```bash
+\copy operadora (codigo_operadora,operadora,CNPJ,razao_social,data_alteracao,email,telefone,grupo,responsavel) from '/uploaded/operadora.csv' delimiter ';' csv header encoding 'ISO88599';
+```
+
+```bash
+\copy pedagio from '/uploaded/pedagios2.csv' delimiter ';' csv header encoding 'ISO88599';
+```
