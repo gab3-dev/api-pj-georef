@@ -7,7 +7,7 @@ use tokio_postgres::Row;
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "operadora")]
 struct Operadora {
-    data_operacao: String,
+    data_alteracao: String,
     responsavel: String,
     grupo: String,
     codigo_operadora: i32,
@@ -22,7 +22,7 @@ struct Operadora {
 impl Operadora {    
     pub fn from(row: &Row) -> Operadora {
         Operadora {
-            data_operacao: match row.get(1) {
+            data_alteracao: match row.get(1) {
                 Some(x) => x,
                 None => "".to_string(),
             },
@@ -68,7 +68,7 @@ async fn create_operadora(data: String, pool: web::Data<Pool>) -> impl Responder
     let operadora: Operadora = new_operadora(data);
     let mut sql_builder = SqlBuilder::insert_into("operadora");
     sql_builder
-        .field("DATA_OPERACAO")
+        .field("DATA_ALTERACAO")
         .field("RESPONSAVEL")
         .field("GRUPO")
         .field("CODIGO_OPERADORA")
@@ -78,7 +78,7 @@ async fn create_operadora(data: String, pool: web::Data<Pool>) -> impl Responder
         .field("EMAIL")
         .field("TELEFONE");
     sql_builder.values(&[
-        &quote(&operadora.data_operacao),
+        &quote(&operadora.data_alteracao),
         &quote(&operadora.responsavel),
         &quote(&operadora.grupo),
         &quote(operadora.codigo_operadora),
