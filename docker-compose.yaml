@@ -48,6 +48,7 @@ services:
       - ./tmp:/uploaded
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./postgresql.conf:/docker-entrypoint-initdb.d/postgresql.conf
+      - ./postgres-data:/var/lib/postgresql/data
     command: postgres -c config_file=/docker-entrypoint-initdb.d/postgresql.conf
     network_mode: host
     healthcheck:
