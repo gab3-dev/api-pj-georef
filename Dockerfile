@@ -16,4 +16,4 @@ RUN cargo build --release
 
 EXPOSE 80
 
-CMD ./target/release/api-pj-georef
+CMD ./target/release/bgm
