@@ -1,5 +1,5 @@
 [package]
-name = "api-pj-georef"
+name = "bgm"
 version = "0.1.0"
 edition = "2021"
 
@@ -18,3 +18,4 @@ tokio = "1.37.0"
 tokio-postgres = "0.7.10"
 actix-cors = "0.7.0"
 log = "0.4.21"
+sqlx = "0.7.4"
