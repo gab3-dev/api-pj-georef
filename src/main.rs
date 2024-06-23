@@ -58,7 +58,11 @@ async fn main() -> std::io::Result<()> {
             .app_data(TempFileConfig::default().directory("./tmp"))
             .app_data(web::Data::new(pool.clone()))
             .service(create_operadora)
-            .service(create_praca)
+            .service(create_pedagio)
+            .service(get_all_operadoras)
+            .service(get_all_pedagio)
+            .service(get_operadora_by_id)
+            .service(get_pedagio_by_id)
             .service(
                 web::resource("/")
                     .route(web::get().to(index))
