@@ -1,4 +1,4 @@
-use actix_web::{post, web, HttpResponse, Responder};
+use actix_web::{get, post, web, HttpResponse, Responder};
 use deadpool_postgres::Pool;
 use serde::{Deserialize, Serialize};
 use sql_builder::{quote, SqlBuilder};
@@ -22,15 +22,42 @@ struct Operadora {
 impl Operadora {    
     pub fn from(row: &Row) -> Operadora {
         Operadora {
-            data_operacao: row.get(1),
-            responsavel: row.get(2),
-            grupo: row.get(3),
-            codigo_operadora: row.get(4),
-            operadora: row.get(5),
-            razao_social: row.get(6),
-            cnpj: row.get(7),
-            email: row.get(8),
-            telefone: row.get(9),
+            data_operacao: match row.get(1) {
+                Some(x) => x,
+                None => "".to_string(),
+            },
+            responsavel: match row.get(2) {
+                Some(x) => x,
+                None => "".to_string(),
+            },
+            grupo: match row.get(3) {
+                Some(x) => x,
+                None => "".to_string(),
+            },
+            codigo_operadora: match row.get(4) {
+                Some(x) => x,
+                None => -1,                
+            },
+            operadora: match row.get(5) {
+                Some(x) => x,
+                None => "".to_string(),                
+            },
+            razao_social: match row.get(6) {
+                Some(x) => x,
+                None => "".to_string(),
+            },
+            cnpj: match row.get(7) {
+                Some(x) => x,
+                None => "".to_string(),                            
+            },
+            email: match row.get(8) {
+                Some(x) => x,
+                None => "".to_string(),                            
+            },
+            telefone: match row.get(9) {
+                Some(x) => x,
+                None => "".to_string(),                            
+            },
         }
     }
 }
@@ -77,6 +104,54 @@ async fn create_operadora(data: String, pool: web::Data<Pool>) -> impl Responder
     }
 }
 
+#[get("/get-operadoras")]
+async fn get_all_operadoras(pool: web::Data<Pool>) -> impl Responder {
+    let mut sql = String::new();
+    sql.push_str("SELECT * FROM operadora;");
+    let conn = match pool.get().await {
+        Ok(x) => x,
+        Err(e) => {
+            return HttpResponse::InternalServerError().body("Erro ao conectar ao banco de dados".to_owned() + e.to_string().as_str());
+        }
+    };
+    let result = conn.query(sql.as_str(), &[]).await;
+    match result {
+        Ok(rows) => {
+            let mut operadoras = Vec::new();
+            for row in rows {
+                operadoras.push(Operadora::from(&row));
+            }
+            return HttpResponse::Ok().json(operadoras);
+        }
+        Err(_) => return HttpResponse::InternalServerError().body("Erro ao buscar operadoras"),
+    }
+}
+
+#[get("/get-operadora/{codigo_operadora}")]
+async fn get_operadora_by_id(pool: web::Data<Pool>, codigo_operadora: web::Path<i32>) -> impl Responder {
+    let mut sql = String::new();
+    sql.push_str("SELECT * FROM operadora WHERE CODIGO_OPERADORA = ");
+    sql.push_str(&codigo_operadora.to_string());
+    sql.push_str(";");
+    let conn = match pool.get().await {
+        Ok(x) => x,
+        Err(e) => {
+            return HttpResponse::InternalServerError().body("Erro ao conectar ao banco de dados".to_owned() + e.to_string().as_str());
+        }
+    };
+    let result = conn.query(sql.as_str(), &[]).await;
+    match result {
+        Ok(rows) => {
+            let mut operadoras = Vec::new();
+            for row in rows {
+                operadoras.push(Operadora::from(&row));
+            }
+            return HttpResponse::Ok().json(operadoras);
+        }
+        Err(_) => return HttpResponse::InternalServerError().body("Erro ao buscar operadoras"),
+    }
+}
+
 fn new_operadora(json: String) -> Operadora {
     println!("{}", json);    
     let result: Operadora = serde_json::from_str(&json.as_str()).unwrap();
@@ -85,10 +160,10 @@ fn new_operadora(json: String) -> Operadora {
 }
 
 #[derive(Serialize, Deserialize)]
-#[serde(tag = "praca")]
-struct Praca {
-    longitude: i32,
-    latitude: i32,
+#[serde(tag = "pedagio")]
+struct Pedagio {
+    longitude: i64,
+    latitude: i64,
     codigo_operadora: i32,
     nome: String,
     situacao: String,
@@ -97,7 +172,7 @@ struct Praca {
     sentido: String,
     cidade: String,
     estado: String,
-    codigo_praca: i8,
+    codigo_pedagio: i8,
     orientacao: String,
     tipo: String,
     jurisdicao: String,
@@ -111,9 +186,9 @@ struct Praca {
 }
 
 #[allow(unused)]
-impl Praca {    
-    pub fn from(row: &Row) -> Praca {
-        Praca {
+impl Pedagio {    
+    pub fn from(row: &Row) -> Pedagio {
+        Pedagio {
             longitude: row.get(1),
             latitude: row.get(2),
             codigo_operadora: row.get(3),
@@ -124,7 +199,7 @@ impl Praca {
             sentido: row.get(8),
             cidade: row.get(9),
             estado: row.get(10),
-            codigo_praca: row.get(11),
+            codigo_pedagio: row.get(11),
             orientacao: row.get(12),
             tipo: row.get(13),
             jurisdicao: row.get(14),
@@ -139,11 +214,11 @@ impl Praca {
     }
 }
 
-#[post("/create-praca")]
-async fn create_praca(data: String, pool: web::Data<Pool>) -> impl Responder {
+#[post("/create-pedagio")]
+async fn create_pedagio(data: String, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
-    let praca: Praca = new_praca(data);
-    let mut sql_builder = SqlBuilder::insert_into("praca");
+    let pedagio: Pedagio = new_pedagio(data);
+    let mut sql_builder = SqlBuilder::insert_into("pedagio");
     sql_builder
         .field("LONGITUDE")
         .field("LATITUDE")
@@ -167,27 +242,27 @@ async fn create_praca(data: String, pool: web::Data<Pool>) -> impl Responder {
         .field("EMAIL")
         .field("TELEFONE");
     sql_builder.values(&[
-        &quote(praca.longitude),
-        &quote(praca.latitude),
-        &quote(&praca.codigo_operadora),
-        &quote(&praca.nome),
-        &quote(&praca.situacao),
-        &quote(&praca.rodovia),
-        &quote(praca.km),
-        &quote(&praca.sentido),
-        &quote(&praca.cidade),
-        &quote(&praca.estado),
-        &quote(praca.codigo_praca),
-        &quote(&praca.orientacao),
-        &quote(&praca.tipo),
-        &quote(&praca.jurisdicao),
-        &quote(praca.cobranca_especial),
-        &quote(&praca.categoria),
-        &quote(&praca.data_alteracao),
-        &quote(&praca.razao_social),
-        &quote(&praca.cnpj),
-        &quote(&praca.email),
-        &quote(&praca.telefone),
+        &quote(pedagio.longitude),
+        &quote(pedagio.latitude),
+        &quote(&pedagio.codigo_operadora),
+        &quote(&pedagio.nome),
+        &quote(&pedagio.situacao),
+        &quote(&pedagio.rodovia),
+        &quote(pedagio.km),
+        &quote(&pedagio.sentido),
+        &quote(&pedagio.cidade),
+        &quote(&pedagio.estado),
+        &quote(pedagio.codigo_pedagio),
+        &quote(&pedagio.orientacao),
+        &quote(&pedagio.tipo),
+        &quote(&pedagio.jurisdicao),
+        &quote(pedagio.cobranca_especial),
+        &quote(&pedagio.categoria),
+        &quote(&pedagio.data_alteracao),
+        &quote(&pedagio.razao_social),
+        &quote(&pedagio.cnpj),
+        &quote(&pedagio.email),
+        &quote(&pedagio.telefone),
     ]);
     let mut this_sql = match sql_builder.sql() {
         Ok(x) => x,
@@ -199,14 +274,62 @@ async fn create_praca(data: String, pool: web::Data<Pool>) -> impl Responder {
     
     let result = batch_execute(&sql, pool.get_ref().clone()).await;
     match result {
-        Ok(_) => return HttpResponse::Ok().body("Praca inserida com sucesso"),
+        Ok(_) => return HttpResponse::Ok().body("Pedagio inserida com sucesso"),
         Err(_) => return result.unwrap_err(),
     }
 }
 
-fn new_praca(json: String) -> Praca {
+#[get("/get-pedagios")]
+async fn get_all_pedagio(pool: web::Data<Pool>) -> impl Responder {
+    let mut sql = String::new();
+    sql.push_str("SELECT * FROM pedagio;");
+    let conn = match pool.get().await {
+        Ok(x) => x,
+        Err(e) => {
+            return HttpResponse::InternalServerError().body("Erro ao conectar ao banco de dados".to_owned() + e.to_string().as_str());
+        }
+    };
+    let result = conn.query(sql.as_str(), &[]).await;
+    match result {
+        Ok(rows) => {
+            let mut pedagios = Vec::new();
+            for row in rows {
+                pedagios.push(Operadora::from(&row));
+            }
+            return HttpResponse::Ok().json(pedagios);
+        }
+        Err(_) => return HttpResponse::InternalServerError().body("Erro ao buscar pedagios"),
+    }
+}
+
+#[get("/get-pedagio/{codigo_pedagio}")]
+async fn get_pedagio_by_id(pool: web::Data<Pool>, codigo_pedagio: web::Path<i8>) -> impl Responder {
+    let mut sql = String::new();
+    sql.push_str("SELECT * FROM pedagio WHERE CODIGO_PEDAGIO = ");
+    sql.push_str(&codigo_pedagio.to_string());
+    sql.push_str(";");
+    let conn = match pool.get().await {
+        Ok(x) => x,
+        Err(e) => {
+            return HttpResponse::InternalServerError().body("Erro ao conectar ao banco de dados".to_owned() + e.to_string().as_str());
+        }
+    };
+    let result = conn.query(sql.as_str(), &[]).await;
+    match result {
+        Ok(rows) => {
+            let mut pedagios = Vec::new();
+            for row in rows {
+                pedagios.push(Pedagio::from(&row));
+            }
+            return HttpResponse::Ok().json(pedagios);
+        }
+        Err(_) => return HttpResponse::InternalServerError().body("Erro ao buscar pedagios"),
+    }
+}
+
+fn new_pedagio(json: String) -> Pedagio {
     println!("{}", json);
-    let result: Praca = serde_json::from_str(&json.as_str()).unwrap();
+    let result: Pedagio = serde_json::from_str(&json.as_str()).unwrap();
 
     return result;
 }
