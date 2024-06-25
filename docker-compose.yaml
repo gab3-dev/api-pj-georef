@@ -12,8 +12,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.1'
-          memory: '0.8GB'
+          cpus: '0.5'
+          memory: '2.5GB'
     network_mode: host
 
   api02:
@@ -22,6 +22,23 @@ services:
       HTTP_PORT: 8081
       DB_HOST: localhost
       POOL_SIZE: 30
+
+  web: # Frontend
+    build:
+      context: ./web/
+      dockerfile: Dockerfile
+    image: node:latest
+    depends_on:
+      - api01
+      - api02
+    network_mode: host
+    environment:
+      API: localhost:9999
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: '2.5GB'
 
   nginx: # Load Balancer
     image: nginx:latest
@@ -34,8 +51,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.1'
-          memory: '0.5GB'
+          cpus: '1'
+          memory: '3.0GB'
 
   db: # Banco de dados
     image: postgres
@@ -60,5 +77,5 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.7'
-          memory: '1.7GB'
+          cpus: '1'
+          memory: '4.0GB'
