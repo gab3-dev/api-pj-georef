@@ -27,7 +27,6 @@ services:
     build:
       context: ./web/
       dockerfile: Dockerfile
-    image: node:latest
     depends_on:
       - api01
       - api02
