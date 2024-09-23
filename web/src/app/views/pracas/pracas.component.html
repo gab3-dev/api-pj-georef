@@ -1,0 +1,25 @@
+<form #form="ngForm" [formGroup]="pracaForm" (ngSubmit)="onSubmit()">
+    <div *ngFor="let fieldInfo of fieldInfoList" class="text-field">
+        <label>{{fieldInfo.label}}</label>
+        <input id="{{fieldInfo.id}}" type="{{fieldInfo.type}}" name="{{fieldInfo.name}}" placeholder="{{fieldInfo.placeholder}}" formControlName="{{fieldInfo.name}}"/>
+    </div>
+    <div class="text-field">
+        <label>Sentido</label>
+        <select formControlName="sentido" required>
+            <option value="" disabled selected>Selecione uma opção</option>
+            <option value="norte">Norte</option>
+            <option value="sul">Sul</option>
+            <option value="leste">Leste</option>
+            <option value="oeste">Oeste</option>
+        </select>
+    </div>
+    <div class="text-field">
+        <label>Cobrança Especial</label>
+        <select formControlName="cobranca_especial" required>
+            <option value="" disabled selected>Selecione uma opção</option>
+            <option value="true">Cobrança especial</option>
+            <option value="false">Cobrança não especial</option>
+        </select>
+    </div>
+        <input type="submit" value="Enviar" [disabled]="pracaForm.invalid" />
+</form>

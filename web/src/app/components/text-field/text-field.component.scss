@@ -1,0 +1,21 @@
+$fontFamily: 'Roboto', sans-serif;
+
+.text-field {
+    font-family: $fontFamily;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+.text-field label {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    padding-left: 0.5rem;
+}
+
+.text-field input {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 0.25rem;
+}
