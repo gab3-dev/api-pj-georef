@@ -62,7 +62,7 @@ impl Operadora {
     }
 }
 
-#[post("/create-operadora")]
+#[post("/api/create-operadora")]
 async fn create_operadora(data: String, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
     let operadora: Operadora = new_operadora(data);
@@ -104,7 +104,7 @@ async fn create_operadora(data: String, pool: web::Data<Pool>) -> impl Responder
     }
 }
 
-#[get("/get-operadoras")]
+#[get("/api/get-operadoras")]
 async fn get_all_operadoras(pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
     sql.push_str("SELECT * FROM operadora;");
@@ -127,7 +127,7 @@ async fn get_all_operadoras(pool: web::Data<Pool>) -> impl Responder {
     }
 }
 
-#[get("/get-operadora/{codigo_operadora}")]
+#[get("/api/get-operadora/{codigo_operadora}")]
 async fn get_operadora_by_id(pool: web::Data<Pool>, codigo_operadora: web::Path<i32>) -> impl Responder {
     let mut sql = String::new();
     sql.push_str("SELECT * FROM operadora WHERE CODIGO_OPERADORA = ");
@@ -214,7 +214,7 @@ impl Pedagio {
     }
 }
 
-#[post("/create-pedagio")]
+#[post("/api/create-pedagio")]
 async fn create_pedagio(data: String, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
     let pedagio: Pedagio = new_pedagio(data);
@@ -279,7 +279,7 @@ async fn create_pedagio(data: String, pool: web::Data<Pool>) -> impl Responder {
     }
 }
 
-#[get("/get-pedagios")]
+#[get("/api/get-pedagios")]
 async fn get_all_pedagio(pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
     sql.push_str("SELECT * FROM pedagio;");
@@ -302,7 +302,7 @@ async fn get_all_pedagio(pool: web::Data<Pool>) -> impl Responder {
     }
 }
 
-#[get("/get-pedagio/{codigo_pedagio}")]
+#[get("/api/get-pedagio/{codigo_pedagio}")]
 async fn get_pedagio_by_id(pool: web::Data<Pool>, codigo_pedagio: web::Path<i8>) -> impl Responder {
     let mut sql = String::new();
     sql.push_str("SELECT * FROM pedagio WHERE CODIGO_PEDAGIO = ");
