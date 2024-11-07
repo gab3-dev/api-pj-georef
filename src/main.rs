@@ -7,8 +7,10 @@ use std::env;
 
 mod db;
 use db::*;
-use files::*;
 mod files;
+use files::*;
+mod import;
+use import::*;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -63,6 +65,14 @@ async fn main() -> std::io::Result<()> {
             .service(get_all_pedagio)
             .service(get_operadora_by_id)
             .service(get_pedagio_by_id)
+            .service(create_tipo_tarifa)
+            .service(get_all_tipos_tarifa)
+            .service(get_tarifa_by_id)
+            .service(create_tarifa)
+            .service(get_all_tarifas)
+            .service(get_tarifa_by_id)
+            .service(import_tarifas)
+            .service(import_operadoras)
             .service(
                 web::resource("/")
                     .route(web::get().to(index))
