@@ -108,7 +108,6 @@ async fn get_all_tipos_tarifa(pool: web::Data<Pool>) -> impl Responder {
 }
 
 #[derive(Serialize, Deserialize)]
-#[serde(tag = "tarifa")]
 struct Tarifa {
     id_tarifa: i32,
     id_tipo_tarifa: i32,
