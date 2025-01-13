@@ -1,7 +1,15 @@
-<form #form="ngForm" [formGroup]="operadoraForm" (ngSubmit)="onSubmit()">
-    <div *ngFor="let fieldInfo of fieldInfoList" class="text-field">
-        <label>{{fieldInfo.label}}</label>
-        <input id="{{fieldInfo.id}}" type="{{fieldInfo.type}}" name="{{fieldInfo.name}}" placeholder="{{fieldInfo.placeholder}}" formControlName="{{fieldInfo.name}}"/>
-    </div>    
-    <input type="submit" value="Enviar" [disabled]="operadoraForm.invalid" />
-</form>
+<mat-tab-group>
+    <mat-tab label="Cadastrar Operadora">
+        <form #form="ngForm" [formGroup]="operadoraForm" (ngSubmit)="onSubmit()">
+            <div *ngFor="let fieldInfo of fieldInfoList" class="text-field">
+                <label>{{fieldInfo.label}}</label>
+                <input id="{{fieldInfo.id}}" type="{{fieldInfo.type}}" name="{{fieldInfo.name}}"
+                    placeholder="{{fieldInfo.placeholder}}" formControlName="{{fieldInfo.name}}" />
+            </div>
+            <input type="submit" value="Enviar" [disabled]="operadoraForm.invalid" />
+        </form>
+    </mat-tab>
+    <mat-tab label="Listar Operadoras">
+        <app-operadoras-list></app-operadoras-list>
+    </mat-tab>
+</mat-tab-group>

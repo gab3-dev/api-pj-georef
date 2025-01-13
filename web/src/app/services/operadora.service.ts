@@ -17,7 +17,7 @@ export class OperadoraService {
       type: 'date',
       required: true,
       placeholder: 'Digite a Data da operacao',
-      value: ''    
+      value: ''
     },
     {
       id: 2,
@@ -96,20 +96,35 @@ export class OperadoraService {
   getAllFields(): FieldInfo[] {
     return this.fieldInfoList;
   }
-  
+
   createOperadora(data: any) {
     data = parseOperadoraJson(data);
 
-    this.http.post('http://ec2-52-67-218-45.sa-east-1.compute.amazonaws.com:9999/create-operadora', data,{
+    this.http.post('localhost:9999/create-operadora', data, {
       headers: {
         'Content-Type': 'application/json'
       },
       responseType: 'text',
       observe: 'response',
     },).subscribe(response => {
-      if(response.status === 200) {
+      if (response.status === 200) {
         alert(response.body);
       }
     });
+  }
+
+  getOperadoras() {
+    // Chama api e formata os dados para objeto
+    // API retorna os dados em json
+    let result: any[] = [];
+    this.http.get('http://localhost:9999/api/get-operadoras', {
+      responseType: 'json',
+      observe: 'response'
+    }).subscribe(res => {
+      console.log(res.body);
+      result = res.body as any[];
+    });
+    console.log(result);
+    return result;
   }
 }
