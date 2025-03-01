@@ -230,4 +230,17 @@ export class PracaService {
       }
     });
   }
+
+  getPedagios() {
+    let result: any[] = [];
+    this.http.get('http://localhost:9999/api/get-pedagios', {
+      responseType: 'json',
+      observe: 'response'
+    }).subscribe(res => {
+      console.log(res.body);
+      result = res.body as any[];
+    });
+    console.log(result);
+    return result;
+  }
 }
