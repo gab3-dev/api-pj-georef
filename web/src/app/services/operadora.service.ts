@@ -100,7 +100,7 @@ export class OperadoraService {
   createOperadora(data: any) {
     data = parseOperadoraJson(data);
 
-    this.http.post('localhost:9999/create-operadora', data, {
+    this.http.post('http://ec2-54-233-34-194.sa-east-1.compute.amazonaws.com:9999/create-operadora', data, {
       headers: {
         'Content-Type': 'application/json'
       },
@@ -117,7 +117,7 @@ export class OperadoraService {
     // Chama api e formata os dados para objeto
     // API retorna os dados em json
     let result: any[] = [];
-    this.http.get('http://localhost:9999/api/get-operadoras', {
+    this.http.get('http://ec2-54-233-34-194.sa-east-1.compute.amazonaws.com:9999/api/get-operadoras', {
       responseType: 'json',
       observe: 'response'
     }).subscribe(res => {
