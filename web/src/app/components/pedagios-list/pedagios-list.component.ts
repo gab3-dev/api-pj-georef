@@ -55,7 +55,7 @@ export class PedagiosListComponent {
 
   pedagioService: PedagioService = inject(PedagioService);
 
-  constructor() {
+  ngAfterViewInit() {
     this.rowData = this.pedagioService.getPedagios();
   }
 }

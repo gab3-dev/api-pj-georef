@@ -43,7 +43,7 @@ export class OperadorasListComponent {
 
   operadoraService: OperadoraService = inject(OperadoraService);
 
-  constructor() {
+  ngAfterViewInit() {
     this.rowData = this.operadoraService.getOperadoras();
   }
 }

@@ -90,7 +90,7 @@ export class TarifasListComponent {
 
   tarifasService: TarifasService = inject(TarifasService);
 
-  constructor() {
+  ngAfterViewInit() {
     this.rowData = this.tarifasService.getTarifas();
   }
 }
