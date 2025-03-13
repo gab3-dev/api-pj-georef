@@ -4,6 +4,8 @@ import { AgGridAngular } from 'ag-grid-angular'; // Angular Data Grid Component
 import type { ColDef } from 'ag-grid-community'; // Column Definition Type Interface
 
 import {
+  GridApi,
+  GridReadyEvent,
   ModuleRegistry,
   ValueCacheModule,
   AlignedGridsModule,
@@ -29,6 +31,7 @@ ModuleRegistry.registerModules([ValueCacheModule,
 })
 
 export class TarifasListComponent {
+  private gridApi!: GridApi;
   public rowData: any[] | null = null;
 
   public columnDefs: ColDef[] = [
@@ -90,7 +93,13 @@ export class TarifasListComponent {
 
   tarifasService: TarifasService = inject(TarifasService);
 
-  ngAfterViewInit() {
-    this.rowData = this.tarifasService.getTarifas();
+  onGridReady(params: GridReadyEvent) {
+    this.gridApi = params.api;
+  }
+
+  ngOnInit() {
+    this.tarifasService.getTarifas().subscribe((tarifas) => {
+      this.rowData = tarifas.body as any[];
+    });
   }
 }

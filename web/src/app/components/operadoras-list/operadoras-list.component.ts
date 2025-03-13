@@ -3,6 +3,8 @@ import { OperadoraService } from '../../services/operadora.service';
 import { AgGridAngular } from 'ag-grid-angular'; // Angular Data Grid Component
 import type { ColDef } from 'ag-grid-community'; // Column Definition Type Interface
 import {
+  GridApi,
+  GridReadyEvent,
   ModuleRegistry,
   ValueCacheModule,
   AlignedGridsModule,
@@ -27,6 +29,7 @@ ModuleRegistry.registerModules([ValueCacheModule,
   styleUrl: './operadoras-list.component.scss'
 })
 export class OperadorasListComponent {
+  private gridApi!: GridApi;
   public rowData: any[] | null = null;
 
   public columnDefs: ColDef[] = [
@@ -43,7 +46,14 @@ export class OperadorasListComponent {
 
   operadoraService: OperadoraService = inject(OperadoraService);
 
-  ngAfterViewInit() {
-    this.rowData = this.operadoraService.getOperadoras();
+  onGridReady(params: GridReadyEvent) {
+    this.gridApi = params.api;
+  }
+
+  ngOnInit() {
+    this.operadoraService.getOperadoras().subscribe((operadoras) => {
+      this.rowData = operadoras.body as any[];
+    });
+    this.gridApi.setGridOption("rowData", this.rowData);
   }
 }
