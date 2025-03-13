@@ -20,15 +20,15 @@ VALUES
 
 CREATE TABLE IF NOT EXISTS pedagio (
     id_pedagio INT,
-    longitude INT,
-    latitude INT,
+    longitude BIGINT,
+    latitude BIGINT,
     nome VARCHAR(50),
     codigo_operadora INT,
     concessionaria VARCHAR(100),
     situacao VARCHAR(20),
     sigla VARCHAR(20),
     rodovia VARCHAR(100),
-    km REAL,
+    km DOUBLE PRECISION,
     id_trecho INT,
     sentido VARCHAR(10),
     cidade VARCHAR(50),
@@ -86,12 +86,12 @@ VALUES
     (16, NULL, 'Carros Forte', 2, 'Dupla', 2),
     (17, 9, 'Motocicleta, motonetas e bicicleta a motor', 1, 'Simples', 2);
 
-CREATE TABLE IF NOT EXISTS tarifa (
+CREATE TABLE IF NOT EXISTS tarifas (
     id_tarifa INT NOT NULL PRIMARY KEY,
     id_tipo_tarifa INT NOT NULL,
     id_pedagio INT NOT NULL,
-    multiplicador FLOAT,
-    valor REAL,
+    multiplicador DOUBLE PRECISION,
+    valor DOUBLE PRECISION,
     data_criacao TIMESTAMP,
     data_atualizacao TIMESTAMP,
     situacao VARCHAR(20),
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS tarifa (
 );
 
 -- insert for pedagio 2
-INSERT INTO tarifa (id_tarifa, id_tipo_tarifa, id_pedagio, multiplicador, valor, data_criacao, data_atualizacao, situacao, tipo)
+INSERT INTO tarifas (id_tarifa, id_tipo_tarifa, id_pedagio, multiplicador, valor, data_criacao, data_atualizacao, situacao, tipo)
 VALUES 
     (1, 1, 2, 1.0, 10.0, '2021-06-01', '2021-06-01', 'Ativo', 'Normal'),
     (2, 2, 2, 1.0, 20.0, '2021-06-01', '2021-06-01', 'Ativo', 'Normal'),

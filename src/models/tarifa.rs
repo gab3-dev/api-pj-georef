@@ -124,15 +124,15 @@ struct Tarifa {
 impl Tarifa {
     pub fn from(row: &Row) -> Tarifa {
         Tarifa {
-            id_tarifa: row.get(0),
-            id_tipo_tarifa: row.get(1),
-            id_pedagio: row.get(2),
-            multiplicador: row.get(3),
-            valor: row.get(4),
-            data_criacao: row.get(5),
-            data_atualizacao: row.get(6),
-            situacao: row.get(7),
-            tipo: row.get(8),
+            id_tarifa: row.get("id_tarifa"),
+            id_tipo_tarifa: row.get("id_tipo_tarifa"),
+            id_pedagio: row.get("id_pedagio"),
+            multiplicador: row.get("multiplicador"),
+            valor: row.get("valor"),
+            data_criacao: row.get("data_criacao"),
+            data_atualizacao: row.get("data_atualizacao"),
+            situacao: row.get("situacao"),
+            tipo: row.get("tipo"),
         }
     }
 
@@ -146,7 +146,7 @@ impl Tarifa {
 async fn create_tarifa(data: String, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
     let tarifa: Tarifa = Tarifa::new(data);
-    let mut sql_builder = SqlBuilder::insert_into("tarifa");
+    let mut sql_builder = SqlBuilder::insert_into("tarifas");
     sql_builder
         .field("ID_TIPO_TARIFA")
         .field("ID_PEDAGIO")
@@ -184,7 +184,7 @@ async fn create_tarifa(data: String, pool: web::Data<Pool>) -> impl Responder {
 #[get("/api/get-tarifas")]
 async fn get_all_tarifas(pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
-    sql.push_str("SELECT * FROM tarifa;");
+    sql.push_str("SELECT * FROM tarifas;");
     log::info!("sql: {}", sql);
     let conn = match pool.get().await {
         Ok(x) => x,
@@ -194,7 +194,7 @@ async fn get_all_tarifas(pool: web::Data<Pool>) -> impl Responder {
         }
     };
     let result = conn.query(sql.as_str(), &[]).await;
-    log::info!("result: {:?}", result);
+    // log::info!("result: {:?}", result);
     match result {
         Ok(rows) => {
             let mut tarifas = Vec::new();
@@ -210,7 +210,7 @@ async fn get_all_tarifas(pool: web::Data<Pool>) -> impl Responder {
 #[get("/api/get-tarifa/{id_tarifa}")]
 async fn get_tarifa_by_id(pool: web::Data<Pool>, id_tarifa: web::Path<i32>) -> impl Responder {
     let mut sql = String::new();
-    sql.push_str("SELECT * FROM tarifa WHERE ID_TARIFA = ");
+    sql.push_str("SELECT * FROM tarifas WHERE ID_TARIFA = ");
     sql.push_str(&id_tarifa.to_string());
     sql.push_str(";");
     let conn = match pool.get().await {

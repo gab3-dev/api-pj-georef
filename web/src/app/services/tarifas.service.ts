@@ -12,7 +12,7 @@ export class TarifasService {
     // Chama api e formata os dados para objeto
     // API retorna os dados em json
     let result: any[] = [];
-    this.http.get('http://localhost:9999/get-tarifas', {
+    this.http.get('http://localhost:9999/api/get-tarifas', {
       responseType: 'json',
       observe: 'response'
     }).subscribe(res => {

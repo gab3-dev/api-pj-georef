@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { TarifasService } from '../../services/tarifas.service';
 import { AgGridAngular } from 'ag-grid-angular'; // Angular Data Grid Component
 import type { ColDef } from 'ag-grid-community'; // Column Definition Type Interface
+
 import {
   ModuleRegistry,
   ValueCacheModule,
@@ -25,71 +27,70 @@ ModuleRegistry.registerModules([ValueCacheModule,
   templateUrl: './tarifas-list.component.html',
   styleUrl: './tarifas-list.component.scss'
 })
+
 export class TarifasListComponent {
-  public rowData: any[] | null = [
-    {
-      make: "Fiat",
-      model: "500",
-      price: 15774,
-      electric: false,
-      month: "January",
-    },
-    {
-      make: "Nissan",
-      model: "Juke",
-      price: 20675,
-      electric: false,
-      month: "March",
-    },
-    {
-      make: "Vauxhall",
-      model: "Corsa",
-      price: 18460,
-      electric: false,
-      month: "July",
-    },
-    {
-      make: "Volvo",
-      model: "EX30",
-      price: 33795,
-      electric: true,
-      month: "September",
-    },
-    {
-      make: "Mercedes",
-      model: "Maybach",
-      price: 175720,
-      electric: false,
-      month: "December",
-    },
-    {
-      make: "Vauxhall",
-      model: "Astra",
-      price: 25795,
-      electric: false,
-      month: "April",
-    },
-    {
-      make: "Fiat",
-      model: "Panda",
-      price: 13724,
-      electric: false,
-      month: "November",
-    },
-    {
-      make: "Jaguar",
-      model: "I-PACE",
-      price: 69425,
-      electric: true,
-      month: "May",
-    },
-  ];
+  public rowData: any[] | null = null;
 
   public columnDefs: ColDef[] = [
-    { field: 'make', flex: 1, minWidth: 100 },
-    { field: 'model', flex: 1, minWidth: 100 },
-    { field: 'price', flex: 1, minWidth: 100 },
-    { field: 'electric', flex: 1, minWidth: 100 },
-    { field: 'month', flex: 1, minWidth: 100 },
+    {
+      field: 'id_tarifa',
+      headerName: 'ID Tarifa',
+      sortable: true,
+      filter: true
+    },
+    {
+      field: 'id_tipo_tarifa',
+      headerName: 'ID Tipo Tarifa',
+      sortable: true,
+      filter: true
+    },
+    {
+      field: 'id_pedagio',
+      headerName: 'ID Pedágio',
+      sortable: true,
+      filter: true
+    },
+    {
+      field: 'multiplicador',
+      headerName: 'Multiplicador',
+      sortable: true,
+      filter: true
+    },
+    {
+      field: 'valor',
+      headerName: 'Valor',
+      sortable: true,
+      filter: true
+    },
+    {
+      field: 'data_criacao',
+      headerName: 'Data Criação',
+      sortable: true,
+      filter: true
+    },
+    {
+      field: 'data_atualizacao',
+      headerName: 'Data Atualização',
+      sortable: true,
+      filter: true
+    },
+    {
+      field: 'situacao',
+      headerName: 'Situação',
+      sortable: true,
+      filter: true
+    },
+    {
+      field: 'tipo',
+      headerName: 'Tipo',
+      sortable: true,
+      filter: true
+    }
   ];
+
+  tarifasService: TarifasService = inject(TarifasService);
+
+  constructor() {
+    this.rowData = this.tarifasService.getTarifas();
+  }
 }

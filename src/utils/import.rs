@@ -45,9 +45,9 @@ pub async fn import_operadoras(
                 .json(format!("{{\"operadoras_importadas\": {}}}", idx)))
         }
         Err(e) => {
-            if (e.to_string().contains(
+            if e.to_string().contains(
                 "duplicate key value violates unique constraint \"operadora_codigo_operadora_key\"",
-            )) {
+            ) {
                 let error_msg = e.to_string();
                 if let Some(detail_start) = error_msg.find("DETAIL:") {
                     let details = error_msg[detail_start..]
@@ -94,7 +94,7 @@ pub async fn import_tarifas(
 
     let path_on_server = path.clone().replace("./tmp/", "/uploaded/");
 
-    log::info!("importing operadoras from {path_on_server}");
+    log::info!("importing tarifas from {path_on_server}");
     let client = pool.get().await.unwrap();
 
     let mut sql = String::new();

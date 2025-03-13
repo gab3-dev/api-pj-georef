@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FieldInfo } from '../../models/field-info';
 import { NgFor, formatDate } from '@angular/common';
-import { PracaService } from '../../services/praca.service';
+import { PedagioService } from '../../services/pedagio.service';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
 @Component({
@@ -12,7 +12,7 @@ import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 })
 export class PedagiosFormComponent {
   fieldInfoList: FieldInfo[] = [];
-  pracaService: PracaService = inject(PracaService);
+  PedagioService: PedagioService = inject(PedagioService);
 
   pracaForm = new FormGroup({
     codigo: new FormControl<number>(
@@ -68,10 +68,10 @@ export class PedagiosFormComponent {
     if (this.pracaForm.value.data_alteracao) {
       this.pracaForm.value.data_alteracao = formatDate(this.pracaForm.value.data_alteracao, 'yyyy-MM-dd', 'en-US');
     }
-    this.pracaService.createPraca(this.pracaForm.value);
+    this.PedagioService.createPraca(this.pracaForm.value);
   }
 
   constructor() {
-    this.fieldInfoList = this.pracaService.getAllFields();
+    this.fieldInfoList = this.PedagioService.getAllFields();
   }
 }

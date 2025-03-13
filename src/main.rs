@@ -1,16 +1,20 @@
-use actix_web::{http, middleware, http::KeepAlive, web::{self}, App, HttpServer};
-use actix_multipart::form::tempfile::TempFileConfig;
 use actix_cors::Cors;
+use actix_multipart::form::tempfile::TempFileConfig;
+use actix_web::{
+    http,
+    http::KeepAlive,
+    middleware,
+    web::{self},
+    App, HttpServer,
+};
 use deadpool_postgres::{Config, PoolConfig, Runtime};
-use tokio_postgres::NoTls;
 use std::env;
+use tokio_postgres::NoTls;
 
-mod db;
-use db::*;
-mod files;
-use files::*;
-mod import;
-use import::*;
+mod models;
+use models::*;
+mod utils;
+use utils::*;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -77,7 +81,7 @@ async fn main() -> std::io::Result<()> {
                 web::resource("/")
                     .route(web::get().to(index))
                     .route(web::post().to(save_files)),
-                )
+            )
     })
     .keep_alive(KeepAlive::Os)
     .bind(format!("0.0.0.0:{http_port}"))?

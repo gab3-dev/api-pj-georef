@@ -6,7 +6,7 @@ import { parsePracaJson } from '../utils/handle';
 @Injectable({
   providedIn: 'root'
 })
-export class PracaService {
+export class PedagioService {
   constructor(private http: HttpClient) { }
   fieldInfoList: FieldInfo[] = [
     {
@@ -229,5 +229,20 @@ export class PracaService {
         alert('Erro ao criar a praça');
       }
     });
+  }
+
+  getPedagios() {
+    // Chama api e formata os dados para objeto
+    // API retorna os dados em json
+    let result: any[] = [];
+    this.http.get('http://localhost:9999/api/get-pedagios', {
+      responseType: 'json',
+      observe: 'response'
+    }).subscribe(res => {
+      console.log(res.body);
+      result = res.body as any[];
+    });
+    console.log(result);
+    return result;
   }
 }

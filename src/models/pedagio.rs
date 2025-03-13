@@ -10,48 +10,47 @@ struct Pedagio {
     nome: String,
     situacao: String,
     rodovia: String,
-    km: i32,
+    km: f64,
     sentido: String,
     cidade: String,
     estado: String,
-    codigo_pedagio: i8,
+    codigo_pedagio: String,
     orientacao: String,
     tipo: String,
     jurisdicao: String,
     cobranca_especial: bool,
     categoria: String,
-    data_alteracao: NaiveDateTime,
+    data_alteracao: String,
     razao_social: String,
     cnpj: String,
     email: String,
     telefone: String,
 }
 
-#[allow(unused)]
 impl Pedagio {
     pub fn from(row: &Row) -> Self {
         Pedagio {
-            longitude: row.get(1),
-            latitude: row.get(2),
-            codigo_operadora: row.get(3),
-            nome: row.get(4),
-            situacao: row.get(5),
-            rodovia: row.get(6),
-            km: row.get(7),
-            sentido: row.get(8),
-            cidade: row.get(9),
-            estado: row.get(10),
-            codigo_pedagio: row.get(11),
-            orientacao: row.get(12),
-            tipo: row.get(13),
-            jurisdicao: row.get(14),
-            cobranca_especial: row.get(15),
-            categoria: row.get(16),
-            data_alteracao: row.get(17),
-            razao_social: row.get(18),
-            cnpj: row.get(19),
-            email: row.get(20),
-            telefone: row.get(21),
+            longitude: row.get("longitude"),
+            latitude: row.get("latitude"),
+            codigo_operadora: row.get("codigo_operadora"),
+            nome: row.get("nome"),
+            situacao: row.get("situacao"),
+            rodovia: row.get("rodovia"),
+            km: row.get("km"),
+            sentido: row.get("sentido"),
+            cidade: row.get("cidade"),
+            estado: row.get("estado"),
+            codigo_pedagio: row.get("codigo"),
+            orientacao: row.get("orientacao"),
+            tipo: row.get("tipo"),
+            jurisdicao: row.get("jurisdicao"),
+            cobranca_especial: row.get("cobranca_especial"),
+            categoria: row.get("categoria"),
+            data_alteracao: row.get("data_alteracao"),
+            razao_social: row.get("razao_social"),
+            cnpj: row.get("cnpj"),
+            email: row.get("email"),
+            telefone: row.get("telefone"),
         }
     }
 
@@ -77,7 +76,7 @@ async fn create_pedagio(data: String, pool: web::Data<Pool>) -> impl Responder {
         .field("SENTIDO")
         .field("CIDADE")
         .field("ESTADO")
-        .field("CODIGO_PRACA")
+        .field("CODIGO")
         .field("ORIENTACAO")
         .field("TIPO")
         .field("JURISDICAO")
@@ -129,7 +128,11 @@ async fn create_pedagio(data: String, pool: web::Data<Pool>) -> impl Responder {
 #[get("/api/get-pedagios")]
 async fn get_all_pedagio(pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
-    sql.push_str("SELECT * FROM pedagio;");
+    sql.push_str(
+        "SELECT longitude, latitude, codigo_operadora, nome, situacao, rodovia, km, sentido, cidade, estado, \
+        codigo, orientacao, tipo, jurisdicao, cobranca_especial, categoria, data_alteracao, razao_social, \
+        cnpj, email, telefone FROM pedagio;"
+    );
     let conn = match pool.get().await {
         Ok(x) => x,
         Err(e) => {
