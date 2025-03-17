@@ -1,9 +1,9 @@
 services:
-  web: # Frontend
-    build: ./web
-    ports:
-      - "80:80"
-    network_mode: host
+  #web: # Frontend
+  # build: ./web
+  # ports:
+  #   - "80:80"
+  # network_mode: host
 
   api01: &api # API Backend
     build: .
@@ -37,6 +37,7 @@ services:
     image: nginx:latest
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./index.html:/etc/nginx/index.html
       - ./web/dist/bgm-web/browser:/web/dist/bgm-web/browser
     depends_on:
       - api01
