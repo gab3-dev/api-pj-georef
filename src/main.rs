@@ -1,14 +1,20 @@
-use actix_web::{http, middleware, http::KeepAlive, web::{self}, App, HttpServer};
-use actix_multipart::form::tempfile::TempFileConfig;
 use actix_cors::Cors;
+use actix_multipart::form::tempfile::TempFileConfig;
+use actix_web::{
+    http,
+    http::KeepAlive,
+    middleware,
+    web::{self},
+    App, HttpServer,
+};
 use deadpool_postgres::{Config, PoolConfig, Runtime};
-use tokio_postgres::NoTls;
 use std::env;
+use tokio_postgres::NoTls;
 
-mod db;
-use db::*;
-use files::*;
-mod files;
+mod models;
+use models::*;
+mod utils;
+use utils::*;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -63,11 +69,19 @@ async fn main() -> std::io::Result<()> {
             .service(get_all_pedagio)
             .service(get_operadora_by_id)
             .service(get_pedagio_by_id)
+            .service(create_tipo_tarifa)
+            .service(get_all_tipos_tarifa)
+            .service(get_tarifa_by_id)
+            .service(create_tarifa)
+            .service(get_all_tarifas)
+            .service(get_tarifa_by_id)
+            .service(import_tarifas)
+            .service(import_operadoras)
             .service(
                 web::resource("/")
                     .route(web::get().to(index))
                     .route(web::post().to(save_files)),
-                )
+            )
     })
     .keep_alive(KeepAlive::Os)
     .bind(format!("0.0.0.0:{http_port}"))?

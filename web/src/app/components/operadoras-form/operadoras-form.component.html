@@ -1,0 +1,8 @@
+<form #form="ngForm" [formGroup]="operadoraForm" (ngSubmit)="onSubmit()">
+    <div *ngFor="let fieldInfo of fieldInfoList" class="text-field">
+        <label>{{fieldInfo.label}}</label>
+        <input id="{{fieldInfo.id}}" type="{{fieldInfo.type}}" name="{{fieldInfo.name}}"
+            placeholder="{{fieldInfo.placeholder}}" formControlName="{{fieldInfo.name}}" />
+    </div>
+    <input type="submit" value="Enviar" [disabled]="operadoraForm.invalid" />
+</form>
