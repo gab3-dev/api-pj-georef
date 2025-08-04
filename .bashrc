@@ -1,14 +1,16 @@
-alias d-c-r='docker compose down && docker compose up -d --force-recreate'
+# Attached options
+alias dcu='docker compose up'
+alias dcd='docker compose down'
+alias dcr='docker compose down && docker compose up --force-recreate'
 
-alias dcu="docker compose up"
-alias dcud="docker compose up -d"
-alias dcd="docker compose down"
-alias dcr="docker compose up --force-recreate"
-alias dcrd="docker compose up --force-recreate -d"
+# Detached options
+alias dcud='docker compose up -d'
+alias dcrd='docker compose down && docker compose up -d --force-recreate'
 
-dckRm() {
-    docker rm $(docker ps -qa)
+function dkrRm() {
+  docker rm $(docker ps -a -q)
 }
-dckRmi() {
-    docker rmi $(docker images -aq)
+
+function dkrRmi() {
+  docker rmi $(docker images -q)
 }
