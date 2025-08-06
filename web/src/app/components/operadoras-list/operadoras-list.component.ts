@@ -48,12 +48,12 @@ export class OperadorasListComponent {
 
   onGridReady(params: GridReadyEvent) {
     this.gridApi = params.api;
+    this.gridApi.setGridOption("rowData", this.rowData);
   }
 
   ngOnInit() {
     this.operadoraService.getOperadoras().subscribe((operadoras) => {
       this.rowData = operadoras.body as any[];
     });
-    this.gridApi.setGridOption("rowData", this.rowData);
   }
 }

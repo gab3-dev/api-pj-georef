@@ -45,7 +45,7 @@ async fn main() -> std::io::Result<()> {
     let pool = cfg.create_pool(Some(Runtime::Tokio1), NoTls).unwrap();
     println!("postgres pool succesfully created");
 
-    let http_port = env::var("HTTP_PORT").unwrap_or("80".into());
+    let http_port = env::var("HTTP_PORT").unwrap_or("6969".into());
 
     log::info!("Running on port {http_port}");
 
@@ -54,7 +54,7 @@ async fn main() -> std::io::Result<()> {
             .send_wildcard()
             .allow_any_origin()
             .block_on_origin_mismatch(false)
-            .allowed_methods(vec!["GET", "POST"])
+            .allowed_methods(vec!["GET", "POST", "OPTIONS"])
             .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
             .allowed_header(http::header::CONTENT_TYPE)
             .max_age(3600);

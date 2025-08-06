@@ -118,6 +118,9 @@ struct Tarifa {
     data_atualizacao: NaiveDateTime,
     situacao: String,
     tipo: String,
+    descricao: String,
+    rodagem: String,
+    eixos: i32,
 }
 
 #[allow(unused)]
@@ -133,6 +136,9 @@ impl Tarifa {
             data_atualizacao: row.get("data_atualizacao"),
             situacao: row.get("situacao"),
             tipo: row.get("tipo"),
+            descricao: row.get("descricao"),
+            rodagem: row.get("rodagem"),
+            eixos: row.get("eixos"),
         }
     }
 
@@ -184,7 +190,12 @@ async fn create_tarifa(data: String, pool: web::Data<Pool>) -> impl Responder {
 #[get("/api/get-tarifas")]
 async fn get_all_tarifas(pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
-    sql.push_str("SELECT * FROM tarifas;");
+    sql.push_str("SELECT id_tarifa, descricao, multiplicador, valor, rodagem, eixos, data_criacao, ");
+    sql.push_str("data_atualizacao, situacao, tipo, tipo_tarifa.id_tipo_tarifa, id_padrao_tarifa, ");
+    sql.push_str("id_pedagio ");
+    sql.push_str("FROM tarifas ");
+    sql.push_str("JOIN tipo_tarifa ON tarifas.id_tipo_tarifa = tipo_tarifa.id_tipo_tarifa ");
+    sql.push_str("WHERE situacao = 'Ativo';");
     log::info!("sql: {}", sql);
     let conn = match pool.get().await {
         Ok(x) => x,
