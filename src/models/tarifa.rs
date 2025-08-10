@@ -121,6 +121,7 @@ struct Tarifa {
     descricao: String,
     rodagem: String,
     eixos: i32,
+    nome: String,
 }
 
 #[allow(unused)]
@@ -139,6 +140,7 @@ impl Tarifa {
             descricao: row.get("descricao"),
             rodagem: row.get("rodagem"),
             eixos: row.get("eixos"),
+            nome: row.get("nome"),
         }
     }
 
@@ -190,12 +192,15 @@ async fn create_tarifa(data: String, pool: web::Data<Pool>) -> impl Responder {
 #[get("/api/get-tarifas")]
 async fn get_all_tarifas(pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
-    sql.push_str("SELECT id_tarifa, descricao, multiplicador, valor, rodagem, eixos, data_criacao, ");
-    sql.push_str("data_atualizacao, situacao, tipo, tipo_tarifa.id_tipo_tarifa, id_padrao_tarifa, ");
-    sql.push_str("id_pedagio ");
+    sql.push_str(
+        "SELECT id_tarifa, pedagio.nome, descricao, multiplicador, valor, rodagem, eixos, ",
+    );
+    sql.push_str("data_criacao, data_atualizacao, tarifas.situacao, tarifas.tipo, ");
+    sql.push_str("tipo_tarifa.id_tipo_tarifa, id_padrao_tarifa, tarifas.id_pedagio ");
     sql.push_str("FROM tarifas ");
     sql.push_str("JOIN tipo_tarifa ON tarifas.id_tipo_tarifa = tipo_tarifa.id_tipo_tarifa ");
-    sql.push_str("WHERE situacao = 'Ativo';");
+    sql.push_str("JOIN pedagio ON tarifas.id_pedagio = pedagio.id_pedagio ");
+    sql.push_str("WHERE tarifas.situacao = 'Ativo';");
     log::info!("sql: {}", sql);
     let conn = match pool.get().await {
         Ok(x) => x,
