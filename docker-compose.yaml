@@ -1,9 +1,9 @@
 services:
-  web: # Frontend
-    build: ./web
-    ports:
-      - "80:80"
-    network_mode: host
+  # web: # Frontend
+  #  build: ./web
+  #  ports:
+  #    - "80:80"
+  #  network_mode: host
 
   api01: &api # API Backend
     build: .
@@ -24,14 +24,14 @@ services:
     ports:
       - "8080:8080"
 
-  api02: # API Backend
-    <<: *api
-    environment:
-      HTTP_PORT: 8081
-      DB_HOST: localhost
-      POOL_SIZE: 30
-    ports:
-      - "8081:8081"
+  #api02: # API Backend
+  #  <<: *api
+  #  environment:
+  #    HTTP_PORT: 8081
+  #    DB_HOST: localhost
+  #    POOL_SIZE: 30
+  #  ports:
+  #    - "8081:8081"
 
   web: # Frontend
     build:
@@ -39,7 +39,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - api01
-      - api02
+  #    - api02
     network_mode: host
     environment:
       API: localhost:9999
@@ -56,7 +56,7 @@ services:
       - ./web/dist/bgm-web/browser:/web/dist/bgm-web/browser
     depends_on:
       - api01
-      - api02
+   #   - api02
     network_mode: host
     deploy:
       resources:

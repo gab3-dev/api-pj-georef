@@ -206,7 +206,7 @@ export class PedagioService {
 
   async createPraca(data: any) {
     data = parsePracaJson(data);
-    this.http.post('http://ec2-54-233-34-194.sa-east-1.compute.amazonaws.com:9999/create-praca', data, {
+    this.http.post('http://localhost:9999/api/create-praca', data, {
       headers: {
         'Content-Type': 'application/json'
       },
@@ -234,7 +234,7 @@ export class PedagioService {
   getPedagios() {
     // Chama api e formata os dados para objeto
     // API retorna os dados em json
-    return this.http.get('http://ec2-54-233-34-194.sa-east-1.compute.amazonaws.com:9999/api/get-pedagios', {
+    return this.http.get('http://localhost:9999/api/get-pedagios', {
       responseType: 'json',
       observe: 'response'
     });

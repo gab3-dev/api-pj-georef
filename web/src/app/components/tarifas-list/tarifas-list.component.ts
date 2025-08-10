@@ -14,22 +14,22 @@ import {
   CellApiModule,
   RenderApiModule,
   ClientSideRowModelModule,
-} from "ag-grid-community";
-ModuleRegistry.registerModules([ValueCacheModule,
+} from 'ag-grid-community';
+ModuleRegistry.registerModules([
+  ValueCacheModule,
   AlignedGridsModule,
   ColumnApiModule,
   RowApiModule,
   CellApiModule,
   RenderApiModule,
-  ClientSideRowModelModule,]);
-
+  ClientSideRowModelModule,
+]);
 @Component({
   selector: 'app-tarifas-list',
   imports: [AgGridAngular],
   templateUrl: './tarifas-list.component.html',
-  styleUrl: './tarifas-list.component.scss'
+  styleUrl: './tarifas-list.component.scss',
 })
-
 export class TarifasListComponent {
   private gridApi!: GridApi;
   public rowData: any[] | null = null;
@@ -39,56 +39,66 @@ export class TarifasListComponent {
       field: 'id_tarifa',
       headerName: 'ID Tarifa',
       sortable: true,
-      filter: true
+      filter: true,
     },
     {
-      field: 'id_tipo_tarifa',
-      headerName: 'ID Tipo Tarifa',
-      sortable: true,
-      filter: true
+      field: 'descricao',
+      headerName: 'Descricao',
+    },
+    {
+      field: 'nome',
+      headerName: 'Nome do Pedagio',
+    },
+    {
+      field: 'eixos',
+      headerName: 'Eixos',
+    },
+    {
+      field: 'rodagem',
+      headerName: 'Rodagem',
     },
     {
       field: 'id_pedagio',
       headerName: 'ID Pedágio',
       sortable: true,
-      filter: true
+      filter: true,
     },
     {
       field: 'multiplicador',
       headerName: 'Multiplicador',
       sortable: true,
-      filter: true
+      filter: true,
     },
     {
       field: 'valor',
       headerName: 'Valor',
       sortable: true,
-      filter: true
+      filter: true,
     },
     {
       field: 'data_criacao',
       headerName: 'Data Criação',
       sortable: true,
-      filter: true
+      filter: true,
     },
     {
       field: 'data_atualizacao',
       headerName: 'Data Atualização',
       sortable: true,
-      filter: true
+      filter: true,
     },
     {
       field: 'situacao',
       headerName: 'Situação',
       sortable: true,
-      filter: true
+      filter: true,
     },
     {
       field: 'tipo',
       headerName: 'Tipo',
       sortable: true,
-      filter: true
-    }
+      filter: true,
+    },
   ];
 
   tarifasService: TarifasService = inject(TarifasService);
