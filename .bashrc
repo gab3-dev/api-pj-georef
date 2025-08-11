@@ -7,10 +7,20 @@ alias dcr='docker compose down && docker compose up --force-recreate'
 alias dcud='docker compose up -d'
 alias dcrd='docker compose down && docker compose up -d --force-recreate'
 
-function dkrRm() {
-  docker rm $(docker ps -a -q)
+dkrRm() {
+  docker rm $(docker ps -qa)
 }
 
-function dkrRmi() {
-  docker rmi $(docker images -q)
+dckRmi() {
+  docker rmi $(docker images -qa)
+}
+
+alias fzf='fzf --tmux --preview="cat {}"'
+
+fzf_view() {
+  fzf --preview="cat {}"
+}
+
+nvim_fzf() {
+  nvim $(fzf --preview="cat {}")
 }

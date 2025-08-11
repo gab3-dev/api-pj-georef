@@ -121,3 +121,92 @@ pub async fn import_tarifas(
         }
     }
 }
+
+#[post("/api/importar-pedagios")]
+pub async fn import_pedagios(
+    MultipartForm(form): MultipartForm<UploadForm>,
+    pool: web::Data<Pool>,
+) -> Result<impl Responder, actix_web::Error> {
+    let mut path = String::new();
+    // 1. Salva o arquivo enviado em um diretório temporário
+    for f in form.files {
+        // Usa um nome de arquivo fixo ou o nome original, como preferir
+        let file_name = f.file_name.unwrap_or_else(|| "pedagios.csv".to_string());
+        path = format!("./tmp/{}", file_name);
+        log::info!("Salvando arquivo de pedágios em: {}", path);
+        f.file.persist(path.clone()).unwrap();
+
+        // Define permissões para que o processo do Postgres possa ler o arquivo
+        let file = File::open(path.clone()).unwrap();
+        file.set_permissions(fs::Permissions::from_mode(0o664))
+            .unwrap();
+    }
+
+    // 2. Define o caminho do arquivo como o container do Postgres o enxerga
+    //    Isso assume um volume compartilhado: ./tmp do seu app -> /uploaded do Postgres
+    let path_on_server = path.clone().replace("./tmp/", "/uploaded/");
+
+    log::info!("Iniciando importação de pedágios de: {}", path_on_server);
+    let client: Client = pool
+        .get()
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    // 3. Monta o comando SQL COPY
+    //    A lista de colunas deve corresponder exatamente à ordem no seu arquivo CSV
+    let sql = format!(
+        "COPY pedagio (longitude, latitude, codigo_operadora, nome, situacao, rodovia, km, sentido, cidade, estado, codigo, orientacao, tipo, jurisdicao, cobranca_especial, categoria, data_alteracao, razao_social, cnpj, email, telefone) \
+         FROM '{path_on_server}' \
+         DELIMITER ';' \
+         CSV HEADER \
+         ENCODING 'UTF8';" // UTF8 é mais comum, mas ajuste se seu arquivo for ISO88599 ou outro
+    );
+
+    log::info!("Executando SQL: {}", sql);
+    let result = client.execute(sql.as_str(), &[]).await;
+
+    // 4. Trata o resultado da importação
+    match result {
+        Ok(rows_affected) => {
+            log::info!("{} pedágios importados com sucesso.", rows_affected);
+            // Limpa o arquivo temporário após o sucesso
+            fs::remove_file(path)
+                .unwrap_or_else(|e| log::warn!("Falha ao deletar arquivo temporário: {}", e));
+            Ok(HttpResponse::Ok().json(serde_json::json!({
+                "pedagios_importados": rows_affected
+            })))
+        }
+        Err(e) => {
+            log::error!("Erro ao importar pedágios: {}", e);
+            // Sempre tenta limpar o arquivo temporário, mesmo em caso de erro
+            fs::remove_file(path.clone())
+                .unwrap_or_else(|err| log::warn!("Falha ao deletar arquivo temporário: {}", err));
+
+            // Tratamento de erro específico para chave duplicada (ex: codigo do pedágio já existe)
+            // IMPORTANTE: Ajuste o nome da constraint "pedagio_codigo_key" para o nome real da sua tabela.
+            if e.to_string()
+                .contains("violates unique constraint \"pedagio_codigo_key\"")
+            {
+                let error_msg = e.to_string();
+                let details = if let Some(detail_start) = error_msg.find("DETAIL:") {
+                    error_msg[detail_start..]
+                        .replace("DETAIL: Key (codigo)=(", "O pedágio com código ")
+                        .replace(") already exists.", " já existe.")
+                } else {
+                    "Um dos códigos de pedágio no arquivo já existe no banco de dados.".to_string()
+                };
+
+                return Ok(HttpResponse::Conflict().json(serde_json::json!({
+                    "erro": "Pedágio duplicado.",
+                    "detalhes": details
+                })));
+            }
+
+            // Erro genérico
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "erro": "Falha ao importar o arquivo de pedágios.",
+                "detalhes": e.to_string()
+            })))
+        }
+    }
+}
