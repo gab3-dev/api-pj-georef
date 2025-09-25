@@ -1,8 +1,8 @@
 use actix_web::{post, web, HttpResponse, Responder};
-use deadpool_postgres::Pool;
+use deadpool_postgres::{Pool, Client};
 
 use actix_multipart::form::{tempfile::TempFile, MultipartForm};
-use std::{fs::File, os::unix::fs::PermissionsExt};
+use std::{fs, fs::Permissions, fs::File, os::unix::fs::PermissionsExt};
 
 #[derive(Debug, MultipartForm)]
 pub struct UploadForm {
@@ -21,7 +21,7 @@ pub async fn import_operadoras(
         log::info!("saving to {path}");
         f.file.persist(path.clone()).unwrap();
         let file = File::open(path.clone()).unwrap();
-        file.set_permissions(std::fs::Permissions::from_mode(0o664))
+        file.set_permissions(Permissions::from_mode(0o664))
             .unwrap();
     }
 
@@ -88,7 +88,7 @@ pub async fn import_tarifas(
         log::info!("saving to {path}");
         f.file.persist(path.clone()).unwrap();
         let file = File::open(path.clone()).unwrap();
-        file.set_permissions(std::fs::Permissions::from_mode(0o664))
+        file.set_permissions(Permissions::from_mode(0o664))
             .unwrap();
     }
 
@@ -138,7 +138,7 @@ pub async fn import_pedagios(
 
         // Define permissões para que o processo do Postgres possa ler o arquivo
         let file = File::open(path.clone()).unwrap();
-        file.set_permissions(fs::Permissions::from_mode(0o664))
+        file.set_permissions(Permissions::from_mode(0o664))
             .unwrap();
     }
 
