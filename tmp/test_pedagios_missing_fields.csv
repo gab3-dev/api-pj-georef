@@ -1,0 +1,6 @@
+longitude;latitude;codigo_operadora;nome;situacao;rodovia;km;sentido;cidade;estado;codigo;orientacao;tipo;jurisdicao;cobranca_especial;categoria;data_alteracao;razao_social;cnpj;email;telefone
+-50123456;-28123456;1;"Pedagio Minimal";"Ativo";;0.00;;;;;;;;;0;;"";;;;
+-51234567;-29234567;2;"Pedagio No Email";"Ativo";"BR-277";150.00;"Norte";"Foz do Iguaçu";"PR";"MIN-01";;"PED";"Federal";0;"A";"10/01/2024";"OPERADORA B";"98765432000188";;
+-52345678;-30345678;3;"Pedagio No Phone";"Ativo";"BR-153";200.00;"Sul";"Goiânia";"GO";"MIN-02";;"BAL";"Estadual";0;"B";"15/01/2024";"OPERADORA C";"11223344000155";"nophone@test.com";
+-53456789;-31456789;1;"Pedagio No Code";"Ativo";"BR-101";300.00;"Norte";"Florianópolis";"SC";;;"PED";"Federal";1;"C";"20/01/2024";"OPERADORA A";"12345678000199";"nocode@test.com";"(48) 99999-9999"
+-54567890;-32567890;2;"Pedagio No Orientation";"Ativo";"BR-116";400.00;"Sul";"Porto Alegre";"RS";"MIN-03";;"BAL";"Estadual";0;"D";"25/01/2024";"OPERADORA B";"98765432000188";"noordient@test.com";"(51) 98888-8888"

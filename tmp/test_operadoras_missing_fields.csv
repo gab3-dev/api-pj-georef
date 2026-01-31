@@ -1,0 +1,6 @@
+codigo_operadora;operadora;CNPJ;razao_social;data_alteracao;Email;telefone;grupo;responsavel
+200;"Operadora Minimal";;;"--";;;"Grupo Test";"Teste User"
+201;"Operadora No CNPJ";;"OPERADORA SEM CNPJ LTDA";"10/01/2024";;"(11) 99999-9999";"Grupo Test";"Teste User"
+202;"Operadora No Email";"12312312000199";"OPERADORA SEM EMAIL LTDA";"15/01/2024";;"(11) 98888-8888";"Grupo Test";"Teste User"
+203;"Operadora No Phone";"45645645000188";"OPERADORA SEM TELEFONE";"20/01/2024";"teste@example.com";;"Grupo Test";"Teste User"
+204;"Operadora Partial";;"OPERADORA PARCIAL";"--";"partial@test.com";;"Grupo Test";"Teste User"
