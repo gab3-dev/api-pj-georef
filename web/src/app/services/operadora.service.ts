@@ -106,9 +106,11 @@ export class OperadoraService {
       },
       responseType: 'text',
       observe: 'response',
-    },).subscribe(response => {
-      if (response.status === 200) {
-        alert(response.body);
+    },).subscribe({
+      next: (response) => {
+        if (response.status === 200) {
+          alert(response.body);
+        }
       }
     });
   }

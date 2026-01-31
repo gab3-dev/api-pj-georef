@@ -52,8 +52,10 @@ export class OperadorasListComponent {
   }
 
   ngOnInit() {
-    this.operadoraService.getOperadoras().subscribe((operadoras) => {
-      this.rowData = operadoras.body as any[];
+    this.operadoraService.getOperadoras().subscribe({
+      next: (operadoras) => {
+        this.rowData = operadoras.body as any[];
+      }
     });
   }
 }

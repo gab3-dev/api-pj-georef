@@ -63,8 +63,10 @@ export class PedagiosListComponent {
   }
 
   ngOnInit() {
-    this.pedagioService.getPedagios().subscribe((operadoras) => {
-      this.rowData = operadoras.body as any[];
+    this.pedagioService.getPedagios().subscribe({
+      next: (operadoras) => {
+        this.rowData = operadoras.body as any[];
+      }
     });
     this.gridApi.setGridOption("rowData", this.rowData);
   }
