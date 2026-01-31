@@ -1,0 +1,40 @@
+form {
+    display: flex;
+    flex-direction: column;
+    width: 60%;
+    margin-left: 20%;
+    margin-top: 10px;
+
+    input[type='submit'] {
+        width: 100%;
+        margin-top: 20px;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+
+        &:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    }
+}
+
+.text-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 3px;
+
+    label {
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    input {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+}

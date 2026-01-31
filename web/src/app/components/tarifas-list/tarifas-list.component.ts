@@ -108,8 +108,10 @@ export class TarifasListComponent {
   }
 
   ngOnInit() {
-    this.tarifasService.getTarifas().subscribe((tarifas) => {
-      this.rowData = tarifas.body as any[];
+    this.tarifasService.getTarifas().subscribe({
+      next: (tarifas) => {
+        this.rowData = tarifas.body as any[];
+      }
     });
   }
 }
