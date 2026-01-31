@@ -16,6 +16,9 @@ use models::*;
 mod utils;
 use utils::*;
 
+#[cfg(test)]
+mod tests;
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "debug");
@@ -45,7 +48,7 @@ async fn main() -> std::io::Result<()> {
     let pool = cfg.create_pool(Some(Runtime::Tokio1), NoTls).unwrap();
     println!("postgres pool succesfully created");
 
-    let http_port = env::var("HTTP_PORT").unwrap_or("6969".into());
+    let http_port = env::var("HTTP_PORT").unwrap_or("9999".into());
 
     log::info!("Running on port {http_port}");
 
@@ -77,8 +80,8 @@ async fn main() -> std::io::Result<()> {
             .service(get_tarifa_by_id)
             .service(import_tarifas)
             .service(import_operadoras)
-            .service(
-                web::resource("/")
+            .service(import_pedagios)
+            .service(                web::resource("/")
                     .route(web::get().to(index))
                     .route(web::post().to(save_files)),
             )
