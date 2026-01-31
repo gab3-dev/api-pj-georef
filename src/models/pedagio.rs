@@ -54,16 +54,21 @@ impl Pedagio {
         }
     }
 
-    fn new(json: String) -> Pedagio {
-        let result: Pedagio = serde_json::from_str(&json.as_str()).unwrap();
-        return result;
+    fn new(json: String) -> Result<Pedagio, serde_json::Error> {
+        serde_json::from_str(&json)
     }
 }
 
 #[post("/api/create-pedagio")]
 async fn create_pedagio(data: String, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
-    let pedagio: Pedagio = Pedagio::new(data);
+    let pedagio: Pedagio = match Pedagio::new(data) {
+        Ok(p) => p,
+        Err(e) => {
+            return HttpResponse::BadRequest()
+                .body(format!("JSON inválido: {}", e));
+        }
+    };
     let mut sql_builder = SqlBuilder::insert_into("pedagio");
     sql_builder
         .field("LONGITUDE")

@@ -25,16 +25,21 @@ impl TipoTarifa {
         }
     }
 
-    fn new(json: String) -> TipoTarifa {
-        let result: TipoTarifa = serde_json::from_str(&json.as_str()).unwrap();
-        return result;
+    fn new(json: String) -> Result<TipoTarifa, serde_json::Error> {
+        serde_json::from_str(&json)
     }
 }
 
 #[post("/api/create-tipo-tarifa")]
 async fn create_tipo_tarifa(data: String, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
-    let tipo_tarifa: TipoTarifa = TipoTarifa::new(data);
+    let tipo_tarifa: TipoTarifa = match TipoTarifa::new(data) {
+        Ok(t) => t,
+        Err(e) => {
+            return HttpResponse::BadRequest()
+                .body(format!("JSON inválido: {}", e));
+        }
+    };
     let mut sql_builder = SqlBuilder::insert_into("tipo_tarifa");
     sql_builder
         .field("ID_PADRAO_TARIFA")
@@ -144,16 +149,21 @@ impl Tarifa {
         }
     }
 
-    fn new(json: String) -> Tarifa {
-        let result: Tarifa = serde_json::from_str(&json.as_str()).unwrap();
-        return result;
+    fn new(json: String) -> Result<Tarifa, serde_json::Error> {
+        serde_json::from_str(&json)
     }
 }
 
 #[post("/api/create-tarifa")]
 async fn create_tarifa(data: String, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
-    let tarifa: Tarifa = Tarifa::new(data);
+    let tarifa: Tarifa = match Tarifa::new(data) {
+        Ok(t) => t,
+        Err(e) => {
+            return HttpResponse::BadRequest()
+                .body(format!("JSON inválido: {}", e));
+        }
+    };
     let mut sql_builder = SqlBuilder::insert_into("tarifas");
     sql_builder
         .field("ID_TIPO_TARIFA")

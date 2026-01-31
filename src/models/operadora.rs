@@ -57,16 +57,21 @@ impl Operadora {
         }
     }
 
-    fn new(json: String) -> Operadora {
-        let result: Operadora = serde_json::from_str(&json.as_str()).unwrap();
-        return result;
+    fn new(json: String) -> Result<Operadora, serde_json::Error> {
+        serde_json::from_str(&json)
     }
 }
 
 #[post("/api/create-operadora")]
 async fn create_operadora(data: String, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
-    let operadora: Operadora = Operadora::new(data);
+    let operadora: Operadora = match Operadora::new(data) {
+        Ok(o) => o,
+        Err(e) => {
+            return HttpResponse::BadRequest()
+                .body(format!("JSON inválido: {}", e));
+        }
+    };
     let mut sql_builder = SqlBuilder::insert_into("operadora");
     sql_builder
         .field("DATA_ALTERACAO")
