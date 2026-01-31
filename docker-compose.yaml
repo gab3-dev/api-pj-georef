@@ -1,11 +1,7 @@
 services:
-  # web: # Frontend
-  #  build: ./web
-  #  ports:
-  #    - "80:80"
-  #  network_mode: host
-
-  api01: &api # API Backend
+  api01:
+    # API Backend
+    &api
     build: .
     volumes:
       - ./tmp:/actix/tmp
@@ -33,13 +29,14 @@ services:
   #  ports:
   #    - "8081:8081"
 
-  web: # Frontend
+  web:
+    # Frontend
     build:
       context: ./web/
       dockerfile: Dockerfile
     depends_on:
       - api01
-  #    - api02
+    #    - api02
     network_mode: host
     environment:
       API: localhost:9999
@@ -49,14 +46,15 @@ services:
           cpus: '2'
           memory: '2.5GB'
 
-  nginx: # Load Balancer
+  nginx:
+    # Load Balancer
     image: nginx:latest
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./web/dist/bgm-web/browser:/web/dist/bgm-web/browser
     depends_on:
       - api01
-   #   - api02
+    #   - api02
     network_mode: host
     deploy:
       resources:
@@ -64,7 +62,8 @@ services:
           cpus: '1'
           memory: '3.0GB'
 
-  db: # Database
+  db:
+    # Database
     image: postgres
     hostname: db
     environment:
@@ -75,11 +74,11 @@ services:
       - ./tmp:/uploaded
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./postgresql.conf:/docker-entrypoint-initdb.d/postgresql.conf
-      - ./postgres-data:/var/lib/postgresql/data
+      - ./postgres-data:/var/lib/postgresql/18/docker
     command: postgres -c config_file=/docker-entrypoint-initdb.d/postgresql.conf
     network_mode: host
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
+      test: [ "CMD-SHELL", "pg_isready" ]
       interval: 5s
       timeout: 5s
       retries: 20
