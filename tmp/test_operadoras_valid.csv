@@ -1,4 +1,4 @@
-codigo_operadora;operadora;CNPJ;razao_social;data_alteracao;Email;telefone;grupo;responsavel
+codigo_operadora;operadora;CNPJ;razao_social;data_alteracao;email;telefone;grupo;responsavel
 100;"Test Operadora A";"12345678000199";"TEST OPERADORA A LTDA";"01/01/2024";"contato@testa.com.br";"(11) 98765-4321";"Grupo Test";"João Silva"
 101;"Test Operadora B";"98765432000188";"TEST OPERADORA B S.A.";"15/02/2024";"info@testb.com.br";"(21) 91234-5678";"Grupo Test";"Maria Santos"
 102;"Test Operadora C";"11223344000155";"TEST OPERADORA C LTDA";"20/03/2024";"admin@testc.com.br";"(31) 99876-5432";"Grupo Test";"Pedro Costa"

@@ -1,4 +1,4 @@
-codigo_operadora;operadora;CNPJ;razao_social;data_alteracao;Email;telefone;grupo;responsavel
+codigo_operadora;operadora;CNPJ;razao_social;data_alteracao;email;telefone;grupo;responsavel
 500;"Test Operadora 500";"0000000050000199";"TEST OPERADORA 500 LTDA";"01/01/2024";"operadora500@test.com";"(11) 9500-0000";"Grupo Test";"User 500"
 501;"Test Operadora 501";"0000000050100199";"TEST OPERADORA 501 LTDA";"01/01/2024";"operadora501@test.com";"(11) 9501-0000";"Grupo Test";"User 501"
 502;"Test Operadora 502";"0000000050200199";"TEST OPERADORA 502 LTDA";"01/01/2024";"operadora502@test.com";"(11) 9502-0000";"Grupo Test";"User 502"

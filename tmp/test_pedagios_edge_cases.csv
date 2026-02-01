@@ -1,6 +1,6 @@
-longitude;latitude;codigo_operadora;nome;situacao;rodovia;km;sentido;cidade;estado;codigo;orientacao;tipo;jurisdicao;cobranca_especial;categoria;data_alteracao;razao_social;cnpj;email;telefone
--90000000;-45000000;1;"Pedagio Extremo Coordenadas";"Ativo";"BR-101";0.00;"Norte";"Cidade";"SP";"EDGE-01";;"PED";"Federal";0;"A";"01/07/2024";"OPERADORA";"12345678000199";"edge1@test.com";"(11) 99999-9999"
-0;0;1;"Pedagio Coordenadas Zero";"Ativo";"BR-101";0.00;"Norte";"Cidade";"SP";"EDGE-02";;"PED";"Federal";0;"A";"05/07/2024";"OPERADORA";"12345678000199";"edge2@test.com";"(11) 99999-9999"
--45123456;-23456789;1;"Pedagio com Açentos e Çedilha";"Ativo";"BR-101";100.50;"Norte";"São José dos Pinhais";"SP";"EDGE-03";;"PED";"Federal";0;"A";"10/07/2024";"OPERADORA CONSTRUÇÃO";"12345678000199";"edge3@test.com";"(11) 99999-9999"
--45123456;-23456789;1;"Pedagio 'Com Aspas'";"Ativo";"BR-101";999.99;"Norte";"Cidade";"SP";"EDGE-04";;"PED";"Federal";1;"A";"15/07/2024";"OPERADORA 'TESTE'";"12345678000199";"edge4@test.com";"(11) 99999-9999"
--45123456;-23456789;1;"";"Ativo";"BR-101";100.00;"Norte";"Cidade";"SP";"EDGE-05";;"PED";"Federal";0;"A";"20/07/2024";"OPERADORA";"12345678000199";"edge5@test.com";"(11) 99999-9999"
+id_pedagio;longitude;latitude;codigo_operadora;nome;situacao;rodovia;km;sentido;cidade;estado;codigo;orientacao;tipo;jurisdicao;cobranca_especial;categoria;data_alteracao;razao_social;cnpj;email;telefone
+6;-90000000;-45000000;1;"Pedagio Extremo Coordenadas";"Ativo";"BR-101";0.00;"Norte";"Cidade";"SP";"EDGE-01";;"PED";"Federal";0;"A";"01/07/2024";"OPERADORA";"12345678000199";"edge1@test.com";"(11) 99999-9999"
+7;0;0;1;"Pedagio Coordenadas Zero";"Ativo";"BR-101";0.00;"Norte";"Cidade";"SP";"EDGE-02";;"PED";"Federal";0;"A";"05/07/2024";"OPERADORA";"12345678000199";"edge2@test.com";"(11) 99999-9999"
+8;-45123456;-23456789;1;"Pedagio com Açentos e Çedilha";"Ativo";"BR-101";100.50;"Norte";"São José dos Pinhais";"SP";"EDGE-03";;"PED";"Federal";0;"A";"10/07/2024";"OPERADORA CONSTRUÇÃO";"12345678000199";"edge3@test.com";"(11) 99999-9999"
+9;-45123456;-23456789;1;"Pedagio 'Com Aspas'";"Ativo";"BR-101";999.99;"Norte";"Cidade";"SP";"EDGE-04";;"PED";"Federal";1;"A";"15/07/2024";"OPERADORA 'TESTE'";"12345678000199";"edge4@test.com";"(11) 99999-9999"
+10;-45123456;-23456789;1;"";"Ativo";"BR-101";100.00;"Norte";"Cidade";"SP";"EDGE-05";;"PED";"Federal";0;"A";"20/07/2024";"OPERADORA";"12345678000199";"edge5@test.com";"(11) 99999-9999"

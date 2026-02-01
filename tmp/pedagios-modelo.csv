@@ -1,4 +1,4 @@
-﻿id_operadora;data_operacao;responsavel;grupo;codigo_operadora;operadora;RAZAO_SOCIAL;CNPJ;EMAIL;TELEFONE
+﻿id_pedagio;data_operacao;responsavel;grupo;codigo_operadora;operadora;RAZAO_SOCIAL;CNPJ;EMAIL;TELEFONE
 109;23/04/1988;Jaú;Eixo SP;4257269;SP225;PC05;;PED;Estadual
 108;24/04/1988;Dois Córregos;Eixo SP;15922474;SP225;PC04;;PED;Estadual
 107;25/04/1988;Brotas;Eixo SP;15923066;SP225;PC03;;PED;Estadual

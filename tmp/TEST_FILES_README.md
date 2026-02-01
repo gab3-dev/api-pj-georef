@@ -25,7 +25,7 @@ The test files are designed to cover:
 
 **CSV Format:**
 ```
-codigo_operadora;operadora;CNPJ;razao_social;data_alteracao;Email;telefone;grupo;responsavel
+codigo_operadora;operadora;CNPJ;razao_social;data_alteracao;email;telefone;grupo;responsavel
 ```
 
 **Field Details:**
@@ -34,7 +34,7 @@ codigo_operadora;operadora;CNPJ;razao_social;data_alteracao;Email;telefone;grupo
 - `CNPJ`: VARCHAR(30), optional
 - `razao_social`: VARCHAR(100), optional
 - `data_alteracao`: VARCHAR(11), format: DD/MM/YYYY
-- `Email`: VARCHAR(100), optional
+- `email`: VARCHAR(100), optional
 - `telefone`: VARCHAR(30), optional
 - `grupo`: VARCHAR(100), required
 - `responsavel`: VARCHAR(100), required

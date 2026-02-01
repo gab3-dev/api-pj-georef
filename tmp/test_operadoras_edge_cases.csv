@@ -1,4 +1,4 @@
-codigo_operadora;operadora;CNPJ;razao_social;data_alteracao;Email;telefone;grupo;responsavel
+codigo_operadora;operadora;CNPJ;razao_social;data_alteracao;email;telefone;grupo;responsavel
 400;"Operadora com Acentuação";"12345678000199";"OPERADORA COM ACENTUAÇÃO ÀÈÌÒÙ";"01/07/2024";"acento@example.com";"(11) 99999-9999";"Grupo Tëst";"José Müller"
 401;"Operadora Ç Cedilha";"98765432000188";"OPERADORA CONSTRUÇÃO E MANUTENÇÃO";"05/07/2024";"construcao@example.com";"(11) 98888-8888";"Açúcar";"François"
 402;"Empty Strings";"";"";"";"";"";"";""

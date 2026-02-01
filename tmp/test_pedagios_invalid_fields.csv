@@ -1,6 +1,6 @@
-longitude;latitude;codigo_operadora;nome;situacao;rodovia;km;sentido;cidade;estado;codigo;orientacao;tipo;jurisdicao;cobranca_especial;categoria;data_alteracao;razao_social;cnpj;email;telefone
-999999999;999999999;999;"Invalid Foreign Key";"Ativo";"BR-101";100.00;"Norte";"Test City";"TS";"INV-01";;"PED";"Federal";0;"A";"01/06/2024";"INVALID OPERADORA";"12345678000199";"invalid@test.com";"(11) 99999-9999"
--45123456;999999999;1;"Invalid Latitude";"Ativo";"BR-101";100.00;"Norte";"Test City";"TS";"INV-02";;"PED";"Federal";0;"A";"05/06/2024";"TEST OPERADORA";"12345678000199";"invalid.lat@test.com";"(11) 99999-9999"
-999999999;-23456789;1;"Invalid Longitude";"Ativo";"BR-101";100.00;"Norte";"Test City";"TS";"INV-03";;"PED";"Federal";0;"A";"10/06/2024";"TEST OPERADORA";"12345678000199";"invalid.long@test.com";"(11) 99999-9999"
--45123456;-23456789;1;"Invalid KM";"Ativo";"BR-101";-50.00;"Norte";"Test City";"TS";"INV-04";;"PED";"Federal";0;"A";"15/06/2024";"TEST OPERADORA";"12345678000199";"invalid.km@test.com";"(11) 99999-9999"
--45123456;-23456789;1;"Invalid Boolean";"Ativo";"BR-101";100.00;"Norte";"Test City";"TS";"INV-05";;"PED";"Federal";9;"A";"20/06/2024";"TEST OPERADORA";"12345678000199";"invalid.bool@test.com";"(11) 99999-9999"
+id_pedagio;longitude;latitude;codigo_operadora;nome;situacao;rodovia;km;sentido;cidade;estado;codigo;orientacao;tipo;jurisdicao;cobranca_especial;categoria;data_alteracao;razao_social;cnpj;email;telefone
+11;999999999;999999999;999;"Invalid Foreign Key";"Ativo";"BR-101";100.00;"Norte";"Test City";"TS";"INV-01";;"PED";"Federal";0;"A";"01/06/2024";"INVALID OPERADORA";"12345678000199";"invalid@test.com";"(11) 99999-9999"
+12;-45123456;999999999;1;"Invalid Latitude";"Ativo";"BR-101";100.00;"Norte";"Test City";"TS";"INV-02";;"PED";"Federal";0;"A";"05/06/2024";"TEST OPERADORA";"12345678000199";"invalid.lat@test.com";"(11) 99999-9999"
+13;999999999;-23456789;1;"Invalid Longitude";"Ativo";"BR-101";100.00;"Norte";"Test City";"TS";"INV-03";;"PED";"Federal";0;"A";"10/06/2024";"TEST OPERADORA";"12345678000199";"invalid.long@test.com";"(11) 99999-9999"
+14;-45123456;-23456789;1;"Invalid KM";"Ativo";"BR-101";-50.00;"Norte";"Test City";"TS";"INV-04";;"PED";"Federal";0;"A";"15/06/2024";"TEST OPERADORA";"12345678000199";"invalid.km@test.com";"(11) 99999-9999"
+15;-45123456;-23456789;1;"Invalid Boolean";"Ativo";"BR-101";100.00;"Norte";"Test City";"TS";"INV-05";;"PED";"Federal";9;"A";"20/06/2024";"TEST OPERADORA";"12345678000199";"invalid.bool@test.com";"(11) 99999-9999"
