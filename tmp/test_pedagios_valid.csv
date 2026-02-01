@@ -1,0 +1,6 @@
+longitude;latitude;codigo_operadora;nome;situacao;rodovia;km;sentido;cidade;estado;codigo;orientacao;tipo;jurisdicao;cobranca_especial;categoria;data_alteracao;razao_social;cnpj;email;telefone
+-45123456;-23456789;1;"Test Pedagio A";"Ativo";"BR-101";125.50;"Norte";"São Paulo";"SP";"TEST-A";"Sul-Norte";"PED";"Federal";0;"A";"01/01/2024";"TEST OPERADORA A";"12345678000199";"pedagio.a@test.com";"(11) 98765-4321"
+-46234567;-24567890;2;"Test Pedagio B";"Ativo";"BR-116";250.75;"Sul";"Curitiba";"PR";"TEST-B";"Norte-Sul";"PED";"Federal";1;"B";"15/02/2024";"TEST OPERADORA B";"98765432000188";"pedagio.b@test.com";"(41) 91234-5678"
+-47345678;-25678901;3;"Test Pedagio C";"Ativo";"BR-381";375.25;"Leste";"Belo Horizonte";"MG";"TEST-C";"Oeste-Leste";"BAL";"Estadual";0;"C";"20/03/2024";"TEST OPERADORA C";"11223344000155";"pedagio.c@test.com";"(31) 99876-5432"
+-48456789;-26789012;1;"Test Pedagio D";"Desativado";"BR-040";500.00;"Oeste";"Brasília";"DF";"TEST-D";"Leste-Oeste";"PED";"Federal";1;"D";"10/04/2024";"TEST OPERADORA A";"12345678000199";"pedagio.d@test.com";"(61) 93456-7890"
+-49567890;-27890123;2;"Test Pedagio E";"Ativo";"BR-262";625.80;"Norte";"Salvador";"BA";"TEST-E";"Sul-Norte";"BAL";"Estadual";0;"E";"25/05/2024";"TEST OPERADORA B";"98765432000188";"pedagio.e@test.com";"(71) 92345-6789"

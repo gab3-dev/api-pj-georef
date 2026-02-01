@@ -1,0 +1,6 @@
+codigo_operadora;operadora;CNPJ;razao_social;data_alteracao;Email;telefone;grupo;responsavel
+300;"Invalid CNPJ Format";"123456";"INVALID CNPJ OPERADORA";"01/06/2024";"test@example.com";"(11) 99999-9999";"Grupo Test";"Test User"
+301;"Invalid Email";"12345678000199";"INVALID EMAIL OPERADORA";"05/06/2024";"not-an-email";"(11) 99999-9999";"Grupo Test";"Test User"
+302;"Invalid Date";"98765432000188";"INVALID DATE OPERADORA";"32/13/2024";"test@example.com";"(11) 99999-9999";"Grupo Test";"Test User"
+303;"Special Chars in Name";"11223344000155";"OPERADORA COM CARACTERES ESPECIAIS @#$%";"10/06/2024";"test@example.com";"(11) 99999-9999";"Grupo Test";"Test User"
+304;"Very Long Name That Exceeds Normal Length Limits For Operator Names";"55667788000166";"VERY LONG OPERATOR NAME THAT SHOULD TEST DATABASE FIELD LENGTH LIMITS AND POTENTIAL TRUNCATION ISSUES";"15/06/2024";"test@example.com";"(11) 99999-9999";"Grupo Test";"Test User"
