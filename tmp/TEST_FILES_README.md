@@ -51,17 +51,21 @@ codigo_operadora;operadora;CNPJ;razao_social;data_alteracao;email;telefone;grupo
 
 **CSV Format:**
 ```
-longitude;latitude;codigo_operadora;nome;situacao;rodovia;km;sentido;cidade;estado;codigo;orientacao;tipo;jurisdicao;cobranca_especial;categoria;data_alteracao;razao_social;cnpj;email;telefone
+id_pedagio;longitude;latitude;nome;codigo_operadora;concessionaria;situacao;sigla;rodovia;km;id_trecho;sentido;cidade;estado;codigo;orientacao;tipo;jurisdicao;cobranca_especial;categoria;data_alteracao;razao_social;cnpj;email;telefone
 ```
 
 **Field Details:**
+- `id_pedagio`: INT, PRIMARY KEY, required
 - `longitude`: BIGINT, required (large negative integers for coordinates)
 - `latitude`: BIGINT, required (large negative integers for coordinates)
-- `codigo_operadora`: INT, FOREIGN KEY to operadora, required
 - `nome`: VARCHAR(50), required
+- `codigo_operadora`: INT, FOREIGN KEY to operadora, required
+- `concessionaria`: VARCHAR(100), concession name, required
 - `situacao`: VARCHAR(20), typical values: "Ativo", "Desativado"
+- `sigla`: VARCHAR(20), abbreviation/acronym, required
 - `rodovia`: VARCHAR(100), optional
 - `km`: DOUBLE PRECISION, kilometer position
+- `id_trecho`: INT, road segment identifier, required
 - `sentido`: VARCHAR(10), direction (Norte, Sul, Leste, Oeste)
 - `cidade`: VARCHAR(50), optional
 - `estado`: VARCHAR(3), state abbreviation
