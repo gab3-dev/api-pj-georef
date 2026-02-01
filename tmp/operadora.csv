@@ -1,4 +1,4 @@
-codigo_operadora;operadora;CNPJ;razao_social;data_alteracao;email;tefefone;grupo;responsavel
+codigo_operadora;operadora;CNPJ;razao_social;data_alteracao;email;telefone;grupo;responsavel
 0;"Outras";;;"--";;;"TESTE";"TESTE"
 1;"Concessionaria Porto Morrinho Ltda";"10994905000188";"CONCESSIONARIA PORTO MORRINHO LTDA";"23/03/2018";;;"TESTE";"TESTE"
 2;"Auto Pista Fern�o Dias";"09326342000170";;"21/08/2020";;;"TESTE";"TESTE"

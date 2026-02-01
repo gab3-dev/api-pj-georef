@@ -1,2 +1,2 @@
-id_pedagio;Longitude;Latitude;Nome;codigo_operadora;Concessionaria;Situacao;Sigla;rodovia;Km;id_trecho;Sentido;Cidade;Estado;Codigo;orientacao;Tipo;juridicao;cobranca_especial;Categoria;data_alteracao;razao_social;CNPJ;Email;tefefone
+id_pedagio;Longitude;Latitude;Nome;codigo_operadora;Concessionaria;Situacao;Sigla;rodovia;Km;id_trecho;Sentido;Cidade;Estado;Codigo;orientacao;Tipo;jurisdicao;cobranca_especial;Categoria;data_alteracao;razao_social;CNPJ;Email;telefone
 9999;-72644296;-7721975;"Test Pedagio";1;"EcoRodovias";"Ativo";"BR364";"Teste";0.00;1583567;"A";"Test City";"SP";"T001";"Test";"BAL";"Federal";0;"A";"01/01/2024";"Test Razao";"12345678000100";"test@test.com";"11999999999"

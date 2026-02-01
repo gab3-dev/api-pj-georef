@@ -159,7 +159,7 @@ pub async fn import_pedagios(
     let sql = format!(
         "COPY pedagio (id_pedagio, longitude, latitude, nome, codigo_operadora, concessionaria, situacao, sigla, rodovia, km, id_trecho, sentido, cidade, estado, codigo, orientacao, tipo, jurisdicao, cobranca_especial, categoria, data_alteracao, razao_social, cnpj, email, telefone) \
          FROM '{path_on_server}' \
-         WITH (FORMAT csv, HEADER true, DELIMITER ';', ENCODING 'ISO88599');"
+         WITH (FORMAT csv, HEADER true, DELIMITER ';', ENCODING 'UTF8');"
     );
 
     log::info!("Executando SQL: {}", sql);
