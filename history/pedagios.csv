@@ -1,4 +1,4 @@
-id_pedagio;Longitude;Latitude;Nome;codigo_operadora;Concessionaria;Situacao;Sigla;rodovia;Km;id_trecho;Sentido;Cidade;Estado;Codigo;orientacao;Tipo;juridicao;cobranca_especial;Categoria;data_alteracao;razao_social;CNPJ;email;tefefone
+id_pedagio;Longitude;Latitude;Nome;codigo_operadora;Concessionaria;Situacao;Sigla;rodovia;Km;id_trecho;Sentido;Cidade;Estado;Codigo;orientacao;Tipo;jurisdicao;cobranca_especial;Categoria;data_alteracao;razao_social;CNPJ;email;telefone
 1095;-72644296;-7721975;"Rodrigues Alves";0;"Outras";"Ativo";"BR364";"Teste";0.00;1583567;"A";"Rodrigues Alves";"AC";;;"BAL";"Federal";0;;"--";;;;
 1060;-56554465;-29117677;"Itaqui";0;"Outras";"Ativo";;"Teste";0.00;1614861;"D";"Itaqui";"RS";;;"BAL";;0;;"--";;;;
 1168;-56014507;-28610682;"S�o Borja";38;"Mercovia";"Ativo";"BR287";"Teste";1.90;1615816;"A";"S�o Borja";"RS";;;"PED";"Federal";1;"B";"23/03/2018";;"01645397000131";;
