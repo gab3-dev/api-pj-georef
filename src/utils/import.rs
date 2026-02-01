@@ -155,12 +155,11 @@ pub async fn import_pedagios(
     // 3. Monta o comando SQL COPY
     //    A lista de colunas deve corresponder exatamente à ordem no seu arquivo CSV
     //    CSV Header: id_pedagio;Longitude;Latitude;Nome;codigo_operadora;Concessionaria;Situacao;Sigla;rodovia;Km;id_trecho;Sentido;Cidade;Estado;Codigo;orientacao;Tipo;juridicao;cobranca_especial;Categoria;data_alteracao;razao_social;CNPJ;Email;tefefone
+    //    Note: Using positional matching instead of CSV HEADER due to typos in CSV column names (juridicao vs jurisdicao, tefefone vs telefone)
     let sql = format!(
         "COPY pedagio (id_pedagio, longitude, latitude, nome, codigo_operadora, concessionaria, situacao, sigla, rodovia, km, id_trecho, sentido, cidade, estado, codigo, orientacao, tipo, jurisdicao, cobranca_especial, categoria, data_alteracao, razao_social, cnpj, email, telefone) \
          FROM '{path_on_server}' \
-         DELIMITER ';' \
-         CSV HEADER \
-         ENCODING 'ISO88599';" // Mantém encoding ISO88599 para compatibilidade com operadora
+         WITH (FORMAT csv, HEADER true, DELIMITER ';', ENCODING 'ISO88599');"
     );
 
     log::info!("Executando SQL: {}", sql);
