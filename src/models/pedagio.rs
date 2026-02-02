@@ -183,3 +183,53 @@ async fn get_pedagio_by_id(pool: web::Data<Pool>, codigo_pedagio: web::Path<i8>)
         Err(_) => return HttpResponse::InternalServerError().body("Erro ao buscar pedagios"),
     }
 }
+
+#[put("/api/update-pedagio/{id_pedagio}")]
+async fn update_pedagio(
+    data: String,
+    pool: web::Data<Pool>,
+    id_pedagio: web::Path<i32>,
+) -> impl Responder {
+    let pedagio: Pedagio = match Pedagio::new(data) {
+        Ok(p) => p,
+        Err(e) => {
+            return HttpResponse::BadRequest()
+                .body(format!("JSON inválido: {}", e));
+        }
+    };
+    let mut sql_builder = SqlBuilder::update_table("pedagio");
+    sql_builder
+        .set("LONGITUDE", &quote(pedagio.longitude))
+        .set("LATITUDE", &quote(pedagio.latitude))
+        .set("CODIGO_OPERADORA", &quote(pedagio.codigo_operadora))
+        .set("NOME", &quote(&pedagio.nome))
+        .set("SITUACAO", &quote(&pedagio.situacao))
+        .set("RODOVIA", &quote(&pedagio.rodovia))
+        .set("KM", &quote(pedagio.km))
+        .set("SENTIDO", &quote(&pedagio.sentido))
+        .set("CIDADE", &quote(&pedagio.cidade))
+        .set("ESTADO", &quote(&pedagio.estado))
+        .set("CODIGO", &quote(&pedagio.codigo_pedagio))
+        .set("ORIENTACAO", &quote(&pedagio.orientacao))
+        .set("TIPO", &quote(&pedagio.tipo))
+        .set("JURISDICAO", &quote(&pedagio.jurisdicao))
+        .set("COBRANCA_ESPECIAL", &quote(pedagio.cobranca_especial))
+        .set("CATEGORIA", &quote(&pedagio.categoria))
+        .set("DATA_ALTERACAO", &quote(&pedagio.data_alteracao))
+        .set("RAZAO_SOCIAL", &quote(&pedagio.razao_social))
+        .set("CNPJ", &quote(&pedagio.cnpj))
+        .set("EMAIL", &quote(&pedagio.email))
+        .set("TELEFONE", &quote(&pedagio.telefone));
+    sql_builder.and_where_eq("ID_PEDAGIO", id_pedagio.into_inner());
+
+    let sql = match sql_builder.sql() {
+        Ok(x) => x,
+        Err(_) => return HttpResponse::InternalServerError().body("Erro ao atualizar pedagio"),
+    };
+
+    let result = batch_execute(&sql, pool.get_ref().clone()).await;
+    match result {
+        Ok(_) => return HttpResponse::Ok().body("Pedagio atualizado com sucesso"),
+        Err(_) => return result.unwrap_err(),
+    }
+}

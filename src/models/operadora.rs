@@ -162,3 +162,40 @@ async fn get_operadora_by_id(
         Err(_) => return HttpResponse::InternalServerError().body("Erro ao buscar operadoras"),
     }
 }
+
+#[put("/api/update-operadora/{codigo_operadora}")]
+async fn update_operadora(
+    data: String,
+    pool: web::Data<Pool>,
+    codigo_operadora: web::Path<i32>,
+) -> impl Responder {
+    let operadora: Operadora = match Operadora::new(data) {
+        Ok(o) => o,
+        Err(e) => {
+            return HttpResponse::BadRequest()
+                .body(format!("JSON inválido: {}", e));
+        }
+    };
+    let mut sql_builder = SqlBuilder::update_table("operadora");
+    sql_builder
+        .set("DATA_ALTERACAO", &quote(&operadora.data_alteracao))
+        .set("RESPONSAVEL", &quote(&operadora.responsavel))
+        .set("GRUPO", &quote(&operadora.grupo))
+        .set("OPERADORA", &quote(&operadora.operadora))
+        .set("RAZAO_SOCIAL", &quote(&operadora.razao_social))
+        .set("CNPJ", &quote(&operadora.cnpj))
+        .set("EMAIL", &quote(&operadora.email))
+        .set("TELEFONE", &quote(&operadora.telefone));
+    sql_builder.and_where_eq("CODIGO_OPERADORA", codigo_operadora.into_inner());
+
+    let sql = match sql_builder.sql() {
+        Ok(x) => x,
+        Err(_) => return HttpResponse::InternalServerError().body("Erro ao atualizar operadora"),
+    };
+
+    let result = batch_execute(&sql, pool.get_ref().clone()).await;
+    match result {
+        Ok(_) => return HttpResponse::Ok().body("Operadora atualizada com sucesso"),
+        Err(_) => return result.unwrap_err(),
+    }
+}

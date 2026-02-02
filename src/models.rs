@@ -1,4 +1,4 @@
-pub use actix_web::{get, post, web, HttpResponse, Responder};
+pub use actix_web::{get, post, put, web, HttpResponse, Responder};
 pub use chrono::NaiveDateTime;
 pub use deadpool_postgres::Pool;
 pub use serde::{Deserialize, Serialize};

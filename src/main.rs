@@ -57,7 +57,7 @@ async fn main() -> std::io::Result<()> {
             .send_wildcard()
             .allow_any_origin()
             .block_on_origin_mismatch(false)
-            .allowed_methods(vec!["GET", "POST", "OPTIONS"])
+            .allowed_methods(vec!["GET", "POST", "PUT", "OPTIONS"])
             .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
             .allowed_header(http::header::CONTENT_TYPE)
             .max_age(3600);
@@ -81,6 +81,9 @@ async fn main() -> std::io::Result<()> {
             .service(import_tarifas)
             .service(import_operadoras)
             .service(import_pedagios)
+            .service(update_operadora)
+            .service(update_pedagio)
+            .service(update_tarifa)
             .service(                web::resource("/")
                     .route(web::get().to(index))
                     .route(web::post().to(save_files)),

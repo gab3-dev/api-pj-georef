@@ -258,3 +258,40 @@ async fn get_tarifa_by_id(pool: web::Data<Pool>, id_tarifa: web::Path<i32>) -> i
         Err(_) => return HttpResponse::InternalServerError().body("Erro ao buscar tarifas"),
     }
 }
+
+#[put("/api/update-tarifa/{id_tarifa}")]
+async fn update_tarifa(
+    data: String,
+    pool: web::Data<Pool>,
+    id_tarifa: web::Path<i32>,
+) -> impl Responder {
+    let tarifa: Tarifa = match Tarifa::new(data) {
+        Ok(t) => t,
+        Err(e) => {
+            return HttpResponse::BadRequest()
+                .body(format!("JSON inválido: {}", e));
+        }
+    };
+    let mut sql_builder = SqlBuilder::update_table("tarifas");
+    sql_builder
+        .set("ID_TIPO_TARIFA", &quote(tarifa.id_tipo_tarifa))
+        .set("ID_PEDAGIO", &quote(tarifa.id_pedagio))
+        .set("MULTIPLICADOR", &quote(tarifa.multiplicador))
+        .set("VALOR", &quote(tarifa.valor))
+        .set("DATA_CRIACAO", &quote(tarifa.data_criacao))
+        .set("DATA_ATUALIZACAO", &quote(tarifa.data_atualizacao))
+        .set("SITUACAO", &quote(&tarifa.situacao))
+        .set("TIPO", &quote(&tarifa.tipo));
+    sql_builder.and_where_eq("ID_TARIFA", id_tarifa.into_inner());
+
+    let sql = match sql_builder.sql() {
+        Ok(x) => x,
+        Err(_) => return HttpResponse::InternalServerError().body("Erro ao atualizar tarifa"),
+    };
+
+    let result = batch_execute(&sql, pool.get_ref().clone()).await;
+    match result {
+        Ok(_) => return HttpResponse::Ok().body("Tarifa atualizada com sucesso"),
+        Err(_) => return result.unwrap_err(),
+    }
+}
