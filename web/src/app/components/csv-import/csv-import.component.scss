@@ -1,0 +1,62 @@
+.csv-import-container {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 600px;
+}
+
+.drop-zone {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 32px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+
+  &:hover,
+  &.drag-over {
+    border-color: #1976d2;
+    background-color: rgba(25, 118, 210, 0.04);
+  }
+
+  &.has-file {
+    border-color: #4caf50;
+    background-color: rgba(76, 175, 80, 0.04);
+  }
+
+  .upload-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #999;
+  }
+
+  p {
+    margin: 8px 0 0;
+    color: #666;
+  }
+
+  .file-name {
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+.message {
+  padding: 12px 16px;
+  border-radius: 4px;
+  white-space: pre-line;
+
+  &.success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+  }
+
+  &.error {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+  }
+}

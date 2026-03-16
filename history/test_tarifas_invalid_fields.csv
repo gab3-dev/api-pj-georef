@@ -1,0 +1,9 @@
+id_tarifa;id_tipo_tarifa;id_pedagio;multiplicador;valor;data_criacao;data_atualizacao;situacao;tipo
+3000;999;1;1.0;15.00;2024-01-01 10:00:00;2024-01-01 10:00:00;Ativo;Normal
+3001;1;999;1.0;20.00;2024-01-01 10:00:00;2024-01-01 10:00:00;Ativo;Normal
+3002;1;1;-1.0;25.00;2024-01-15 14:30:00;2024-01-15 14:30:00;Ativo;Normal
+3003;1;1;1.0;-30.00;2024-01-15 14:30:00;2024-01-15 14:30:00;Ativo;Normal
+3004;1;1;abc;35.00;2024-02-01 09:15:00;2024-02-01 09:15:00;Ativo;Normal
+3005;1;1;1.0;xyz;2024-02-01 09:15:00;2024-02-01 09:15:00;Ativo;Normal
+3006;1;1;1.0;40.00;invalid-date;2024-02-01 09:15:00;Ativo;Normal
+3007;1;1;1.0;45.00;2024-01-01 10:00:00;invalid-date;Ativo;Normal

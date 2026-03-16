@@ -1,3 +1,4 @@
+use crate::auth::{AdminAutenticado, UsuarioAutenticado};
 use crate::models::*;
 use crate::utils::*;
 
@@ -31,7 +32,7 @@ impl TipoTarifa {
 }
 
 #[post("/api/create-tipo-tarifa")]
-async fn create_tipo_tarifa(data: String, pool: web::Data<Pool>) -> impl Responder {
+async fn create_tipo_tarifa(_admin: AdminAutenticado, data: String, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
     let tipo_tarifa: TipoTarifa = match TipoTarifa::new(data) {
         Ok(t) => t,
@@ -87,7 +88,7 @@ async fn create_tipo_tarifa(data: String, pool: web::Data<Pool>) -> impl Respond
 }
 
 #[get("/api/get-tipos-tarifa")]
-async fn get_all_tipos_tarifa(pool: web::Data<Pool>) -> impl Responder {
+async fn get_all_tipos_tarifa(_user: UsuarioAutenticado, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
     sql.push_str("SELECT * FROM tipo_tarifa;");
     let conn = match pool.get().await {
@@ -155,7 +156,7 @@ impl Tarifa {
 }
 
 #[post("/api/create-tarifa")]
-async fn create_tarifa(data: String, pool: web::Data<Pool>) -> impl Responder {
+async fn create_tarifa(_admin: AdminAutenticado, data: String, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
     let tarifa: Tarifa = match Tarifa::new(data) {
         Ok(t) => t,
@@ -200,7 +201,7 @@ async fn create_tarifa(data: String, pool: web::Data<Pool>) -> impl Responder {
 }
 
 #[get("/api/get-tarifas")]
-async fn get_all_tarifas(pool: web::Data<Pool>) -> impl Responder {
+async fn get_all_tarifas(_user: UsuarioAutenticado, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
     sql.push_str(
         "SELECT id_tarifa, pedagio.nome, descricao, multiplicador, valor, rodagem, eixos, ",
@@ -234,7 +235,7 @@ async fn get_all_tarifas(pool: web::Data<Pool>) -> impl Responder {
 }
 
 #[get("/api/get-tarifa/{id_tarifa}")]
-async fn get_tarifa_by_id(pool: web::Data<Pool>, id_tarifa: web::Path<i32>) -> impl Responder {
+async fn get_tarifa_by_id(_user: UsuarioAutenticado, pool: web::Data<Pool>, id_tarifa: web::Path<i32>) -> impl Responder {
     let mut sql = String::new();
     sql.push_str("SELECT * FROM tarifas WHERE ID_TARIFA = ");
     sql.push_str(&id_tarifa.to_string());
@@ -261,6 +262,7 @@ async fn get_tarifa_by_id(pool: web::Data<Pool>, id_tarifa: web::Path<i32>) -> i
 
 #[put("/api/update-tarifa/{id_tarifa}")]
 async fn update_tarifa(
+    _admin: AdminAutenticado,
     data: String,
     pool: web::Data<Pool>,
     id_tarifa: web::Path<i32>,
@@ -272,6 +274,17 @@ async fn update_tarifa(
                 .body(format!("JSON inválido: {}", e));
         }
     };
+    let id = id_tarifa.into_inner();
+
+    // 1) Insert a backup copy of the current row with situacao = 'Inativo'
+    let backup_sql = format!(
+        "INSERT INTO tarifas (id_tarifa, id_tipo_tarifa, id_pedagio, multiplicador, valor, data_criacao, data_atualizacao, situacao, tipo) \
+         SELECT (SELECT COALESCE(MAX(id_tarifa), 0) + 1 FROM tarifas), id_tipo_tarifa, id_pedagio, multiplicador, valor, data_criacao, data_atualizacao, 'Inativo', tipo \
+         FROM tarifas WHERE id_tarifa = {};",
+        id
+    );
+
+    // 2) Update the original row with new values
     let mut sql_builder = SqlBuilder::update_table("tarifas");
     sql_builder
         .set("ID_TIPO_TARIFA", &quote(tarifa.id_tipo_tarifa))
@@ -282,12 +295,14 @@ async fn update_tarifa(
         .set("DATA_ATUALIZACAO", &quote(tarifa.data_atualizacao))
         .set("SITUACAO", &quote(&tarifa.situacao))
         .set("TIPO", &quote(&tarifa.tipo));
-    sql_builder.and_where_eq("ID_TARIFA", id_tarifa.into_inner());
+    sql_builder.and_where_eq("ID_TARIFA", id);
 
-    let sql = match sql_builder.sql() {
+    let update_sql = match sql_builder.sql() {
         Ok(x) => x,
         Err(_) => return HttpResponse::InternalServerError().body("Erro ao atualizar tarifa"),
     };
+
+    let sql = format!("{}{}", backup_sql, update_sql);
 
     let result = batch_execute(&sql, pool.get_ref().clone()).await;
     match result {

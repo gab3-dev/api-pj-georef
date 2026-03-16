@@ -3,6 +3,7 @@
 //! These are integration tests that test the HTTP layer of the API.
 //! They require a running PostgreSQL database.
 
+mod auth_tests;
 mod operadora_tests;
 mod pedagio_tests;
 mod tarifa_tests;

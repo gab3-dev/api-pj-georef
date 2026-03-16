@@ -1,0 +1,67 @@
+<div class="update-container">
+  <mat-form-field class="search-field" appearance="outline">
+    <mat-label>Buscar Operadora</mat-label>
+    <input matInput [formControl]="searchControl" [matAutocomplete]="auto"
+           placeholder="Digite o nome, razão social ou código">
+    <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn"
+                      (optionSelected)="onSelected($event.option.value)">
+      @for (op of filteredOperadoras; track op.codigo_operadora) {
+        <mat-option [value]="op">{{ op.codigo_operadora }} - {{ op.operadora }}</mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+
+  @if (selectedOperadora) {
+    <form [formGroup]="updateForm" (ngSubmit)="onSubmit()">
+      <div class="text-field">
+        <label>Responsável</label>
+        <input type="text" formControlName="responsavel">
+      </div>
+      <div class="text-field">
+        <label>Grupo</label>
+        <input type="text" formControlName="grupo">
+      </div>
+      <div class="text-field">
+        <label>Código da Operadora</label>
+        <input type="number" formControlName="codigo_operadora">
+      </div>
+      <div class="text-field">
+        <label>Operadora</label>
+        <input type="text" formControlName="operadora">
+      </div>
+      <div class="text-field">
+        <label>Razão Social</label>
+        <input type="text" formControlName="razao_social">
+      </div>
+      <div class="text-field">
+        <label>CNPJ</label>
+        <input type="text" formControlName="cnpj">
+      </div>
+      <div class="text-field">
+        <label>Email</label>
+        <input type="email" formControlName="email">
+      </div>
+      <div class="text-field">
+        <label>Telefone</label>
+        <input type="text" formControlName="telefone">
+      </div>
+
+      @if (loading) {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      }
+
+      @if (successMessage) {
+        <div class="message success">{{ successMessage }}</div>
+      }
+
+      @if (errorMessage) {
+        <div class="message error">{{ errorMessage }}</div>
+      }
+
+      <button mat-raised-button color="primary" type="submit"
+              [disabled]="updateForm.invalid || loading">
+        Atualizar Operadora
+      </button>
+    </form>
+  }
+</div>

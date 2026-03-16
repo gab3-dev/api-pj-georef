@@ -137,11 +137,34 @@ export class TarifasService {
   }
 
   getTarifas() {
-    // Chama api e formata os dados para objeto
-    // API retorna os dados em json
-    return this.http.get('http://localhost:9999/api/get-tarifas', {
+    return this.http.get<any[]>('http://localhost:9999/api/get-tarifas', {
       responseType: 'json',
       observe: 'response'
+    });
+  }
+
+  updateTarifa(idTarifa: number, data: any) {
+    const payload = {
+      ...data,
+      id_tarifa: Number(idTarifa),
+      descricao: data.descricao || '',
+      rodagem: data.rodagem || '',
+      eixos: Number(data.eixos) || 0,
+      nome: data.nome || '',
+      id_tipo_tarifa: Number(data.id_tipo_tarifa),
+      id_pedagio: Number(data.id_pedagio),
+      multiplicador: Number(data.multiplicador),
+      valor: Number(data.valor),
+    };
+    if (payload.data_criacao && !payload.data_criacao.includes('T')) {
+      payload.data_criacao = `${payload.data_criacao}T00:00:00`;
+    }
+    if (payload.data_atualizacao && !payload.data_atualizacao.includes('T')) {
+      payload.data_atualizacao = `${payload.data_atualizacao}T00:00:00`;
+    }
+    return this.http.put(`http://localhost:9999/api/update-tarifa/${idTarifa}`, JSON.stringify(payload), {
+      headers: { 'Content-Type': 'application/json' },
+      responseType: 'text',
     });
   }
 }

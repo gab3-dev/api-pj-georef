@@ -1,3 +1,4 @@
+use crate::auth::{AdminAutenticado, UsuarioAutenticado};
 use crate::models::*;
 use crate::utils::*;
 
@@ -63,7 +64,7 @@ impl Operadora {
 }
 
 #[post("/api/create-operadora")]
-async fn create_operadora(data: String, pool: web::Data<Pool>) -> impl Responder {
+async fn create_operadora(_admin: AdminAutenticado, data: String, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
     let operadora: Operadora = match Operadora::new(data) {
         Ok(o) => o,
@@ -111,7 +112,7 @@ async fn create_operadora(data: String, pool: web::Data<Pool>) -> impl Responder
 }
 
 #[get("/api/get-operadoras")]
-async fn get_all_operadoras(pool: web::Data<Pool>) -> impl Responder {
+async fn get_all_operadoras(_user: UsuarioAutenticado, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
     sql.push_str("SELECT * FROM operadora;");
     let conn = match pool.get().await {
@@ -136,6 +137,7 @@ async fn get_all_operadoras(pool: web::Data<Pool>) -> impl Responder {
 
 #[get("/api/get-operadora/{codigo_operadora}")]
 async fn get_operadora_by_id(
+    _user: UsuarioAutenticado,
     pool: web::Data<Pool>,
     codigo_operadora: web::Path<i32>,
 ) -> impl Responder {
@@ -165,6 +167,7 @@ async fn get_operadora_by_id(
 
 #[put("/api/update-operadora/{codigo_operadora}")]
 async fn update_operadora(
+    _admin: AdminAutenticado,
     data: String,
     pool: web::Data<Pool>,
     codigo_operadora: web::Path<i32>,

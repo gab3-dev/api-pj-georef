@@ -108,6 +108,10 @@ export class TarifasListComponent {
   }
 
   ngOnInit() {
+    this.reload();
+  }
+
+  reload() {
     this.tarifasService.getTarifas().subscribe({
       next: (tarifas) => {
         this.rowData = tarifas.body as any[];

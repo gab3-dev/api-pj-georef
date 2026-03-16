@@ -1,3 +1,4 @@
+use crate::auth::{AdminAutenticado, UsuarioAutenticado};
 use crate::models::*;
 use crate::utils::*;
 
@@ -60,7 +61,7 @@ impl Pedagio {
 }
 
 #[post("/api/create-pedagio")]
-async fn create_pedagio(data: String, pool: web::Data<Pool>) -> impl Responder {
+async fn create_pedagio(_admin: AdminAutenticado, data: String, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
     let pedagio: Pedagio = match Pedagio::new(data) {
         Ok(p) => p,
@@ -131,7 +132,7 @@ async fn create_pedagio(data: String, pool: web::Data<Pool>) -> impl Responder {
 }
 
 #[get("/api/get-pedagios")]
-async fn get_all_pedagio(pool: web::Data<Pool>) -> impl Responder {
+async fn get_all_pedagio(_user: UsuarioAutenticado, pool: web::Data<Pool>) -> impl Responder {
     let mut sql = String::new();
     sql.push_str(
         "SELECT longitude, latitude, codigo_operadora, nome, situacao, rodovia, km, sentido, cidade, estado, \
@@ -159,7 +160,7 @@ async fn get_all_pedagio(pool: web::Data<Pool>) -> impl Responder {
 }
 
 #[get("/api/get-pedagio/{codigo_pedagio}")]
-async fn get_pedagio_by_id(pool: web::Data<Pool>, codigo_pedagio: web::Path<i8>) -> impl Responder {
+async fn get_pedagio_by_id(_user: UsuarioAutenticado, pool: web::Data<Pool>, codigo_pedagio: web::Path<i8>) -> impl Responder {
     let mut sql = String::new();
     sql.push_str("SELECT * FROM pedagio WHERE CODIGO_PEDAGIO = ");
     sql.push_str(&codigo_pedagio.to_string());
@@ -186,6 +187,7 @@ async fn get_pedagio_by_id(pool: web::Data<Pool>, codigo_pedagio: web::Path<i8>)
 
 #[put("/api/update-pedagio/{id_pedagio}")]
 async fn update_pedagio(
+    _admin: AdminAutenticado,
     data: String,
     pool: web::Data<Pool>,
     id_pedagio: web::Path<i32>,

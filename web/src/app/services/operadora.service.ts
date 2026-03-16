@@ -116,11 +116,17 @@ export class OperadoraService {
   }
 
   getOperadoras() {
-    // Chama api e formata os dados para objeto
-    // API retorna os dados em json
-    return this.http.get('http://localhost:9999/api/get-operadoras', {
+    return this.http.get<any[]>('http://localhost:9999/api/get-operadoras', {
       responseType: 'json',
       observe: 'response'
+    });
+  }
+
+  updateOperadora(codigoOperadora: number, data: any) {
+    data = parseOperadoraJson(data);
+    return this.http.put(`http://localhost:9999/api/update-operadora/${codigoOperadora}`, data, {
+      headers: { 'Content-Type': 'application/json' },
+      responseType: 'text',
     });
   }
 }

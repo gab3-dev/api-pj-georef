@@ -125,6 +125,21 @@ VALUES
     (16, 16, 2, 1.0, 160.0, '2021-06-01', '2021-06-01', 'Ativo', 'Normal'),
     (17, 17, 2, 1.0, 170.0, '2021-06-01', '2021-06-01', 'Ativo', 'Normal');
 
+CREATE TYPE perfil_usuario AS ENUM ('admin', 'user');
+
+CREATE TABLE IF NOT EXISTS usuario (
+    id_usuario uuid DEFAULT gen_random_uuid(),
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    senha_hash VARCHAR(255) NOT NULL,
+    perfil perfil_usuario NOT NULL DEFAULT 'user',
+    data_criacao TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY(id_usuario)
+);
+
+INSERT INTO usuario (nome, email, senha_hash, perfil)
+VALUES ('Teste', 'test@test.com', '$argon2id$v=19$m=19456,t=2,p=1$SCnGoGex3c0d1VLc3PoXaw$Ire6DnC3lw5C36EV901oZhOC0ivgt84J4JrYq6lDIh8', 'user');
+
 -- SELECT JSON_OBJECT(
 --     'id', id,
 --     'longitude', longitude,

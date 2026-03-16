@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { NavbarComponent } from "../components/navbar/navbar.component";
+import { AuthService } from '../auth/auth.service';
 
 @Component({
     selector: 'app-root',
@@ -11,4 +12,5 @@ import { NavbarComponent } from "../components/navbar/navbar.component";
 
 export class AppComponent {
   title = 'BGM';
+  constructor(public authService: AuthService) {}
 }

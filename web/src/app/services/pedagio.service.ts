@@ -232,11 +232,17 @@ export class PedagioService {
   }
 
   getPedagios() {
-    // Chama api e formata os dados para objeto
-    // API retorna os dados em json
-    return this.http.get('http://localhost:9999/api/get-pedagios', {
+    return this.http.get<any[]>('http://localhost:9999/api/get-pedagios', {
       responseType: 'json',
       observe: 'response'
+    });
+  }
+
+  updatePedagio(idPedagio: number, data: any) {
+    data = parsePracaJson(data);
+    return this.http.put(`http://localhost:9999/api/update-pedagio/${idPedagio}`, data, {
+      headers: { 'Content-Type': 'application/json' },
+      responseType: 'text',
     });
   }
 }
