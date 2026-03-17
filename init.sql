@@ -104,6 +104,9 @@ CREATE TABLE IF NOT EXISTS tarifas (
         REFERENCES pedagio(id_pedagio)
 );
 
+CREATE SEQUENCE IF NOT EXISTS tarifas_id_seq START WITH 1000 INCREMENT BY 1;
+SELECT setval('tarifas_id_seq', GREATEST(1000, (SELECT COALESCE(MAX(id_tarifa), 0) + 1 FROM tarifas)));
+
 -- insert for pedagio 2
 INSERT INTO tarifas (id_tarifa, id_tipo_tarifa, id_pedagio, multiplicador, valor, data_criacao, data_atualizacao, situacao, tipo)
 VALUES 

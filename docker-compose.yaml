@@ -12,6 +12,8 @@ services:
       DB_HOST: localhost
       POOL_SIZE: 30
       JWT_SECRET: "${JWT_SECRET:-chave_secreta_desenvolvimento}"
+      SEED_ADMIN: "true"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-admin123}"
     depends_on:
       - db
     deploy:

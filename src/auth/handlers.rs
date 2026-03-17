@@ -187,6 +187,11 @@ pub async fn get_all_usuarios(
 }
 
 pub async fn seed_admin(pool: &Pool) {
+    if std::env::var("SEED_ADMIN").unwrap_or_default() != "true" {
+        log::info!("SEED_ADMIN não está habilitado, pulando seed do admin");
+        return;
+    }
+
     let conn = match pool.get().await {
         Ok(c) => c,
         Err(e) => {
@@ -202,6 +207,9 @@ pub async fn seed_admin(pool: &Pool) {
         )
         .await;
 
+    let admin_password = std::env::var("ADMIN_PASSWORD")
+        .unwrap_or_else(|_| "admin123".to_string());
+
     match row {
         Ok(Some(_)) => {
             log::info!("Admin já existe, pulando seed");
@@ -209,7 +217,7 @@ pub async fn seed_admin(pool: &Pool) {
         Ok(None) => {
             let salt = SaltString::generate(&mut OsRng);
             let senha_hash = Argon2::default()
-                .hash_password(b"admin123", &salt)
+                .hash_password(admin_password.as_bytes(), &salt)
                 .expect("Erro ao gerar hash da senha do admin")
                 .to_string();
 
@@ -225,7 +233,7 @@ pub async fn seed_admin(pool: &Pool) {
                 .await
             {
                 Ok(_) => {
-                    log::warn!("Admin padrão criado: admin@bgm.com / admin123 — ALTERE A SENHA!");
+                    log::warn!("Admin padrão criado: admin@bgm.com — ALTERE A SENHA!");
                 }
                 Err(e) => {
                     log::error!("Erro ao criar admin padrão: {}", e);

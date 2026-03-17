@@ -155,7 +155,7 @@ curl -X POST http://localhost:9999/api/importar-operadoras \
 
 ### Common Parameters
 - **Delimiter**: `;` (semicolon)
-- **Encoding**: UTF8 (operadoras uses ISO88599)
+- **Encoding**: UTF8
 - **Headers**: CSV HEADER (first line contains column names)
 
 ### Expected Responses
@@ -240,7 +240,7 @@ curl -X POST http://localhost:9999/api/importar-operadoras \
    - Tarifas edge cases: 4000-4006
    - Tarifas large volume: 5000-5099
 
-3. **Encoding**: The operadoras import uses ISO88599 encoding, while pedagios and tarifas use UTF8. Ensure your test files are properly encoded.
+3. **Encoding**: All imports use UTF8 encoding. Ensure your test files are properly encoded.
 
 4. **Cleanup**: After testing, you may need to clean up test data from the database to avoid conflicts in subsequent tests.
 
@@ -278,7 +278,7 @@ Ensure the CSV files have proper permissions (0664) and the ./tmp directory is m
 Verify that parent records exist before importing child records. Check the test data uses valid references.
 
 ### Encoding Issues
-If you see garbled characters (�), the file encoding may not match the import encoding setting. Check if the file is UTF8 or ISO88599.
+If you see garbled characters (�), the file encoding may not match the import encoding setting. Ensure the file is UTF8 encoded.
 
 ### Duplicate Key Errors
 The import API prevents duplicate keys. Use different ID ranges or clean up existing test data before re-running tests.

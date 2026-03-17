@@ -279,7 +279,7 @@ async fn update_tarifa(
     // 1) Insert a backup copy of the current row with situacao = 'Inativo'
     let backup_sql = format!(
         "INSERT INTO tarifas (id_tarifa, id_tipo_tarifa, id_pedagio, multiplicador, valor, data_criacao, data_atualizacao, situacao, tipo) \
-         SELECT (SELECT COALESCE(MAX(id_tarifa), 0) + 1 FROM tarifas), id_tipo_tarifa, id_pedagio, multiplicador, valor, data_criacao, data_atualizacao, 'Inativo', tipo \
+         SELECT nextval('tarifas_id_seq'), id_tipo_tarifa, id_pedagio, multiplicador, valor, data_criacao, data_atualizacao, 'Inativo', tipo \
          FROM tarifas WHERE id_tarifa = {};",
         id
     );

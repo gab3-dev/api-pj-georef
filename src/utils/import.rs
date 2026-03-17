@@ -18,12 +18,26 @@ fn read_csv_header(path: &str) -> Result<String, Box<dyn std::error::Error>> {
     let mut reader = BufReader::new(file);
     let mut line = String::new();
     reader.read_line(&mut line)?;
-    let header = line.trim();
+    // Strip UTF-8 BOM if present
+    let header = line.trim().trim_start_matches('\u{feff}');
     if header.is_empty() {
         return Err("Empty CSV file".into());
     }
-    // Replace semicolons with commas for SQL column list
-    Ok(header.replace(';', ","))
+    // Split by semicolon, validate each column name
+    let columns: Vec<&str> = header.split(';').collect();
+    for col in &columns {
+        let col = col.trim();
+        if col.is_empty() {
+            return Err("Nome de coluna vazio no cabeçalho do CSV".into());
+        }
+        if !col.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+            return Err(format!(
+                "Nome de coluna inválido no cabeçalho do CSV: '{}'. Apenas letras, números e underscore são permitidos.",
+                col
+            ).into());
+        }
+    }
+    Ok(columns.iter().map(|c| c.trim()).collect::<Vec<&str>>().join(","))
 }
 
 #[post("/api/importar-operadoras")]
