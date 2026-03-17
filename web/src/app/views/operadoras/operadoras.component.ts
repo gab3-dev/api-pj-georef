@@ -5,6 +5,7 @@ import { OperadorasFormComponent } from "../../components/operadoras-form/operad
 import { CsvImportComponent } from "../../components/csv-import/csv-import.component";
 import { OperadorasUpdateComponent } from "../../components/operadoras-update/operadoras-update.component";
 import { AuthService } from '../../auth/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-operadoras',
@@ -15,6 +16,7 @@ import { AuthService } from '../../auth/auth.service';
 
 export class OperadorasComponent {
   title = 'BGM - Operadoras';
+  importUrl = `${environment.apiUrl}/importar-operadoras`;
 
   @ViewChild(MatTabGroup) tabGroup!: MatTabGroup;
   @ViewChild(OperadorasListComponent) listComponent!: OperadorasListComponent;

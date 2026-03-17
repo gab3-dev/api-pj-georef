@@ -14,6 +14,6 @@ COPY src/ ./src/
 
 RUN cargo build --release
 
-EXPOSE 80
+EXPOSE 8081
 
 CMD ["./target/release/bgm"]

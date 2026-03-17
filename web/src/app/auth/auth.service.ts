@@ -2,6 +2,7 @@ import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { LoginRequest, LoginResponse, UsuarioInfo } from '../models/usuario';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -36,7 +37,7 @@ export class AuthService {
   }
 
   login(request: LoginRequest) {
-    return this.http.post<LoginResponse>('http://localhost:9999/api/login', request);
+    return this.http.post<LoginResponse>(`${environment.apiUrl}/login`, request);
   }
 
   handleLoginSuccess(response: LoginResponse): void {

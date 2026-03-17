@@ -5,6 +5,7 @@ import { PedagiosListComponent } from '../../components/pedagios-list/pedagios-l
 import { CsvImportComponent } from '../../components/csv-import/csv-import.component';
 import { PedagiosUpdateComponent } from '../../components/pedagios-update/pedagios-update.component';
 import { AuthService } from '../../auth/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-pedagios',
@@ -16,6 +17,7 @@ import { AuthService } from '../../auth/auth.service';
 
 export class PedagiosComponent {
   title = 'BGM - Pedagios';
+  importUrl = `${environment.apiUrl}/importar-pedagios`;
 
   @ViewChild(MatTabGroup) tabGroup!: MatTabGroup;
   @ViewChild(PedagiosListComponent) listComponent!: PedagiosListComponent;

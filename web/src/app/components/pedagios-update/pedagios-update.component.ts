@@ -72,12 +72,12 @@ export class PedagiosUpdateComponent {
       p.nome?.toLowerCase().includes(term) ||
       p.rodovia?.toLowerCase().includes(term) ||
       p.cidade?.toLowerCase().includes(term) ||
-      String(p.codigo).includes(term)
+      String(p.codigo_pedagio).includes(term)
     );
   }
 
   displayFn(pedagio: any): string {
-    return pedagio ? `${pedagio.codigo} - ${pedagio.nome}` : '';
+    return pedagio ? `${pedagio.codigo_pedagio} - ${pedagio.nome}` : '';
   }
 
   onSelected(pedagio: any) {
@@ -96,7 +96,7 @@ export class PedagiosUpdateComponent {
       sentido: pedagio.sentido || '',
       cidade: pedagio.cidade || '',
       estado: pedagio.estado || '',
-      codigo_pedagio: pedagio.codigo || pedagio.codigo_pedagio || '',
+      codigo_pedagio: pedagio.codigo_pedagio || '',
       orientacao: pedagio.orientacao || '',
       tipo: pedagio.tipo || '',
       jurisdicao: pedagio.jurisdicao || '',
@@ -140,7 +140,7 @@ export class PedagiosUpdateComponent {
       data_alteracao: new Date().toISOString().substring(0, 10),
     };
 
-    this.pedagioService.updatePedagio(this.selectedPedagio.id_pedagio, payload).subscribe({
+    this.pedagioService.updatePedagio(this.selectedPedagio.codigo_pedagio, payload).subscribe({
       next: () => {
         this.loading = false;
         this.successMessage = 'Pedágio atualizado com sucesso!';

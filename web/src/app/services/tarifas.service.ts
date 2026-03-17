@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FieldInfo } from '../models/field-info';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -117,7 +118,7 @@ export class TarifasService {
       payload.data_atualizacao = `${payload.data_atualizacao}T00:00:00`;
     }
 
-    this.http.post('http://localhost:9999/api/create-tarifa', JSON.stringify(payload), {
+    this.http.post(`${environment.apiUrl}/create-tarifa`, JSON.stringify(payload), {
       headers: {
         'Content-Type': 'application/json'
       },
@@ -137,7 +138,7 @@ export class TarifasService {
   }
 
   getTarifas() {
-    return this.http.get<any[]>('http://localhost:9999/api/get-tarifas', {
+    return this.http.get<any[]>(`${environment.apiUrl}/get-tarifas`, {
       responseType: 'json',
       observe: 'response'
     });
@@ -162,7 +163,7 @@ export class TarifasService {
     if (payload.data_atualizacao && !payload.data_atualizacao.includes('T')) {
       payload.data_atualizacao = `${payload.data_atualizacao}T00:00:00`;
     }
-    return this.http.put(`http://localhost:9999/api/update-tarifa/${idTarifa}`, JSON.stringify(payload), {
+    return this.http.put(`${environment.apiUrl}/update-tarifa/${idTarifa}`, JSON.stringify(payload), {
       headers: { 'Content-Type': 'application/json' },
       responseType: 'text',
     });

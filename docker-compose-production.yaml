@@ -6,7 +6,7 @@ services:
     volumes:
       - ./tmp:/actix/tmp
     environment:
-      HTTP_PORT: 8080
+      HTTP_PORT: 8081
       DB_HOST: localhost
       POOL_SIZE: 30
       JWT_SECRET: "${JWT_SECRET:-chave_secreta_desenvolvimento}"
@@ -19,7 +19,7 @@ services:
           memory: '0.4GB'
     network_mode: host
     ports:
-      - "8080:8080"
+      - "8081:8081"
 
   #api02: # API Backend
   #  <<: *api

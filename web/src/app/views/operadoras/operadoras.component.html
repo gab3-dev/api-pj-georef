@@ -15,7 +15,7 @@
     @if (authService.isAdmin()) {
         <mat-tab label="Importar Operadoras">
             <app-csv-import
-                apiUrl="http://localhost:9999/api/importar-operadoras"
+                [apiUrl]="importUrl"
                 entityLabel="Operadoras"
                 (imported)="onImported()"
             ></app-csv-import>

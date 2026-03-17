@@ -185,12 +185,12 @@ async fn get_pedagio_by_id(_user: UsuarioAutenticado, pool: web::Data<Pool>, cod
     }
 }
 
-#[put("/api/update-pedagio/{id_pedagio}")]
+#[put("/api/update-pedagio/{codigo_pedagio}")]
 async fn update_pedagio(
     _admin: AdminAutenticado,
     data: String,
     pool: web::Data<Pool>,
-    id_pedagio: web::Path<i32>,
+    codigo_pedagio: web::Path<String>,
 ) -> impl Responder {
     let pedagio: Pedagio = match Pedagio::new(data) {
         Ok(p) => p,
@@ -222,7 +222,7 @@ async fn update_pedagio(
         .set("CNPJ", &quote(&pedagio.cnpj))
         .set("EMAIL", &quote(&pedagio.email))
         .set("TELEFONE", &quote(&pedagio.telefone));
-    sql_builder.and_where_eq("ID_PEDAGIO", id_pedagio.into_inner());
+    sql_builder.and_where_eq("CODIGO", &quote(codigo_pedagio.into_inner()));
 
     let sql = match sql_builder.sql() {
         Ok(x) => x,

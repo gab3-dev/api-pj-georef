@@ -5,8 +5,8 @@
            placeholder="Digite o nome, rodovia, cidade ou código">
     <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn"
                       (optionSelected)="onSelected($event.option.value)">
-      @for (p of filteredPedagios; track p.id_pedagio) {
-        <mat-option [value]="p">{{ p.codigo }} - {{ p.nome }}</mat-option>
+      @for (p of filteredPedagios; track p.codigo_pedagio) {
+        <mat-option [value]="p">{{ p.codigo_pedagio }} - {{ p.nome }}</mat-option>
       }
     </mat-autocomplete>
   </mat-form-field>

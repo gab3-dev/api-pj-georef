@@ -5,6 +5,7 @@ import { TarifasFormComponent } from "../../components/tarifas-form/tarifas-form
 import { CsvImportComponent } from "../../components/csv-import/csv-import.component";
 import { TarifasUpdateComponent } from "../../components/tarifas-update/tarifas-update.component";
 import { AuthService } from '../../auth/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-tarifas',
@@ -13,6 +14,7 @@ import { AuthService } from '../../auth/auth.service';
   styleUrl: './tarifas.component.scss'
 })
 export class TarifasComponent {
+  importUrl = `${environment.apiUrl}/importar-tarifas`;
   @ViewChild(MatTabGroup) tabGroup!: MatTabGroup;
   @ViewChild(TarifasListComponent) listComponent!: TarifasListComponent;
 

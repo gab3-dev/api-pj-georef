@@ -10,8 +10,7 @@ export const authGuard: CanActivateFn = () => {
     return true;
   }
 
-  router.navigate(['/login']);
-  return false;
+  return router.createUrlTree(['/login']);
 };
 
 export const adminGuard: CanActivateFn = () => {
@@ -22,6 +21,5 @@ export const adminGuard: CanActivateFn = () => {
     return true;
   }
 
-  router.navigate(['/']);
-  return false;
+  return router.createUrlTree(['/']);
 };
