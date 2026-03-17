@@ -1,11 +1,24 @@
 <mat-tab-group>
-    <mat-tab label="Cadastrar Tarifa">
-        <app-tarifas-form></app-tarifas-form>
-    </mat-tab>
+    @if (authService.isAdmin()) {
+        <mat-tab label="Cadastrar Tarifa">
+            <app-tarifas-form></app-tarifas-form>
+        </mat-tab>
+    }
     <mat-tab label="Listar Tarifas">
         <app-tarifas-list></app-tarifas-list>
     </mat-tab>
-    <mat-tab label="Importar Tarifas">
-        <app-tarifas-import></app-tarifas-import>
-    </mat-tab>
+    @if (authService.isAdmin()) {
+        <mat-tab label="Atualizar Tarifa">
+            <app-tarifas-update></app-tarifas-update>
+        </mat-tab>
+    }
+    @if (authService.isAdmin()) {
+        <mat-tab label="Importar Tarifas">
+            <app-csv-import
+                [apiUrl]="importUrl"
+                entityLabel="Tarifas"
+                (imported)="onImported()"
+            ></app-csv-import>
+        </mat-tab>
+    }
 </mat-tab-group>

@@ -1,11 +1,24 @@
 <mat-tab-group>
-    <mat-tab label="Cadastrar Operadora">
-        <app-operadoras-form></app-operadoras-form>
-    </mat-tab>
+    @if (authService.isAdmin()) {
+        <mat-tab label="Cadastrar Operadora">
+            <app-operadoras-form></app-operadoras-form>
+        </mat-tab>
+    }
     <mat-tab label="Listar Operadoras">
         <app-operadoras-list></app-operadoras-list>
     </mat-tab>
-    <mat-tab label="Importar Operadoras">
-        <app-operadoras-import></app-operadoras-import>
-    </mat-tab>
+    @if (authService.isAdmin()) {
+        <mat-tab label="Atualizar Operadora">
+            <app-operadoras-update></app-operadoras-update>
+        </mat-tab>
+    }
+    @if (authService.isAdmin()) {
+        <mat-tab label="Importar Operadoras">
+            <app-csv-import
+                [apiUrl]="importUrl"
+                entityLabel="Operadoras"
+                (imported)="onImported()"
+            ></app-csv-import>
+        </mat-tab>
+    }
 </mat-tab-group>

@@ -3,6 +3,9 @@ use deadpool_postgres::{Pool, Client};
 
 use actix_multipart::form::{tempfile::TempFile, MultipartForm};
 use std::{fs, fs::Permissions, fs::File, os::unix::fs::PermissionsExt};
+use std::io::{BufRead, BufReader};
+
+use crate::auth::AdminAutenticado;
 
 #[derive(Debug, MultipartForm)]
 pub struct UploadForm {
@@ -10,8 +13,36 @@ pub struct UploadForm {
     files: Vec<TempFile>,
 }
 
+fn read_csv_header(path: &str) -> Result<String, Box<dyn std::error::Error>> {
+    let file = File::open(path)?;
+    let mut reader = BufReader::new(file);
+    let mut line = String::new();
+    reader.read_line(&mut line)?;
+    // Strip UTF-8 BOM if present
+    let header = line.trim().trim_start_matches('\u{feff}');
+    if header.is_empty() {
+        return Err("Empty CSV file".into());
+    }
+    // Split by semicolon, validate each column name
+    let columns: Vec<&str> = header.split(';').collect();
+    for col in &columns {
+        let col = col.trim();
+        if col.is_empty() {
+            return Err("Nome de coluna vazio no cabeçalho do CSV".into());
+        }
+        if !col.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+            return Err(format!(
+                "Nome de coluna inválido no cabeçalho do CSV: '{}'. Apenas letras, números e underscore são permitidos.",
+                col
+            ).into());
+        }
+    }
+    Ok(columns.iter().map(|c| c.trim()).collect::<Vec<&str>>().join(","))
+}
+
 #[post("/api/importar-operadoras")]
 pub async fn import_operadoras(
+    _admin: AdminAutenticado,
     MultipartForm(form): MultipartForm<UploadForm>,
     pool: web::Data<Pool>,
 ) -> Result<impl Responder, actix_web::Error> {
@@ -25,13 +56,24 @@ pub async fn import_operadoras(
             .unwrap();
     }
 
+    // Read header dynamically
+    let columns = match read_csv_header(&path) {
+        Ok(cols) => cols,
+        Err(e) => {
+            log::error!("Failed to read CSV header: {}", e);
+             return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                "erro": "Falha ao ler o cabeçalho do arquivo CSV."
+            })));
+        }
+    };
+
     let path_on_server = path.clone().replace("./tmp/", "/uploaded/");
 
     log::info!("importing operadoras from {path_on_server}");
     let client = pool.get().await.unwrap();
 
     let mut sql = String::new();
-    sql.push_str(format!("COPY operadora (codigo_operadora,operadora,CNPJ,razao_social,data_alteracao,email,telefone,grupo,responsavel) FROM '{path_on_server}' DELIMITER ';' CSV HEADER ENCODING 'ISO88599';").as_str());
+    sql.push_str(format!("COPY operadora ({columns}) FROM '{path_on_server}' WITH (FORMAT csv, HEADER true, DELIMITER ';', ENCODING 'UTF8');").as_str());
 
     log::info!("executing {sql}");
     let result = client.execute(&sql, &[]).await;
@@ -79,6 +121,7 @@ pub async fn import_operadoras(
 
 #[post("/api/importar-tarifas")]
 pub async fn import_tarifas(
+    _admin: AdminAutenticado,
     MultipartForm(form): MultipartForm<UploadForm>,
     pool: web::Data<Pool>,
 ) -> Result<impl Responder, actix_web::Error> {
@@ -92,6 +135,17 @@ pub async fn import_tarifas(
             .unwrap();
     }
 
+    // Read header dynamically
+    let columns = match read_csv_header(&path) {
+        Ok(cols) => cols,
+        Err(e) => {
+            log::error!("Failed to read CSV header: {}", e);
+             return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                "erro": "Falha ao ler o cabeçalho do arquivo CSV."
+            })));
+        }
+    };
+
     let path_on_server = path.clone().replace("./tmp/", "/uploaded/");
 
     log::info!("importing tarifas from {path_on_server}");
@@ -99,7 +153,7 @@ pub async fn import_tarifas(
 
     let mut sql = String::new();
     sql.push_str(
-        format!("COPY tarifas FROM '{path_on_server}' DELIMITER ';' CSV HEADER;").as_str(),
+        format!("COPY tarifas ({columns}) FROM '{path_on_server}' WITH (FORMAT csv, HEADER true, DELIMITER ';', ENCODING 'UTF8');").as_str(),
     );
 
     let result = client.execute(&sql, &[]).await;
@@ -124,6 +178,7 @@ pub async fn import_tarifas(
 
 #[post("/api/importar-pedagios")]
 pub async fn import_pedagios(
+    _admin: AdminAutenticado,
     MultipartForm(form): MultipartForm<UploadForm>,
     pool: web::Data<Pool>,
 ) -> Result<impl Responder, actix_web::Error> {
@@ -142,6 +197,17 @@ pub async fn import_pedagios(
             .unwrap();
     }
 
+    // Read header dynamically
+    let columns = match read_csv_header(&path) {
+        Ok(cols) => cols,
+        Err(e) => {
+            log::error!("Failed to read CSV header: {}", e);
+             return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                "erro": "Falha ao ler o cabeçalho do arquivo CSV."
+            })));
+        }
+    };
+
     // 2. Define o caminho do arquivo como o container do Postgres o enxerga
     //    Isso assume um volume compartilhado: ./tmp do seu app -> /uploaded do Postgres
     let path_on_server = path.clone().replace("./tmp/", "/uploaded/");
@@ -153,11 +219,9 @@ pub async fn import_pedagios(
         .map_err(actix_web::error::ErrorInternalServerError)?;
 
     // 3. Monta o comando SQL COPY
-    //    A lista de colunas deve corresponder exatamente à ordem no seu arquivo CSV
-    //    CSV Header: id_pedagio;Longitude;Latitude;Nome;codigo_operadora;Concessionaria;Situacao;Sigla;rodovia;Km;id_trecho;Sentido;Cidade;Estado;Codigo;orientacao;Tipo;juridicao;cobranca_especial;Categoria;data_alteracao;razao_social;CNPJ;Email;tefefone
-    //    Note: Using positional matching instead of CSV HEADER due to typos in CSV column names (juridicao vs jurisdicao, tefefone vs telefone)
+    //    Usamos as colunas lidas dinamicamente do CSV
     let sql = format!(
-        "COPY pedagio (id_pedagio, longitude, latitude, nome, codigo_operadora, concessionaria, situacao, sigla, rodovia, km, id_trecho, sentido, cidade, estado, codigo, orientacao, tipo, jurisdicao, cobranca_especial, categoria, data_alteracao, razao_social, cnpj, email, telefone) \
+        "COPY pedagio ({columns}) \
          FROM '{path_on_server}' \
          WITH (FORMAT csv, HEADER true, DELIMITER ';', ENCODING 'UTF8');"
     );

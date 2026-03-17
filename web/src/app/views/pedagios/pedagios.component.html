@@ -1,11 +1,24 @@
 <mat-tab-group>
-    <mat-tab label="Cadastrar Pedágio">
-        <app-pedagios-form></app-pedagios-form>
-    </mat-tab>
+    @if (authService.isAdmin()) {
+        <mat-tab label="Cadastrar Pedágio">
+            <app-pedagios-form></app-pedagios-form>
+        </mat-tab>
+    }
     <mat-tab label="Listar Pedágios">
         <app-pedagios-list></app-pedagios-list>
     </mat-tab>
-    <mat-tab label="Importar Pedágios">
-        <app-pedagios-import></app-pedagios-import>
-    </mat-tab>
+    @if (authService.isAdmin()) {
+        <mat-tab label="Atualizar Pedágio">
+            <app-pedagios-update></app-pedagios-update>
+        </mat-tab>
+    }
+    @if (authService.isAdmin()) {
+        <mat-tab label="Importar Pedágios">
+            <app-csv-import
+                [apiUrl]="importUrl"
+                entityLabel="Pedágios"
+                (imported)="onImported()"
+            ></app-csv-import>
+        </mat-tab>
+    }
 </mat-tab-group>

@@ -63,11 +63,14 @@ export class PedagiosListComponent {
   }
 
   ngOnInit() {
+    this.reload();
+  }
+
+  reload() {
     this.pedagioService.getPedagios().subscribe({
-      next: (operadoras) => {
-        this.rowData = operadoras.body as any[];
+      next: (pedagios) => {
+        this.rowData = pedagios.body as any[];
       }
     });
-    this.gridApi.setGridOption("rowData", this.rowData);
   }
 }

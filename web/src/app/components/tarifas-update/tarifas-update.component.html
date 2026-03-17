@@ -1,0 +1,63 @@
+<div class="update-container">
+  <mat-form-field class="search-field" appearance="outline">
+    <mat-label>Buscar Tarifa</mat-label>
+    <input matInput [formControl]="searchControl" [matAutocomplete]="auto"
+           placeholder="Digite o ID, descrição, nome ou tipo">
+    <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn"
+                      (optionSelected)="onSelected($event.option.value)">
+      @for (t of filteredTarifas; track t.id_tarifa) {
+        <mat-option [value]="t">{{ t.id_tarifa }} - {{ t.descricao || t.tipo }}</mat-option>
+      }
+    </mat-autocomplete>
+  </mat-form-field>
+
+  @if (selectedTarifa) {
+    <form [formGroup]="updateForm" (ngSubmit)="onSubmit()">
+      <div class="text-field">
+        <label>ID Tipo Tarifa</label>
+        <input type="number" formControlName="id_tipo_tarifa">
+      </div>
+      <div class="text-field">
+        <label>ID Pedágio</label>
+        <input type="number" formControlName="id_pedagio">
+      </div>
+      <div class="text-field">
+        <label>Multiplicador</label>
+        <input type="number" step="any" formControlName="multiplicador">
+      </div>
+      <div class="text-field">
+        <label>Valor</label>
+        <input type="number" step="any" formControlName="valor">
+      </div>
+      <div class="text-field">
+        <label>Data de Criação</label>
+        <input type="date" formControlName="data_criacao">
+      </div>
+      <div class="text-field">
+        <label>Situação</label>
+        <input type="text" formControlName="situacao">
+      </div>
+      <div class="text-field">
+        <label>Tipo</label>
+        <input type="text" formControlName="tipo">
+      </div>
+
+      @if (loading) {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      }
+
+      @if (successMessage) {
+        <div class="message success">{{ successMessage }}</div>
+      }
+
+      @if (errorMessage) {
+        <div class="message error">{{ errorMessage }}</div>
+      }
+
+      <button mat-raised-button color="primary" type="submit"
+              [disabled]="updateForm.invalid || loading">
+        Atualizar Tarifa
+      </button>
+    </form>
+  }
+</div>

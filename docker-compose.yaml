@@ -4,21 +4,25 @@ services:
     &api
     build: .
     volumes:
-      - ./tmp:/actix/tmp
+      - .:/actix
+      - cargo-cache:/usr/local/cargo/registry
+      - target-cache:/actix/target
     environment:
-      HTTP_PORT: 8080
+      HTTP_PORT: 8081
       DB_HOST: localhost
       POOL_SIZE: 30
+      JWT_SECRET: "${JWT_SECRET:-chave_secreta_desenvolvimento}"
+      SEED_ADMIN: "true"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-admin123}"
     depends_on:
       - db
     deploy:
       resources:
         limits:
-          cpus: '0.1'
-          memory: '0.4GB'
+          cpus: "0.1"
+          memory: "0.4GB"
     network_mode: host
-    ports:
-      - "8080:8080"
+    command: cargo watch -x run
 
   #api02: # API Backend
   #  <<: *api
@@ -43,8 +47,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2'
-          memory: '2.5GB'
+          cpus: "2"
+          memory: "2.5GB"
 
   nginx:
     # Load Balancer
@@ -59,8 +63,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: '3.0GB'
+          cpus: "1"
+          memory: "3.0GB"
 
   db:
     # Database
@@ -78,7 +82,7 @@ services:
     command: postgres -c config_file=/docker-entrypoint-initdb.d/postgresql.conf
     network_mode: host
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready" ]
+      test: ["CMD-SHELL", "pg_isready"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -86,5 +90,9 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.7'
-          memory: '1.0GB'
+          cpus: "0.7"
+          memory: "1.0GB"
+
+volumes:
+  cargo-cache:
+  target-cache:

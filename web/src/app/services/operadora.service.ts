@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { FieldInfo } from '../models/field-info';
 import { HttpClient } from '@angular/common/http';
 import { parseOperadoraJson } from '../utils/handle';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -100,7 +101,7 @@ export class OperadoraService {
   createOperadora(data: any) {
     data = parseOperadoraJson(data);
 
-    this.http.post('http://localhost:9999/api/create-operadora', data, {
+    this.http.post(`${environment.apiUrl}/create-operadora`, data, {
       headers: {
         'Content-Type': 'application/json'
       },
@@ -116,11 +117,17 @@ export class OperadoraService {
   }
 
   getOperadoras() {
-    // Chama api e formata os dados para objeto
-    // API retorna os dados em json
-    return this.http.get('http://localhost:9999/api/get-operadoras', {
+    return this.http.get<any[]>(`${environment.apiUrl}/get-operadoras`, {
       responseType: 'json',
       observe: 'response'
+    });
+  }
+
+  updateOperadora(codigoOperadora: number, data: any) {
+    data = parseOperadoraJson(data);
+    return this.http.put(`${environment.apiUrl}/update-operadora/${codigoOperadora}`, data, {
+      headers: { 'Content-Type': 'application/json' },
+      responseType: 'text',
     });
   }
 }

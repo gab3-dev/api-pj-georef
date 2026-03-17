@@ -11,6 +11,7 @@ use deadpool_postgres::{Config, PoolConfig, Runtime};
 use std::env;
 use tokio_postgres::NoTls;
 
+mod auth;
 mod models;
 use models::*;
 mod utils;
@@ -48,6 +49,12 @@ async fn main() -> std::io::Result<()> {
     let pool = cfg.create_pool(Some(Runtime::Tokio1), NoTls).unwrap();
     println!("postgres pool succesfully created");
 
+    auth::seed_admin(&pool).await;
+
+    let jwt_secret = env::var("JWT_SECRET")
+        .unwrap_or("chave_secreta_desenvolvimento".into());
+    let jwt_config = auth::JwtConfig { secret: jwt_secret };
+
     let http_port = env::var("HTTP_PORT").unwrap_or("9999".into());
 
     log::info!("Running on port {http_port}");
@@ -61,11 +68,15 @@ async fn main() -> std::io::Result<()> {
             .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
             .allowed_header(http::header::CONTENT_TYPE)
             .max_age(3600);
-        App::new() // <- register the created data
+        App::new()
             .wrap(cors)
             .wrap(middleware::Logger::default())
             .app_data(TempFileConfig::default().directory("./tmp"))
             .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::new(jwt_config.clone()))
+            .service(auth::login)
+            .service(auth::create_usuario)
+            .service(auth::get_all_usuarios)
             .service(create_operadora)
             .service(create_pedagio)
             .service(get_all_operadoras)

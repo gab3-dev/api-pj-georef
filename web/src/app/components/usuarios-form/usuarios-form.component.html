@@ -1,0 +1,38 @@
+<div class="form-container">
+  <h2>Criar Usuário</h2>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nome</mat-label>
+      <input matInput formControlName="nome" placeholder="Nome do usuário">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email" type="email" placeholder="Email do usuário">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Senha</mat-label>
+      <input matInput formControlName="senha" type="password" placeholder="Senha (mínimo 6 caracteres)">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Perfil</mat-label>
+      <mat-select formControlName="perfil">
+        <mat-option value="user">Usuário</mat-option>
+        <mat-option value="admin">Administrador</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    @if (mensagem) {
+      <p class="sucesso">{{ mensagem }}</p>
+    }
+    @if (erro) {
+      <p class="erro">{{ erro }}</p>
+    }
+
+    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">
+      Criar Usuário
+    </button>
+  </form>
+</div>

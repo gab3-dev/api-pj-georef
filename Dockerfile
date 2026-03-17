@@ -1,19 +1,19 @@
 FROM rust:1.90
 
-RUN apt-get update -yqq && apt-get install -yqq cmake g++
+RUN apt-get update -yqq && \
+    apt-get install -yqq cmake g++ && \
+    cargo install cargo-watch
 
 WORKDIR /actix
 
-RUN mkdir src; touch src/main.rs
-
+# cache de dependências
 COPY Cargo.toml Cargo.lock ./
+RUN mkdir src && echo "fn main(){}" > src/main.rs
+RUN cargo build
 
-RUN cargo fetch
+# remove dummy
+RUN rm -rf src
 
-COPY src/ ./src/
+EXPOSE 8080
 
-RUN cargo build --release
-
-EXPOSE 80
-
-CMD ["./target/release/bgm"]
+CMD ["cargo", "watch", "-x", "run"]

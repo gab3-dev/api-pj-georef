@@ -104,6 +104,9 @@ CREATE TABLE IF NOT EXISTS tarifas (
         REFERENCES pedagio(id_pedagio)
 );
 
+CREATE SEQUENCE IF NOT EXISTS tarifas_id_seq START WITH 1000 INCREMENT BY 1;
+SELECT setval('tarifas_id_seq', GREATEST(1000, (SELECT COALESCE(MAX(id_tarifa), 0) + 1 FROM tarifas)));
+
 -- insert for pedagio 2
 INSERT INTO tarifas (id_tarifa, id_tipo_tarifa, id_pedagio, multiplicador, valor, data_criacao, data_atualizacao, situacao, tipo)
 VALUES 
@@ -124,6 +127,21 @@ VALUES
     (15, 15, 2, 1.0, 150.0, '2021-06-01', '2021-06-01', 'Ativo', 'Normal'),
     (16, 16, 2, 1.0, 160.0, '2021-06-01', '2021-06-01', 'Ativo', 'Normal'),
     (17, 17, 2, 1.0, 170.0, '2021-06-01', '2021-06-01', 'Ativo', 'Normal');
+
+CREATE TYPE perfil_usuario AS ENUM ('admin', 'user');
+
+CREATE TABLE IF NOT EXISTS usuario (
+    id_usuario uuid DEFAULT gen_random_uuid(),
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    senha_hash VARCHAR(255) NOT NULL,
+    perfil perfil_usuario NOT NULL DEFAULT 'user',
+    data_criacao TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY(id_usuario)
+);
+
+INSERT INTO usuario (nome, email, senha_hash, perfil)
+VALUES ('Teste', 'test@test.com', '$argon2id$v=19$m=19456,t=2,p=1$SCnGoGex3c0d1VLc3PoXaw$Ire6DnC3lw5C36EV901oZhOC0ivgt84J4JrYq6lDIh8', 'user');
 
 -- SELECT JSON_OBJECT(
 --     'id', id,

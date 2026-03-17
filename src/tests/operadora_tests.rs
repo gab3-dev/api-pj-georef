@@ -2,9 +2,14 @@
 
 use actix_web::{test, web, App};
 use deadpool_postgres::{Config, PoolConfig, Runtime};
+use jsonwebtoken::{encode, EncodingKey, Header};
 use tokio_postgres::NoTls;
 
+use crate::auth::JwtConfig;
+use crate::auth::models::Claims;
 use crate::models::*;
+
+const TEST_SECRET: &str = "test_secret_key";
 
 /// Helper function to create a test database pool
 /// Note: DB_HOST must be set to reach the database container (e.g., "postgres" in docker, "localhost" for local)
@@ -19,23 +24,51 @@ async fn create_test_pool() -> deadpool_postgres::Pool {
     cfg.create_pool(Some(Runtime::Tokio1), NoTls).unwrap()
 }
 
+fn jwt_config() -> JwtConfig {
+    JwtConfig { secret: TEST_SECRET.to_string() }
+}
+
+fn admin_token() -> String {
+    let now = chrono::Utc::now().timestamp() as usize;
+    let claims = Claims {
+        sub: "admin@test.com".to_string(),
+        perfil: "admin".to_string(),
+        nome: "Admin".to_string(),
+        iat: now,
+        exp: now + 3600,
+    };
+    encode(&Header::default(), &claims, &EncodingKey::from_secret(TEST_SECRET.as_bytes())).unwrap()
+}
+
+fn user_token() -> String {
+    let now = chrono::Utc::now().timestamp() as usize;
+    let claims = Claims {
+        sub: "user@test.com".to_string(),
+        perfil: "user".to_string(),
+        nome: "User".to_string(),
+        iat: now,
+        exp: now + 3600,
+    };
+    encode(&Header::default(), &claims, &EncodingKey::from_secret(TEST_SECRET.as_bytes())).unwrap()
+}
+
 #[actix_rt::test]
 async fn test_get_all_operadoras_returns_ok() {
     let pool = create_test_pool().await;
-    
+
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(pool))
+            .app_data(web::Data::new(jwt_config()))
             .service(get_all_operadoras)
     ).await;
 
     let req = test::TestRequest::get()
         .uri("/api/get-operadoras")
+        .insert_header(("Authorization", format!("Bearer {}", user_token())))
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
-    // Note: Returns 500 if database is unreachable, 200 if connected
-    // In production tests, database should be available
     assert!(
         resp.status().is_success() || resp.status().as_u16() == 500,
         "Expected success or 500 (db issue), got {:?}", resp.status()
@@ -45,19 +78,20 @@ async fn test_get_all_operadoras_returns_ok() {
 #[actix_rt::test]
 async fn test_get_operadora_by_id_returns_ok() {
     let pool = create_test_pool().await;
-    
+
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(pool))
+            .app_data(web::Data::new(jwt_config()))
             .service(get_operadora_by_id)
     ).await;
 
     let req = test::TestRequest::get()
         .uri("/api/get-operadora/1")
+        .insert_header(("Authorization", format!("Bearer {}", user_token())))
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
-    // May return 500 if database is unreachable
     assert!(
         resp.status().is_success() || resp.status().as_u16() == 500,
         "Expected success or 500 (db issue), got {:?}", resp.status()
@@ -67,10 +101,11 @@ async fn test_get_operadora_by_id_returns_ok() {
 #[actix_rt::test]
 async fn test_create_operadora_with_valid_json() {
     let pool = create_test_pool().await;
-    
+
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(pool))
+            .app_data(web::Data::new(jwt_config()))
             .service(create_operadora)
     ).await;
 
@@ -88,11 +123,11 @@ async fn test_create_operadora_with_valid_json() {
 
     let req = test::TestRequest::post()
         .uri("/api/create-operadora")
+        .insert_header(("Authorization", format!("Bearer {}", admin_token())))
         .set_payload(operadora_json)
         .to_request();
-    
+
     let resp = test::call_service(&app, req).await;
-    // May return 500 if database is unreachable, 200 if successful
     assert!(
         resp.status().is_success() || resp.status().as_u16() == 500,
         "Expected success or 500 (db issue), got {:?}", resp.status()
@@ -100,16 +135,13 @@ async fn test_create_operadora_with_valid_json() {
 }
 
 #[actix_rt::test]
-#[should_panic(expected = "Result::unwrap()")]
-async fn test_create_operadora_with_invalid_json_panics() {
-    // Note: The current API implementation panics on invalid JSON
-    // This test documents the current behavior - ideally this should be fixed
-    // to return a proper HTTP error response instead
+async fn test_create_operadora_with_invalid_json() {
     let pool = create_test_pool().await;
-    
+
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(pool))
+            .app_data(web::Data::new(jwt_config()))
             .service(create_operadora)
     ).await;
 
@@ -117,9 +149,10 @@ async fn test_create_operadora_with_invalid_json_panics() {
 
     let req = test::TestRequest::post()
         .uri("/api/create-operadora")
+        .insert_header(("Authorization", format!("Bearer {}", admin_token())))
         .set_payload(invalid_json)
         .to_request();
-    
-    // This will panic due to unwrap() on JSON parsing error
-    let _resp = test::call_service(&app, req).await;
+
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 400, "Expected 400 for invalid JSON");
 }

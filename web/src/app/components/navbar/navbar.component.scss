@@ -1,17 +1,51 @@
-$fontFamily: 'Roboto', sans-serif;
+$fontFamily: "Roboto", sans-serif;
 
 .navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 20px;
-    padding: 1rem 2rem;
-    color: #fff;
-    background-color: #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 20px;
+  padding: 1rem 2rem;
+  color: #fff;
+  background-color: #333;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .navbar a {
-    color: #e2c028;
-    text-decoration: none;
-    font-family: $fontFamily;
+  color: #e2c028;
+  text-decoration: none;
+  font-family: $fontFamily;
+  cursor: pointer;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: $fontFamily;
+}
+
+.user-name {
+  color: #e2c028;
+  font-weight: bold;
+}
+
+.user-perfil {
+  color: #aaa;
+  font-size: 0.85rem;
+}
+
+.logout-link {
+  color: #ff6b6b;
+  cursor: pointer;
+  font-size: 0.9rem;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }

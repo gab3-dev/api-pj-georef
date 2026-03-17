@@ -1,0 +1,49 @@
+$fontFamily: 'Roboto', sans-serif;
+
+.update-container {
+  padding: 16px;
+  max-width: 700px;
+}
+
+.search-field {
+  width: 100%;
+}
+
+.text-field {
+  font-family: $fontFamily;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+
+  label {
+    font-size: 1rem;
+    margin-bottom: 0.3rem;
+    padding-left: 0.5rem;
+  }
+
+  input, select {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 0.25rem;
+  }
+}
+
+.message {
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  white-space: pre-line;
+
+  &.success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+  }
+
+  &.error {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+  }
+}

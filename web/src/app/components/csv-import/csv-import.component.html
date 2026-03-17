@@ -1,0 +1,46 @@
+<div class="csv-import-container">
+  <div
+    class="drop-zone"
+    [class.drag-over]="dragOver"
+    [class.has-file]="selectedFile"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    (click)="fileInput.click()"
+  >
+    <input
+      #fileInput
+      type="file"
+      accept=".csv"
+      (change)="onFileSelected($event)"
+      hidden
+    />
+    <mat-icon class="upload-icon">cloud_upload</mat-icon>
+    @if (selectedFile) {
+      <p class="file-name">{{ selectedFile.name }}</p>
+    } @else {
+      <p>Arraste um arquivo CSV aqui ou clique para selecionar</p>
+    }
+  </div>
+
+  <button
+    mat-raised-button
+    color="primary"
+    [disabled]="!selectedFile || uploading"
+    (click)="uploadFile()"
+  >
+    Importar {{ entityLabel }}
+  </button>
+
+  @if (uploading) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
+
+  @if (successMessage) {
+    <div class="message success">{{ successMessage }}</div>
+  }
+
+  @if (errorMessage) {
+    <div class="message error">{{ errorMessage }}</div>
+  }
+</div>

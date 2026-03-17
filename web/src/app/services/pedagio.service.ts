@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { FieldInfo } from '../models/field-info';
 import { HttpClient } from '@angular/common/http';
 import { parsePracaJson } from '../utils/handle';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -206,7 +207,7 @@ export class PedagioService {
 
   async createPraca(data: any) {
     data = parsePracaJson(data);
-    this.http.post('http://localhost:9999/api/create-praca', data, {
+    this.http.post(`${environment.apiUrl}/create-praca`, data, {
       headers: {
         'Content-Type': 'application/json'
       },
@@ -232,11 +233,17 @@ export class PedagioService {
   }
 
   getPedagios() {
-    // Chama api e formata os dados para objeto
-    // API retorna os dados em json
-    return this.http.get('http://localhost:9999/api/get-pedagios', {
+    return this.http.get<any[]>(`${environment.apiUrl}/get-pedagios`, {
       responseType: 'json',
       observe: 'response'
+    });
+  }
+
+  updatePedagio(codigoPedagio: string, data: any) {
+    data = parsePracaJson(data);
+    return this.http.put(`${environment.apiUrl}/update-pedagio/${codigoPedagio}`, data, {
+      headers: { 'Content-Type': 'application/json' },
+      responseType: 'text',
     });
   }
 }
