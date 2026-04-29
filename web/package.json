@@ -9,7 +9,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "e2e": "playwright test",
-    "e2e:docker": "docker compose --env-file ../.env.test -f ../docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from e2e",
+    "e2e:docker": "docker compose --env-file ../.env.test -f ../docker-compose.test.yml up --build --wait db-test api-test web-test && docker compose --env-file ../.env.test -f ../docker-compose.test.yml run --rm e2e",
     "e2e:docker:down": "docker compose --env-file ../.env.test -f ../docker-compose.test.yml down -v --remove-orphans",
     "serve:ssr:bgm-web": "node dist/bgm-web/server/server.mjs"
   },

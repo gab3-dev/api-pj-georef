@@ -30,6 +30,12 @@ jobs:
         working-directory: web
         run: npm run e2e:docker
 
+      - name: Show Docker logs on failure
+        if: failure()
+        run: |
+          docker compose --env-file .env.test -f docker-compose.test.yml ps
+          docker compose --env-file .env.test -f docker-compose.test.yml logs --tail=200 db-test api-test web-test e2e
+
       - name: Upload Playwright artifacts
         if: failure()
         uses: actions/upload-artifact@v4
