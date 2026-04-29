@@ -12,7 +12,10 @@ use std::env;
 use tokio_postgres::NoTls;
 
 mod auth;
+mod operadora;
+mod pedagio;
 mod models;
+mod tarifa;
 use models::*;
 mod utils;
 use utils::*;

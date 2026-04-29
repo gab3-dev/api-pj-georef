@@ -23,9 +23,7 @@ pub async fn batch_execute(sql: &str, pool: Pool) -> Result<(), HttpResponse> {
         Err(_) => return Err(HttpResponse::InternalServerError().body("Erro ao executar batch")),
     };
     match transaction.commit().await {
-        Ok(_) => return Ok(()),
-        Err(_) => {
-            return Err(HttpResponse::InternalServerError().body("Erro ao commitar transação"))
-        }
-    };
+        Ok(_) => Ok(()),
+        Err(_) => Err(HttpResponse::InternalServerError().body("Erro ao commitar transação")),
+    }
 }

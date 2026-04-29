@@ -5,9 +5,6 @@ pub use serde::{Deserialize, Serialize};
 pub use sql_builder::{quote, SqlBuilder};
 pub use tokio_postgres::Row;
 
-pub mod operadora;
-pub use operadora::*;
-pub mod pedagio;
-pub use pedagio::*;
-pub mod tarifa;
-pub use tarifa::*;
+pub use crate::operadora::*;
+pub use crate::pedagio::*;
+pub use crate::tarifa::*;
