@@ -15,7 +15,7 @@ export class OperadorasFormComponent {
   operadoraService: OperadoraService = inject(OperadoraService);
 
   operadoraForm = new FormGroup({
-    data_operacao: new FormControl(
+    data_alteracao: new FormControl(
       '',
       {
         validators: [Validators.required, Validators.minLength(5), Validators.pattern('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')],
@@ -36,10 +36,13 @@ export class OperadorasFormComponent {
   });
 
   onSubmit() {
-    if (this.operadoraForm.value.data_operacao) {
-      this.operadoraForm.value.data_operacao = formatDate(this.operadoraForm.value.data_operacao, 'yyyy-MM-dd', 'en-US');
+    const data = this.operadoraForm.getRawValue();
+
+    if (data.data_alteracao) {
+      data.data_alteracao = formatDate(data.data_alteracao, 'yyyy-MM-dd', 'en-US');
     }
-    this.operadoraService.createOperadora(this.operadoraForm.value);
+
+    this.operadoraService.createOperadora(data);
   }
 
   constructor() {

@@ -13,7 +13,7 @@ export class OperadoraService {
   fieldInfoList: FieldInfo[] = [
     {
       id: 1,
-      name: 'data_operacao',
+      name: 'data_alteracao',
       label: 'Data da Operação',
       type: 'date',
       required: true,
