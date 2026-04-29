@@ -53,6 +53,25 @@ bafac24683f2   postgres              "docker-entrypoint.s…"   6 days ago   Up 
 ```
 Acima temos um exemplo de todos os containers rodando, deve haver 4 containers listados.
 
+## Testes E2E Web
+Os testes E2E usam Playwright em um ambiente Docker isolado, definido em `docker-compose.test.yml`.
+Esse compose cria rede própria, banco separado e volumes exclusivos de teste; a API e o banco não expõem portas para o host.
+
+Para executar:
+```bash
+cd web
+npm run e2e:docker
+```
+
+Para limpar containers e volumes do ambiente E2E:
+```bash
+cd web
+npm run e2e:docker:down
+```
+
+O compose de teste carrega apenas as variáveis de `.env.test` pelo comando `docker compose --env-file ../.env.test -f ../docker-compose.test.yml`.
+O serviço `api-test` roda com `SEED_ADMIN=true` somente nesse ambiente e cria `admin@bgm.com` usando `ADMIN_PASSWORD` de `.env.test`.
+
 ## Vamos para os Testes - API Methods
 POST - Para criar operadora, passe o json como o exemplo.
 ```bash

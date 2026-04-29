@@ -1,0 +1,35 @@
+name: Web E2E
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  playwright-docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run isolated Docker E2E stack
+        working-directory: web
+        run: npm run e2e:docker
+
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-artifacts
+          path: |
+            web/test-results
+            web/playwright-report
+          if-no-files-found: ignore
+
+      - name: Clean E2E stack
+        if: always()
+        working-directory: web
+        run: npm run e2e:docker:down

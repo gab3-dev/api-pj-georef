@@ -1,0 +1,85 @@
+name: api-pj-georef-e2e
+
+services:
+  db-test:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - db-test-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  api-test:
+    build: .
+    environment:
+      HTTP_PORT: 8081
+      DB_HOST: db-test
+      POOL_SIZE: 10
+      JWT_SECRET: ${JWT_SECRET}
+      SEED_ADMIN: "true"
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    volumes:
+      - .:/actix
+      - cargo-cache-test:/usr/local/cargo/registry
+      - target-cache-test:/actix/target
+      - api-tmp-test:/actix/tmp
+    depends_on:
+      db-test:
+        condition: service_healthy
+    command: cargo run
+
+  web-test:
+    image: node:22.15.1-alpine
+    working_dir: /usr/src/app
+    environment:
+      CI: "true"
+    volumes:
+      - ./web:/usr/src/app
+      - web-node-modules-test:/usr/src/app/node_modules
+    depends_on:
+      - api-test
+    command: sh -c "npm ci && npm run start:e2e"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:4200/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.59.1-noble
+    working_dir: /usr/src/app
+    environment:
+      PLAYWRIGHT_BASE_URL: http://web-test:4200
+      API_URL: http://api-test:8081/api
+      DB_HOST: db-test
+      DB_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      ADMIN_EMAIL: admin@bgm.com
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    volumes:
+      - ./web:/usr/src/app
+      - web-node-modules-test:/usr/src/app/node_modules
+    depends_on:
+      db-test:
+        condition: service_healthy
+      web-test:
+        condition: service_healthy
+    command: npx playwright test
+
+volumes:
+  api-tmp-test:
+  cargo-cache-test:
+  target-cache-test:
+  db-test-data:
+  web-node-modules-test:
