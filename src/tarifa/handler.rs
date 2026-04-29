@@ -25,10 +25,7 @@ pub async fn get_all_tipos_tarifa(
     pool: web::Data<Pool>,
 ) -> impl Responder {
     match db::get_all_tipos_tarifa(pool.get_ref()).await {
-        Ok(rows) => {
-            let tipos_tarifa: Vec<TipoTarifa> = rows.iter().map(TipoTarifa::from).collect();
-            HttpResponse::Ok().json(tipos_tarifa)
-        }
+        Ok(tipos_tarifa) => HttpResponse::Ok().json(tipos_tarifa),
         Err(err) => err,
     }
 }
@@ -56,10 +53,7 @@ pub async fn get_all_tarifas(
     pool: web::Data<Pool>,
 ) -> impl Responder {
     match db::get_all_tarifas(pool.get_ref()).await {
-        Ok(rows) => {
-            let tarifas: Vec<Tarifa> = rows.iter().map(Tarifa::from).collect();
-            HttpResponse::Ok().json(tarifas)
-        }
+        Ok(tarifas) => HttpResponse::Ok().json(tarifas),
         Err(err) => err,
     }
 }
@@ -71,10 +65,7 @@ pub async fn get_tarifa_by_id(
     id_tarifa: web::Path<i32>,
 ) -> impl Responder {
     match db::get_tarifa_by_id(pool.get_ref(), id_tarifa.into_inner()).await {
-        Ok(rows) => {
-            let tarifas: Vec<Tarifa> = rows.iter().map(Tarifa::from).collect();
-            HttpResponse::Ok().json(tarifas)
-        }
+        Ok(tarifas) => HttpResponse::Ok().json(tarifas),
         Err(err) => err,
     }
 }

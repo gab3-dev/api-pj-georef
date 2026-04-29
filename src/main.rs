@@ -7,9 +7,8 @@ use actix_web::{
     web::{self},
     App, HttpServer,
 };
-use deadpool_postgres::{Config, PoolConfig, Runtime};
+use sqlx::postgres::PgPoolOptions;
 use std::env;
-use tokio_postgres::NoTls;
 
 mod auth;
 mod operadora;
@@ -31,25 +30,27 @@ async fn main() -> std::io::Result<()> {
     log::info!("creating temporary upload directory");
     std::fs::create_dir_all("./tmp")?;
 
-    let mut cfg = Config::new();
-    cfg.host = Some(
-        env::var("DB_HOST")
-            .unwrap_or("localhost".into())
-            .to_string(),
+    let db_host = env::var("DB_HOST").unwrap_or("localhost".into());
+    let db_port = env::var("DB_PORT").unwrap_or("5432".into());
+    let db_name = env::var("DB_NAME").unwrap_or("pj_georef".into());
+    let db_user = env::var("DB_USER").unwrap_or("root".into());
+    let db_password = env::var("DB_PASSWORD").unwrap_or("1234".into());
+    let database_url = format!(
+        "postgres://{}:{}@{}:{}/{}",
+        db_user, db_password, db_host, db_port, db_name
     );
-    cfg.port = Some(5432);
-    cfg.dbname = Some("pj_georef".to_string());
-    cfg.user = Some("root".to_string());
-    cfg.password = Some("1234".to_string());
 
     let pool_size = env::var("POOL_SIZE")
         .unwrap_or("125".to_string())
         .parse::<usize>()
         .unwrap();
 
-    cfg.pool = PoolConfig::new(pool_size).into();
     println!("creating postgres pool...");
-    let pool = cfg.create_pool(Some(Runtime::Tokio1), NoTls).unwrap();
+    let pool = PgPoolOptions::new()
+        .max_connections(pool_size as u32)
+        .connect(&database_url)
+        .await
+        .unwrap();
     println!("postgres pool succesfully created");
 
     auth::seed_admin(&pool).await;

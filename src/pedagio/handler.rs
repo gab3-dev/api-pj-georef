@@ -25,10 +25,7 @@ pub async fn get_all_pedagio(
     pool: web::Data<Pool>,
 ) -> impl Responder {
     match db::get_all(pool.get_ref()).await {
-        Ok(rows) => {
-            let pedagios: Vec<Pedagio> = rows.iter().map(Pedagio::from).collect();
-            HttpResponse::Ok().json(pedagios)
-        }
+        Ok(pedagios) => HttpResponse::Ok().json(pedagios),
         Err(err) => err,
     }
 }
@@ -40,10 +37,7 @@ pub async fn get_pedagio_by_id(
     codigo_pedagio: web::Path<i8>,
 ) -> impl Responder {
     match db::get_by_id(pool.get_ref(), codigo_pedagio.into_inner()).await {
-        Ok(rows) => {
-            let pedagios: Vec<Pedagio> = rows.iter().map(Pedagio::from).collect();
-            HttpResponse::Ok().json(pedagios)
-        }
+        Ok(pedagios) => HttpResponse::Ok().json(pedagios),
         Err(err) => err,
     }
 }

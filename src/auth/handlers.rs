@@ -3,8 +3,8 @@ use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
-use deadpool_postgres::Pool;
 use jsonwebtoken::{encode, EncodingKey, Header};
+use sqlx::{PgPool, Row};
 
 use super::middleware::AdminAutenticado;
 use super::models::*;
@@ -12,25 +12,16 @@ use super::models::*;
 #[post("/api/login")]
 pub async fn login(
     data: web::Json<LoginRequest>,
-    pool: web::Data<Pool>,
+    pool: web::Data<PgPool>,
     jwt_config: web::Data<JwtConfig>,
 ) -> impl Responder {
-    let conn = match pool.get().await {
-        Ok(c) => c,
-        Err(_) => {
-            return HttpResponse::InternalServerError()
-                .json(serde_json::json!({"erro": "Erro ao conectar ao banco de dados"}));
-        }
-    };
-
-    let row = conn
-        .query_opt(
-            "SELECT nome, email, senha_hash, perfil::TEXT FROM usuario WHERE email = $1",
-            &[&data.email],
-        )
-        .await;
-
-    let row = match row {
+    let row = match sqlx::query(
+        "SELECT nome, email, senha_hash, perfil::TEXT FROM usuario WHERE email = $1",
+    )
+    .bind(&data.email)
+    .fetch_optional(pool.get_ref())
+    .await
+    {
         Ok(Some(r)) => r,
         Ok(None) => {
             return HttpResponse::Unauthorized()
@@ -98,7 +89,7 @@ pub async fn login(
 pub async fn create_usuario(
     _admin: AdminAutenticado,
     data: web::Json<CreateUsuarioRequest>,
-    pool: web::Data<Pool>,
+    pool: web::Data<PgPool>,
 ) -> impl Responder {
     if data.perfil != "admin" && data.perfil != "user" {
         return HttpResponse::BadRequest()
@@ -114,22 +105,14 @@ pub async fn create_usuario(
         }
     };
 
-    let conn = match pool.get().await {
-        Ok(c) => c,
-        Err(_) => {
-            return HttpResponse::InternalServerError()
-                .json(serde_json::json!({"erro": "Erro ao conectar ao banco de dados"}));
-        }
-    };
-
-    let result = conn
-        .execute(
-            &format!(
-                "INSERT INTO usuario (nome, email, senha_hash, perfil) VALUES ($1, $2, $3, '{}')",
-                data.perfil
-            ),
-            &[&data.nome, &data.email, &senha_hash],
-        )
+    let result = sqlx::query(&format!(
+        "INSERT INTO usuario (nome, email, senha_hash, perfil) VALUES ($1, $2, $3, '{}')",
+        data.perfil
+    ))
+        .bind(&data.nome)
+        .bind(&data.email)
+        .bind(&senha_hash)
+        .execute(pool.get_ref())
         .await;
 
     match result {
@@ -150,21 +133,12 @@ pub async fn create_usuario(
 #[get("/api/get-usuarios")]
 pub async fn get_all_usuarios(
     _admin: AdminAutenticado,
-    pool: web::Data<Pool>,
+    pool: web::Data<PgPool>,
 ) -> impl Responder {
-    let conn = match pool.get().await {
-        Ok(c) => c,
-        Err(_) => {
-            return HttpResponse::InternalServerError()
-                .json(serde_json::json!({"erro": "Erro ao conectar ao banco de dados"}));
-        }
-    };
-
-    let rows = conn
-        .query(
+    let rows = sqlx::query(
             "SELECT id_usuario, nome, email, perfil::TEXT, data_criacao FROM usuario ORDER BY data_criacao DESC",
-            &[],
         )
+        .fetch_all(pool.get_ref())
         .await;
 
     match rows {
@@ -186,26 +160,17 @@ pub async fn get_all_usuarios(
     }
 }
 
-pub async fn seed_admin(pool: &Pool) {
+pub async fn seed_admin(pool: &PgPool) {
     if std::env::var("SEED_ADMIN").unwrap_or_default() != "true" {
         log::info!("SEED_ADMIN não está habilitado, pulando seed do admin");
         return;
     }
 
-    let conn = match pool.get().await {
-        Ok(c) => c,
-        Err(e) => {
-            log::error!("Erro ao conectar ao banco para seed do admin: {}", e);
-            return;
-        }
-    };
-
-    let row = conn
-        .query_opt(
-            "SELECT id_usuario FROM usuario WHERE perfil = 'admin'::perfil_usuario LIMIT 1",
-            &[],
-        )
-        .await;
+    let row = sqlx::query(
+        "SELECT id_usuario FROM usuario WHERE perfil = 'admin'::perfil_usuario LIMIT 1",
+    )
+    .fetch_optional(pool)
+    .await;
 
     let admin_password = std::env::var("ADMIN_PASSWORD")
         .unwrap_or_else(|_| "admin123".to_string());
@@ -221,15 +186,13 @@ pub async fn seed_admin(pool: &Pool) {
                 .expect("Erro ao gerar hash da senha do admin")
                 .to_string();
 
-            match conn
-                .execute(
+            match sqlx::query(
                     "INSERT INTO usuario (nome, email, senha_hash, perfil) VALUES ($1, $2, $3, 'admin')",
-                    &[
-                        &"Administrador",
-                        &"admin@bgm.com",
-                        &senha_hash,
-                    ],
                 )
+                .bind("Administrador")
+                .bind("admin@bgm.com")
+                .bind(&senha_hash)
+                .execute(pool)
                 .await
             {
                 Ok(_) => {

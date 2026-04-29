@@ -5,9 +5,8 @@
 
 use actix_web::{test, web, App, http::StatusCode};
 use actix_multipart::form::tempfile::TempFileConfig;
-use deadpool_postgres::{Config, PoolConfig, Runtime};
 use jsonwebtoken::{encode, EncodingKey, Header};
-use tokio_postgres::NoTls;
+use sqlx::postgres::PgPoolOptions;
 
 use crate::auth::JwtConfig;
 use crate::auth::models::Claims;
@@ -15,15 +14,21 @@ use crate::utils::*;
 
 const TEST_SECRET: &str = "test_secret_key";
 
-async fn create_test_pool() -> deadpool_postgres::Pool {
-    let mut cfg = Config::new();
-    cfg.host = Some(std::env::var("DB_HOST").unwrap_or("localhost".into()));
-    cfg.port = Some(5432);
-    cfg.dbname = Some("pj_georef".to_string());
-    cfg.user = Some("root".to_string());
-    cfg.password = Some("1234".to_string());
-    cfg.pool = PoolConfig::new(5).into();
-    cfg.create_pool(Some(Runtime::Tokio1), NoTls).unwrap()
+async fn create_test_pool() -> sqlx::PgPool {
+    let db_host = std::env::var("DB_HOST").unwrap_or("localhost".into());
+    let db_port = std::env::var("DB_PORT").unwrap_or("5432".into());
+    let db_name = std::env::var("DB_NAME").unwrap_or("pj_georef".into());
+    let db_user = std::env::var("DB_USER").unwrap_or("root".into());
+    let db_password = std::env::var("DB_PASSWORD").unwrap_or("1234".into());
+    let database_url = format!(
+        "postgres://{}:{}@{}:{}/{}",
+        db_user, db_password, db_host, db_port, db_name
+    );
+    PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&database_url)
+        .await
+        .unwrap()
 }
 
 fn jwt_config() -> JwtConfig {

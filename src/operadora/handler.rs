@@ -25,10 +25,7 @@ pub async fn get_all_operadoras(
     pool: web::Data<Pool>,
 ) -> impl Responder {
     match db::get_all(pool.get_ref()).await {
-        Ok(rows) => {
-            let operadoras: Vec<Operadora> = rows.iter().map(Operadora::from).collect();
-            HttpResponse::Ok().json(operadoras)
-        }
+        Ok(operadoras) => HttpResponse::Ok().json(operadoras),
         Err(err) => err,
     }
 }
@@ -40,10 +37,7 @@ pub async fn get_operadora_by_id(
     codigo_operadora: web::Path<i32>,
 ) -> impl Responder {
     match db::get_by_id(pool.get_ref(), codigo_operadora.into_inner()).await {
-        Ok(rows) => {
-            let operadoras: Vec<Operadora> = rows.iter().map(Operadora::from).collect();
-            HttpResponse::Ok().json(operadoras)
-        }
+        Ok(operadoras) => HttpResponse::Ok().json(operadoras),
         Err(err) => err,
     }
 }

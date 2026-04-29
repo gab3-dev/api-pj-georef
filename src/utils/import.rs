@@ -1,5 +1,5 @@
 use actix_web::{post, web, HttpResponse, Responder};
-use deadpool_postgres::{Pool, Client};
+use sqlx::PgPool;
 
 use actix_multipart::form::{tempfile::TempFile, MultipartForm};
 use std::{fs, fs::Permissions, fs::File, os::unix::fs::PermissionsExt};
@@ -44,7 +44,7 @@ fn read_csv_header(path: &str) -> Result<String, Box<dyn std::error::Error>> {
 pub async fn import_operadoras(
     _admin: AdminAutenticado,
     MultipartForm(form): MultipartForm<UploadForm>,
-    pool: web::Data<Pool>,
+    pool: web::Data<PgPool>,
 ) -> Result<impl Responder, actix_web::Error> {
     let mut path = String::new();
     for f in form.files {
@@ -70,21 +70,20 @@ pub async fn import_operadoras(
     let path_on_server = path.clone().replace("./tmp/", "/uploaded/");
 
     log::info!("importing operadoras from {path_on_server}");
-    let client = pool.get().await.unwrap();
-
     let mut sql = String::new();
     sql.push_str(format!("COPY operadora ({columns}) FROM '{path_on_server}' WITH (FORMAT csv, HEADER true, DELIMITER ';', ENCODING 'UTF8');").as_str());
 
     log::info!("executing {sql}");
-    let result = client.execute(&sql, &[]).await;
+    let result = sqlx::query(&sql).execute(pool.get_ref()).await;
     log::info!("executed");
 
     match result {
-        Ok(idx) => {
+        Ok(result) => {
+            let rows_affected = result.rows_affected();
             log::info!("operadoras importadas com sucesso, all rows inserted");
             Ok(HttpResponse::Ok()
                 .content_type("application/json")
-                .json(format!("{{\"operadoras_importadas\": {}}}", idx)))
+                .json(format!("{{\"operadoras_importadas\": {}}}", rows_affected)))
         }
         Err(e) => {
             if e.to_string().contains(
@@ -123,7 +122,7 @@ pub async fn import_operadoras(
 pub async fn import_tarifas(
     _admin: AdminAutenticado,
     MultipartForm(form): MultipartForm<UploadForm>,
-    pool: web::Data<Pool>,
+    pool: web::Data<PgPool>,
 ) -> Result<impl Responder, actix_web::Error> {
     let mut path = String::new();
     for f in form.files {
@@ -149,22 +148,21 @@ pub async fn import_tarifas(
     let path_on_server = path.clone().replace("./tmp/", "/uploaded/");
 
     log::info!("importing tarifas from {path_on_server}");
-    let client = pool.get().await.unwrap();
-
     let mut sql = String::new();
     sql.push_str(
         format!("COPY tarifas ({columns}) FROM '{path_on_server}' WITH (FORMAT csv, HEADER true, DELIMITER ';', ENCODING 'UTF8');").as_str(),
     );
 
-    let result = client.execute(&sql, &[]).await;
+    let result = sqlx::query(&sql).execute(pool.get_ref()).await;
 
     match result {
-        Ok(idx) => {
-            log::info!("tarifas importadas com sucesso, {} rows inserted", idx);
+        Ok(result) => {
+            let rows_affected = result.rows_affected();
+            log::info!("tarifas importadas com sucesso, {} rows inserted", rows_affected);
             std::fs::remove_file(path).unwrap_or_else(|_| {
                 log::warn!("Failed to delete tarifas.csv, it may not exist.");
             });
-            Ok(HttpResponse::Ok().json(format!("{{\"tarifas_importadas\": {}}}", idx)))
+            Ok(HttpResponse::Ok().json(format!("{{\"tarifas_importadas\": {}}}", rows_affected)))
         }
         Err(e) => {
             log::error!("error importing tarifas: {e}");
@@ -180,7 +178,7 @@ pub async fn import_tarifas(
 pub async fn import_pedagios(
     _admin: AdminAutenticado,
     MultipartForm(form): MultipartForm<UploadForm>,
-    pool: web::Data<Pool>,
+    pool: web::Data<PgPool>,
 ) -> Result<impl Responder, actix_web::Error> {
     let mut path = String::new();
     // 1. Salva o arquivo enviado em um diretório temporário
@@ -213,11 +211,6 @@ pub async fn import_pedagios(
     let path_on_server = path.clone().replace("./tmp/", "/uploaded/");
 
     log::info!("Iniciando importação de pedágios de: {}", path_on_server);
-    let client: Client = pool
-        .get()
-        .await
-        .map_err(actix_web::error::ErrorInternalServerError)?;
-
     // 3. Monta o comando SQL COPY
     //    Usamos as colunas lidas dinamicamente do CSV
     let sql = format!(
@@ -227,11 +220,12 @@ pub async fn import_pedagios(
     );
 
     log::info!("Executando SQL: {}", sql);
-    let result = client.execute(sql.as_str(), &[]).await;
+    let result = sqlx::query(sql.as_str()).execute(pool.get_ref()).await;
 
     // 4. Trata o resultado da importação
     match result {
-        Ok(rows_affected) => {
+        Ok(result) => {
+            let rows_affected = result.rows_affected();
             log::info!("{} pedágios importados com sucesso.", rows_affected);
             // Limpa o arquivo temporário após o sucesso
             fs::remove_file(path)
