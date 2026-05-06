@@ -1,18 +1,177 @@
-name: Docker Image CI
+name: API CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  LOCAL_IMAGE: "api-pj-georef:ci-${{ github.sha }}"
+  POSTGRES_USER: root
+  POSTGRES_PASSWORD: ci_postgres_password
+  POSTGRES_DB: pj_georef
+  DB_HOST: localhost
+  DB_PORT: "5432"
+  DB_USER: root
+  DB_PASSWORD: ci_postgres_password
+  DB_NAME: pj_georef
+  JWT_SECRET: not_a_real_secret_for_ci
+  UPLOAD_DIR: ./tmp
+  DB_UPLOAD_DIR: /uploaded
 
 jobs:
-
-  build:
-
+  api:
+    name: Build, test and publish API
     runs-on: ubuntu-latest
+    timeout-minutes: 35
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: docker compose up -d
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@1.90.0
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Start test database
+        run: |
+          mkdir -p tmp
+
+          docker run -d \
+            --name api-ci-test-db \
+            -p 5432:5432 \
+            -e POSTGRES_USER="$POSTGRES_USER" \
+            -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
+            -e POSTGRES_DB="$POSTGRES_DB" \
+            -v "$PWD/init.sql:/docker-entrypoint-initdb.d/init.sql:ro" \
+            -v "$PWD/tmp:/uploaded" \
+            postgres:18
+
+          for attempt in {1..30}; do
+            if docker exec api-ci-test-db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 1 FROM operadora LIMIT 1" > /dev/null 2>&1; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              docker logs api-ci-test-db
+              exit 1
+            fi
+            sleep 2
+          done
+
+      - name: Build Rust application
+        run: cargo build --release --locked
+
+      - name: Run Rust tests
+        env:
+          RUST_TEST_THREADS: "1"
+        run: cargo test --all-targets --locked
+
+      - name: Build API Docker image
+        run: docker build -f Dockerfile.production -t "$LOCAL_IMAGE" .
+
+      - name: Smoke test API container
+        run: |
+          docker network create api-ci
+
+          docker run -d \
+            --name api-ci-db \
+            --network api-ci \
+            -e POSTGRES_USER="$POSTGRES_USER" \
+            -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
+            -e POSTGRES_DB="$POSTGRES_DB" \
+            -v "$PWD/init.sql:/docker-entrypoint-initdb.d/init.sql:ro" \
+            postgres:18
+
+          for attempt in {1..30}; do
+            if docker exec api-ci-db pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"; then
+              break
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              docker logs api-ci-db
+              exit 1
+            fi
+            sleep 2
+          done
+
+          docker run -d \
+            --name api-ci \
+            --network api-ci \
+            -p 8081:8081 \
+            -e HTTP_PORT=8081 \
+            -e DB_HOST=api-ci-db \
+            -e DB_PORT=5432 \
+            -e DB_USER="$DB_USER" \
+            -e DB_PASSWORD="$DB_PASSWORD" \
+            -e DB_NAME="$DB_NAME" \
+            -e JWT_SECRET="$JWT_SECRET" \
+            -e UPLOAD_DIR=/actix/tmp \
+            -e DB_UPLOAD_DIR=/uploaded \
+            "$LOCAL_IMAGE"
+
+          for attempt in {1..30}; do
+            if curl --fail --silent --show-error http://localhost:8081/ > /dev/null; then
+              exit 0
+            fi
+            if [ "$attempt" -eq 30 ]; then
+              docker logs api-ci
+              exit 1
+            fi
+            sleep 2
+          done
+
+      - name: Validate Docker Hub credentials
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          DOCKERHUB_REPOSITORY: ${{ secrets.DOCKERHUB_REPOSITORY }}
+        run: |
+          if [ -z "$DOCKERHUB_USERNAME" ]; then
+            echo "DOCKERHUB_USERNAME secret is required"
+            exit 1
+          fi
+          if [ -z "$DOCKERHUB_TOKEN" ]; then
+            echo "DOCKERHUB_TOKEN secret is required"
+            exit 1
+          fi
+          if [ -z "$DOCKERHUB_REPOSITORY" ]; then
+            echo "DOCKERHUB_REPOSITORY secret is required"
+            exit 1
+          fi
+
+          echo "DOCKERHUB_IMAGE=${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}" >> "$GITHUB_ENV"
+
+      - name: Login to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push API image to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker tag "$LOCAL_IMAGE" "$DOCKERHUB_IMAGE:latest"
+          docker tag "$LOCAL_IMAGE" "$DOCKERHUB_IMAGE:${GITHUB_SHA}"
+          docker push "$DOCKERHUB_IMAGE:latest"
+          docker push "$DOCKERHUB_IMAGE:${GITHUB_SHA}"
+
+      - name: Show Docker logs on failure
+        if: failure()
+        run: |
+          docker ps -a
+          docker logs api-ci-test-db || true
+          docker logs api-ci-db || true
+          docker logs api-ci || true
+
+      - name: Clean smoke test containers
+        if: always()
+        run: |
+          docker rm -f api-ci-test-db || true
+          docker rm -f api-ci api-ci-db || true
+          docker network rm api-ci || true
