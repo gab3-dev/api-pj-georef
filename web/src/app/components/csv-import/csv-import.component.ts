@@ -78,24 +78,7 @@ export class CsvImportComponent {
       next: (event) => {
         if (event.type === HttpEventType.Response) {
           this.uploading = false;
-          const body: any = event.body;
-
-          let count: number | undefined;
-          if (body) {
-            // Look for any key ending in _importadas or _importados
-            for (const key of Object.keys(body)) {
-              if (key.includes('importad')) {
-                count = body[key];
-                break;
-              }
-            }
-          }
-
-          if (count !== undefined) {
-            this.successMessage = `${count} ${this.entityLabel} importados com sucesso!`;
-          } else {
-            this.successMessage = `${this.entityLabel} importados com sucesso!`;
-          }
+          this.successMessage = this.buildSuccessMessage(event.body);
 
           this.resetFileInput();
           this.imported.emit();
@@ -119,5 +102,66 @@ export class CsvImportComponent {
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';
     }
+  }
+
+  private buildSuccessMessage(responseBody: unknown): string {
+    const body = this.parseResponseBody(responseBody);
+    const inserted = this.readNumber(body, 'tarifas_inseridas');
+    const updated = this.readNumber(body, 'tarifas_atualizadas');
+
+    if (inserted !== undefined && updated !== undefined) {
+      const total = this.readNumber(body, 'tarifas_importadas') ?? inserted + updated;
+      return `${total} ${this.entityLabel} importados com sucesso! (${inserted} inseridos, ${updated} atualizados)`;
+    }
+
+    const count = this.findImportedCount(body);
+    if (count !== undefined) {
+      return `${count} ${this.entityLabel} importados com sucesso!`;
+    }
+
+    return `${this.entityLabel} importados com sucesso!`;
+  }
+
+  private parseResponseBody(responseBody: unknown): Record<string, unknown> | null {
+    if (!responseBody) {
+      return null;
+    }
+
+    if (typeof responseBody === 'string') {
+      try {
+        const parsed = JSON.parse(responseBody);
+        return this.isObject(parsed) ? parsed : null;
+      } catch {
+        return null;
+      }
+    }
+
+    return this.isObject(responseBody) ? responseBody : null;
+  }
+
+  private findImportedCount(body: Record<string, unknown> | null): number | undefined {
+    if (!body) {
+      return undefined;
+    }
+
+    for (const key of Object.keys(body)) {
+      if (key.includes('importad')) {
+        return this.toNumber(body[key]);
+      }
+    }
+
+    return undefined;
+  }
+
+  private readNumber(body: Record<string, unknown> | null, key: string): number | undefined {
+    return body ? this.toNumber(body[key]) : undefined;
+  }
+
+  private toNumber(value: unknown): number | undefined {
+    return typeof value === 'number' ? value : undefined;
+  }
+
+  private isObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
   }
 }

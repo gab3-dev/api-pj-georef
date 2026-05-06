@@ -10,6 +10,7 @@ services:
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - db-test-data:/var/lib/postgresql
+      - uploaded-files-test:/uploaded
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -24,12 +25,14 @@ services:
       DB_HOST: db-test
       POOL_SIZE: 10
       JWT_SECRET: ${JWT_SECRET}
+      UPLOAD_DIR: /actix/tmp
+      DB_UPLOAD_DIR: /uploaded
       SEED_ADMIN: "true"
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     volumes:
       - .:/actix
       - cargo-cache-test:/usr/local/cargo/registry
-      - api-tmp-test:/actix/tmp
+      - uploaded-files-test:/actix/tmp
     depends_on:
       db-test:
         condition: service_healthy
@@ -84,6 +87,6 @@ services:
     command: npx playwright test
 
 volumes:
-  api-tmp-test:
   cargo-cache-test:
   db-test-data:
+  uploaded-files-test:
