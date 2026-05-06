@@ -67,6 +67,16 @@ fn uploaded_paths(file_name: &str) -> (String, String) {
     )
 }
 
+fn remove_uploaded_file(path: &str, label: &str) {
+    if path.is_empty() {
+        return;
+    }
+
+    fs::remove_file(path).unwrap_or_else(|e| {
+        log::warn!("Failed to delete uploaded {label} CSV at {path}: {e}");
+    });
+}
+
 #[post("/api/importar-operadoras")]
 pub async fn import_operadoras(
     _admin: AdminAutenticado,
@@ -161,43 +171,146 @@ pub async fn import_tarifas(
         file.set_permissions(Permissions::from_mode(0o664)).unwrap();
     }
 
+    if path.is_empty() {
+        return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+            "erro": "Nenhum arquivo CSV foi enviado."
+        })));
+    }
+
     // Read header dynamically
     let columns = match read_csv_header(&path) {
         Ok(cols) => cols,
         Err(e) => {
             log::error!("Failed to read CSV header: {}", e);
+            remove_uploaded_file(&path, "tarifas");
             return Ok(HttpResponse::BadRequest().json(serde_json::json!({
                 "erro": "Falha ao ler o cabeçalho do arquivo CSV."
             })));
         }
     };
 
-    log::info!("importing tarifas from {path_on_server}");
-    let mut sql = String::new();
-    sql.push_str(
-        format!("COPY tarifas ({columns}) FROM '{path_on_server}' WITH (FORMAT csv, HEADER true, DELIMITER ';', ENCODING 'UTF8');").as_str(),
-    );
+    let column_names = columns.split(',').map(str::trim).collect::<Vec<&str>>();
 
-    let result = sqlx::query(&sql).execute(pool.get_ref()).await;
+    if !column_names.iter().any(|column| *column == "id_tarifa") {
+        remove_uploaded_file(&path, "tarifas");
+        return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+            "erro": "O arquivo CSV de tarifas deve conter a coluna id_tarifa."
+        })));
+    }
+
+    log::info!("importing tarifas from {path_on_server}");
+    let mut conn = match pool.acquire().await {
+        Ok(conn) => conn,
+        Err(e) => {
+            log::error!("error acquiring database connection for tarifas import: {e}");
+            remove_uploaded_file(&path, "tarifas");
+            return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "erro": "Falha ao importar o arquivo de tarifas.",
+                "detalhes": e.to_string()
+            })));
+        }
+    };
+
+    let reset_temp_table = "DROP TABLE IF EXISTS import_tarifas_tmp";
+    let result = async {
+        sqlx::query(reset_temp_table).execute(&mut *conn).await?;
+        sqlx::query("CREATE TEMP TABLE import_tarifas_tmp (LIKE tarifas INCLUDING DEFAULTS)")
+            .execute(&mut *conn)
+            .await?;
+
+        let copy_sql = format!(
+            "COPY import_tarifas_tmp ({columns}) \
+             FROM '{path_on_server}' \
+             WITH (FORMAT csv, HEADER true, DELIMITER ';', ENCODING 'UTF8');"
+        );
+        sqlx::query(&copy_sql).execute(&mut *conn).await?;
+
+        let duplicate_id = sqlx::query_scalar::<_, i32>(
+            "SELECT id_tarifa \
+             FROM import_tarifas_tmp \
+             GROUP BY id_tarifa \
+             HAVING COUNT(*) > 1 \
+             LIMIT 1",
+        )
+        .fetch_optional(&mut *conn)
+        .await?;
+
+        if let Some(id_tarifa) = duplicate_id {
+            return Ok(Err(id_tarifa));
+        }
+
+        let tarifas_atualizadas = sqlx::query_scalar::<_, i64>(
+            "SELECT COUNT(*) \
+             FROM import_tarifas_tmp tmp \
+             WHERE EXISTS ( \
+                 SELECT 1 FROM tarifas t WHERE t.id_tarifa = tmp.id_tarifa \
+             )",
+        )
+        .fetch_one(&mut *conn)
+        .await?;
+
+        let tarifas_importadas =
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM import_tarifas_tmp")
+                .fetch_one(&mut *conn)
+                .await?;
+
+        let update_assignments = column_names
+            .iter()
+            .filter(|column| **column != "id_tarifa")
+            .map(|column| format!("{column} = EXCLUDED.{column}"))
+            .collect::<Vec<String>>()
+            .join(", ");
+        let conflict_action = if update_assignments.is_empty() {
+            "DO NOTHING".to_string()
+        } else {
+            format!("DO UPDATE SET {update_assignments}")
+        };
+
+        let upsert_sql = format!(
+            "INSERT INTO tarifas ({columns}) \
+             SELECT {columns} FROM import_tarifas_tmp \
+             ON CONFLICT (id_tarifa) {conflict_action}"
+        );
+        sqlx::query(&upsert_sql).execute(&mut *conn).await?;
+        sqlx::query(reset_temp_table).execute(&mut *conn).await?;
+
+        Ok::<Result<(i64, i64), i32>, sqlx::Error>(Ok((
+            tarifas_importadas - tarifas_atualizadas,
+            tarifas_atualizadas,
+        )))
+    }
+    .await;
 
     match result {
-        Ok(result) => {
-            let rows_affected = result.rows_affected();
+        Ok(Ok((tarifas_inseridas, tarifas_atualizadas))) => {
             log::info!(
-                "tarifas importadas com sucesso, {} rows inserted",
-                rows_affected
+                "tarifas importadas com sucesso, {} inserted and {} updated",
+                tarifas_inseridas,
+                tarifas_atualizadas
             );
-            std::fs::remove_file(path).unwrap_or_else(|_| {
-                log::warn!("Failed to delete tarifas.csv, it may not exist.");
-            });
-            Ok(HttpResponse::Ok().json(format!("{{\"tarifas_importadas\": {}}}", rows_affected)))
+            remove_uploaded_file(&path, "tarifas");
+            Ok(HttpResponse::Ok().json(serde_json::json!({
+                "tarifas_inseridas": tarifas_inseridas,
+                "tarifas_atualizadas": tarifas_atualizadas,
+                "tarifas_importadas": tarifas_inseridas + tarifas_atualizadas
+            })))
+        }
+        Ok(Err(id_tarifa)) => {
+            let _ = sqlx::query(reset_temp_table).execute(&mut *conn).await;
+            remove_uploaded_file(&path, "tarifas");
+            Ok(HttpResponse::BadRequest().json(serde_json::json!({
+                "erro": "O arquivo CSV contém id_tarifa duplicado.",
+                "detalhes": format!("O id_tarifa {id_tarifa} aparece mais de uma vez no arquivo.")
+            })))
         }
         Err(e) => {
+            let _ = sqlx::query(reset_temp_table).execute(&mut *conn).await;
             log::error!("error importing tarifas: {e}");
-            std::fs::remove_file(path).unwrap_or_else(|_| {
-                log::warn!("Failed to delete tarifas.csv, it may not exist.");
-            });
-            return Ok(HttpResponse::InternalServerError().json(format!("{{\"erro\": \"{}\"}}", e)));
+            remove_uploaded_file(&path, "tarifas");
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "erro": "Falha ao importar o arquivo de tarifas.",
+                "detalhes": e.to_string()
+            })))
         }
     }
 }
