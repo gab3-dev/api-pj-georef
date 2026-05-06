@@ -145,7 +145,14 @@ jobs:
             exit 1
           fi
 
-          echo "DOCKERHUB_IMAGE=${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}" >> "$GITHUB_ENV"
+          if [[ "$DOCKERHUB_REPOSITORY" == */* ]]; then
+            dockerhub_image="$DOCKERHUB_REPOSITORY"
+          else
+            dockerhub_image="${DOCKERHUB_USERNAME}/${DOCKERHUB_REPOSITORY}"
+          fi
+
+          echo "Docker Hub image: ${dockerhub_image}"
+          echo "DOCKERHUB_IMAGE=${dockerhub_image}" >> "$GITHUB_ENV"
 
       - name: Login to Docker Hub
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
