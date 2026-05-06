@@ -26,6 +26,7 @@ jobs:
   api:
     name: Build, test and publish API
     runs-on: ubuntu-latest
+    environment: Production
     timeout-minutes: 35
 
     steps:
