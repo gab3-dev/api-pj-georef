@@ -5,7 +5,7 @@ import { LoginRequest, LoginResponse, UsuarioInfo } from '../models/usuario';
 import { environment } from '../../environments/environment';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class AuthService {
   private usuarioSignal = signal<UsuarioInfo | null>(this.loadUsuario());
@@ -15,7 +15,10 @@ export class AuthService {
   isLoggedIn = computed(() => !!this.tokenSignal());
   isAdmin = computed(() => this.usuarioSignal()?.perfil === 'admin');
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+  ) {}
 
   private isBrowser(): boolean {
     return typeof window !== 'undefined';
@@ -37,7 +40,10 @@ export class AuthService {
   }
 
   login(request: LoginRequest) {
-    return this.http.post<LoginResponse>(`${environment.apiUrl}/login`, request);
+    return this.http.post<LoginResponse>(
+      `${environment.apiUrl}/login`,
+      request,
+    );
   }
 
   handleLoginSuccess(response: LoginResponse): void {

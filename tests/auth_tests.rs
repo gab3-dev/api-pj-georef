@@ -7,15 +7,19 @@
 //! - Login endpoint works correctly
 //! - User management endpoints are admin-only
 
-use actix_web::{test, web, App, http::StatusCode};
 use actix_multipart::form::tempfile::TempFileConfig;
+use actix_web::{http::StatusCode, test, web, App};
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
+    Argon2,
+};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use sqlx::postgres::PgPoolOptions;
 
-use crate::auth::{self, JwtConfig};
-use crate::auth::models::Claims;
-use crate::models::*;
-use crate::utils::*;
+use bgm::auth::models::Claims;
+use bgm::auth::{self, JwtConfig};
+use bgm::models::*;
+use bgm::utils::*;
 
 const TEST_SECRET: &str = "test_secret_key";
 
@@ -36,9 +40,34 @@ async fn create_test_pool() -> sqlx::PgPool {
         .unwrap()
 }
 
+async fn ensure_login_fixture(pool: &sqlx::PgPool) {
+    let salt = SaltString::generate(&mut OsRng);
+    let senha_hash = Argon2::default()
+        .hash_password("12345678".as_bytes(), &salt)
+        .unwrap()
+        .to_string();
+
+    sqlx::query(
+        "INSERT INTO usuario (nome, email, senha_hash, perfil)
+         VALUES ($1, $2, $3, $4::perfil_usuario)
+         ON CONFLICT (email) DO UPDATE SET
+             nome = EXCLUDED.nome,
+             senha_hash = EXCLUDED.senha_hash,
+             perfil = EXCLUDED.perfil",
+    )
+    .bind("Teste")
+    .bind("test@test.com")
+    .bind(senha_hash)
+    .bind("user")
+    .execute(pool)
+    .await
+    .unwrap();
+}
+
 fn jwt_config() -> JwtConfig {
     JwtConfig {
         secret: TEST_SECRET.to_string(),
+        expiration_seconds: 8 * 3600,
     }
 }
 
@@ -792,6 +821,7 @@ async fn test_get_tipos_tarifa_returns_ok_with_user_token() {
 #[actix_rt::test]
 async fn test_login_with_valid_credentials() {
     let pool = create_test_pool().await;
+    ensure_login_fixture(&pool).await;
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(pool))
@@ -816,6 +846,7 @@ async fn test_login_with_valid_credentials() {
 #[actix_rt::test]
 async fn test_login_with_wrong_password() {
     let pool = create_test_pool().await;
+    ensure_login_fixture(&pool).await;
     let app = test::init_service(
         App::new()
             .app_data(web::Data::new(pool))

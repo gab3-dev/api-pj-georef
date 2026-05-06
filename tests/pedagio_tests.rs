@@ -4,9 +4,9 @@ use actix_web::{test, web, App};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use sqlx::postgres::PgPoolOptions;
 
-use crate::auth::JwtConfig;
-use crate::auth::models::Claims;
-use crate::models::*;
+use bgm::auth::models::Claims;
+use bgm::auth::JwtConfig;
+use bgm::models::*;
 
 const TEST_SECRET: &str = "test_secret_key";
 
@@ -28,7 +28,10 @@ async fn create_test_pool() -> sqlx::PgPool {
 }
 
 fn jwt_config() -> JwtConfig {
-    JwtConfig { secret: TEST_SECRET.to_string() }
+    JwtConfig {
+        secret: TEST_SECRET.to_string(),
+        expiration_seconds: 8 * 3600,
+    }
 }
 
 fn admin_token() -> String {
@@ -40,7 +43,12 @@ fn admin_token() -> String {
         iat: now,
         exp: now + 3600,
     };
-    encode(&Header::default(), &claims, &EncodingKey::from_secret(TEST_SECRET.as_bytes())).unwrap()
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(TEST_SECRET.as_bytes()),
+    )
+    .unwrap()
 }
 
 fn user_token() -> String {
@@ -52,7 +60,12 @@ fn user_token() -> String {
         iat: now,
         exp: now + 3600,
     };
-    encode(&Header::default(), &claims, &EncodingKey::from_secret(TEST_SECRET.as_bytes())).unwrap()
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(TEST_SECRET.as_bytes()),
+    )
+    .unwrap()
 }
 
 #[actix_rt::test]
@@ -63,8 +76,9 @@ async fn test_get_all_pedagios_returns_ok() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_pedagio)
-    ).await;
+            .service(get_all_pedagio),
+    )
+    .await;
 
     let req = test::TestRequest::get()
         .uri("/api/get-pedagios")
@@ -74,7 +88,8 @@ async fn test_get_all_pedagios_returns_ok() {
     let resp = test::call_service(&app, req).await;
     assert!(
         resp.status().is_success() || resp.status().as_u16() == 500,
-        "Expected success or 500 (db issue), got {:?}", resp.status()
+        "Expected success or 500 (db issue), got {:?}",
+        resp.status()
     );
 }
 
@@ -86,8 +101,9 @@ async fn test_get_pedagio_by_id_returns_ok() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_pedagio_by_id)
-    ).await;
+            .service(get_pedagio_by_id),
+    )
+    .await;
 
     let req = test::TestRequest::get()
         .uri("/api/get-pedagio/1")
@@ -97,7 +113,8 @@ async fn test_get_pedagio_by_id_returns_ok() {
     let resp = test::call_service(&app, req).await;
     assert!(
         resp.status().is_success() || resp.status().as_u16() == 500,
-        "Expected success or 500 (db issue), got {:?}", resp.status()
+        "Expected success or 500 (db issue), got {:?}",
+        resp.status()
     );
 }
 
@@ -109,8 +126,9 @@ async fn test_create_pedagio_with_valid_json() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_pedagio)
-    ).await;
+            .service(create_pedagio),
+    )
+    .await;
 
     let pedagio_json = r#"{
         "pedagio": "pedagio",
@@ -146,7 +164,8 @@ async fn test_create_pedagio_with_valid_json() {
     let resp = test::call_service(&app, req).await;
     assert!(
         resp.status().is_success() || resp.status().as_u16() == 500,
-        "Expected success or 500 (db issue), got {:?}", resp.status()
+        "Expected success or 500 (db issue), got {:?}",
+        resp.status()
     );
 }
 
@@ -158,8 +177,9 @@ async fn test_create_pedagio_with_invalid_json() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_pedagio)
-    ).await;
+            .service(create_pedagio),
+    )
+    .await;
 
     let invalid_json = r#"{ invalid json }"#;
 

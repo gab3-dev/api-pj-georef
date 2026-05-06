@@ -20,10 +20,7 @@ pub async fn create_pedagio(
 }
 
 #[get("/api/get-pedagios")]
-pub async fn get_all_pedagio(
-    _user: UsuarioAutenticado,
-    pool: web::Data<Pool>,
-) -> impl Responder {
+pub async fn get_all_pedagio(_user: UsuarioAutenticado, pool: web::Data<Pool>) -> impl Responder {
     match db::get_all(pool.get_ref()).await {
         Ok(pedagios) => HttpResponse::Ok().json(pedagios),
         Err(err) => err,

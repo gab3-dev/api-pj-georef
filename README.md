@@ -72,6 +72,23 @@ npm run e2e:docker:down
 O compose de teste carrega apenas as variáveis de `.env.test` pelo comando `docker compose --env-file ../.env.test -f ../docker-compose.test.yml`.
 O serviço `api-test` roda com `SEED_ADMIN=true` somente nesse ambiente e cria `admin@bgm.com` usando `ADMIN_PASSWORD` de `.env.test`.
 
+## Produção
+O compose de produção é apenas para a infraestrutura da Oracle: API, PostgreSQL e Nginx. O frontend deve ser publicado separadamente na Vercel.
+
+Crie um arquivo `.env.production` e ajuste pelo menos:
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+- `JWT_SECRET`
+- `CORS_ALLOWED_ORIGINS` com a origem pública da Vercel, por exemplo `https://seu-app.vercel.app`
+
+Suba a infraestrutura:
+```bash
+docker compose --env-file .env.production -f docker-compose-production.yaml up -d --build
+```
+
+O Nginx publica a API em `http://<host>:9999/api/*` por padrão. Para criar um administrador inicial, defina `SEED_ADMIN=true` e `ADMIN_PASSWORD` somente no primeiro deploy; depois volte `SEED_ADMIN=false`.
+
+Como o frontend usa `/api` no browser, configure a Vercel para encaminhar `/api/*` para a URL pública do Nginx na Oracle, ou ajuste o build do frontend para usar a URL absoluta da API.
+
 ## Vamos para os Testes - API Methods
 POST - Para criar operadora, passe o json como o exemplo.
 ```bash

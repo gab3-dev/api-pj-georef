@@ -2,8 +2,9 @@ use actix_web::{post, web, HttpResponse, Responder};
 use sqlx::PgPool;
 
 use actix_multipart::form::{tempfile::TempFile, MultipartForm};
-use std::{fs, fs::Permissions, fs::File, os::unix::fs::PermissionsExt};
 use std::io::{BufRead, BufReader};
+use std::path::Path;
+use std::{fs, fs::File, fs::Permissions, os::unix::fs::PermissionsExt};
 
 use crate::auth::AdminAutenticado;
 
@@ -37,7 +38,33 @@ fn read_csv_header(path: &str) -> Result<String, Box<dyn std::error::Error>> {
             ).into());
         }
     }
-    Ok(columns.iter().map(|c| c.trim()).collect::<Vec<&str>>().join(","))
+    Ok(columns
+        .iter()
+        .map(|c| c.trim())
+        .collect::<Vec<&str>>()
+        .join(","))
+}
+
+fn safe_file_name(file_name: Option<String>, fallback: &str) -> String {
+    file_name
+        .as_deref()
+        .and_then(|name| Path::new(name).file_name())
+        .and_then(|name| name.to_str())
+        .filter(|name| !name.trim().is_empty())
+        .unwrap_or(fallback)
+        .to_string()
+}
+
+fn uploaded_paths(file_name: &str) -> (String, String) {
+    let upload_dir = std::env::var("UPLOAD_DIR").unwrap_or_else(|_| "./tmp".to_string());
+    let db_upload_dir = std::env::var("DB_UPLOAD_DIR").unwrap_or_else(|_| "/uploaded".to_string());
+    let app_path = Path::new(&upload_dir).join(file_name);
+    let db_path = Path::new(&db_upload_dir).join(file_name);
+
+    (
+        app_path.to_string_lossy().to_string(),
+        db_path.to_string_lossy().replace('\'', "''"),
+    )
 }
 
 #[post("/api/importar-operadoras")]
@@ -47,13 +74,14 @@ pub async fn import_operadoras(
     pool: web::Data<PgPool>,
 ) -> Result<impl Responder, actix_web::Error> {
     let mut path = String::new();
+    let mut path_on_server = String::new();
     for f in form.files {
-        path = format!("./tmp/{}", f.file_name.unwrap());
+        let file_name = safe_file_name(f.file_name, "operadoras.csv");
+        (path, path_on_server) = uploaded_paths(&file_name);
         log::info!("saving to {path}");
         f.file.persist(path.clone()).unwrap();
         let file = File::open(path.clone()).unwrap();
-        file.set_permissions(Permissions::from_mode(0o664))
-            .unwrap();
+        file.set_permissions(Permissions::from_mode(0o664)).unwrap();
     }
 
     // Read header dynamically
@@ -61,13 +89,11 @@ pub async fn import_operadoras(
         Ok(cols) => cols,
         Err(e) => {
             log::error!("Failed to read CSV header: {}", e);
-             return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+            return Ok(HttpResponse::BadRequest().json(serde_json::json!({
                 "erro": "Falha ao ler o cabeçalho do arquivo CSV."
             })));
         }
     };
-
-    let path_on_server = path.clone().replace("./tmp/", "/uploaded/");
 
     log::info!("importing operadoras from {path_on_server}");
     let mut sql = String::new();
@@ -125,13 +151,14 @@ pub async fn import_tarifas(
     pool: web::Data<PgPool>,
 ) -> Result<impl Responder, actix_web::Error> {
     let mut path = String::new();
+    let mut path_on_server = String::new();
     for f in form.files {
-        path = format!("./tmp/{}", f.file_name.unwrap());
+        let file_name = safe_file_name(f.file_name, "tarifas.csv");
+        (path, path_on_server) = uploaded_paths(&file_name);
         log::info!("saving to {path}");
         f.file.persist(path.clone()).unwrap();
         let file = File::open(path.clone()).unwrap();
-        file.set_permissions(Permissions::from_mode(0o664))
-            .unwrap();
+        file.set_permissions(Permissions::from_mode(0o664)).unwrap();
     }
 
     // Read header dynamically
@@ -139,13 +166,11 @@ pub async fn import_tarifas(
         Ok(cols) => cols,
         Err(e) => {
             log::error!("Failed to read CSV header: {}", e);
-             return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+            return Ok(HttpResponse::BadRequest().json(serde_json::json!({
                 "erro": "Falha ao ler o cabeçalho do arquivo CSV."
             })));
         }
     };
-
-    let path_on_server = path.clone().replace("./tmp/", "/uploaded/");
 
     log::info!("importing tarifas from {path_on_server}");
     let mut sql = String::new();
@@ -158,7 +183,10 @@ pub async fn import_tarifas(
     match result {
         Ok(result) => {
             let rows_affected = result.rows_affected();
-            log::info!("tarifas importadas com sucesso, {} rows inserted", rows_affected);
+            log::info!(
+                "tarifas importadas com sucesso, {} rows inserted",
+                rows_affected
+            );
             std::fs::remove_file(path).unwrap_or_else(|_| {
                 log::warn!("Failed to delete tarifas.csv, it may not exist.");
             });
@@ -181,18 +209,18 @@ pub async fn import_pedagios(
     pool: web::Data<PgPool>,
 ) -> Result<impl Responder, actix_web::Error> {
     let mut path = String::new();
+    let mut path_on_server = String::new();
     // 1. Salva o arquivo enviado em um diretório temporário
     for f in form.files {
         // Usa um nome de arquivo fixo ou o nome original, como preferir
-        let file_name = f.file_name.unwrap_or_else(|| "pedagios.csv".to_string());
-        path = format!("./tmp/{}", file_name);
+        let file_name = safe_file_name(f.file_name, "pedagios.csv");
+        (path, path_on_server) = uploaded_paths(&file_name);
         log::info!("Salvando arquivo de pedágios em: {}", path);
         f.file.persist(path.clone()).unwrap();
 
         // Define permissões para que o processo do Postgres possa ler o arquivo
         let file = File::open(path.clone()).unwrap();
-        file.set_permissions(Permissions::from_mode(0o664))
-            .unwrap();
+        file.set_permissions(Permissions::from_mode(0o664)).unwrap();
     }
 
     // Read header dynamically
@@ -200,15 +228,11 @@ pub async fn import_pedagios(
         Ok(cols) => cols,
         Err(e) => {
             log::error!("Failed to read CSV header: {}", e);
-             return Ok(HttpResponse::BadRequest().json(serde_json::json!({
+            return Ok(HttpResponse::BadRequest().json(serde_json::json!({
                 "erro": "Falha ao ler o cabeçalho do arquivo CSV."
             })));
         }
     };
-
-    // 2. Define o caminho do arquivo como o container do Postgres o enxerga
-    //    Isso assume um volume compartilhado: ./tmp do seu app -> /uploaded do Postgres
-    let path_on_server = path.clone().replace("./tmp/", "/uploaded/");
 
     log::info!("Iniciando importação de pedágios de: {}", path_on_server);
     // 3. Monta o comando SQL COPY

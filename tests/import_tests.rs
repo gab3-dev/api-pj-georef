@@ -3,14 +3,14 @@
 //! Note: These tests require multipart form handling which is more complex to test.
 //! The tests here focus on verifying the endpoints are reachable and handle errors gracefully.
 
-use actix_web::{test, web, App, http::StatusCode};
 use actix_multipart::form::tempfile::TempFileConfig;
+use actix_web::{http::StatusCode, test, web, App};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use sqlx::postgres::PgPoolOptions;
 
-use crate::auth::JwtConfig;
-use crate::auth::models::Claims;
-use crate::utils::*;
+use bgm::auth::models::Claims;
+use bgm::auth::JwtConfig;
+use bgm::utils::*;
 
 const TEST_SECRET: &str = "test_secret_key";
 
@@ -32,7 +32,10 @@ async fn create_test_pool() -> sqlx::PgPool {
 }
 
 fn jwt_config() -> JwtConfig {
-    JwtConfig { secret: TEST_SECRET.to_string() }
+    JwtConfig {
+        secret: TEST_SECRET.to_string(),
+        expiration_seconds: 8 * 3600,
+    }
 }
 
 fn admin_token() -> String {
@@ -44,7 +47,12 @@ fn admin_token() -> String {
         iat: now,
         exp: now + 3600,
     };
-    encode(&Header::default(), &claims, &EncodingKey::from_secret(TEST_SECRET.as_bytes())).unwrap()
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(TEST_SECRET.as_bytes()),
+    )
+    .unwrap()
 }
 
 #[actix_rt::test]
@@ -56,8 +64,9 @@ async fn test_import_operadoras_without_file_returns_error() {
             .app_data(TempFileConfig::default().directory("./tmp"))
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(import_operadoras)
-    ).await;
+            .service(import_operadoras),
+    )
+    .await;
 
     let req = test::TestRequest::post()
         .uri("/api/importar-operadoras")
@@ -66,8 +75,10 @@ async fn test_import_operadoras_without_file_returns_error() {
 
     let resp = test::call_service(&app, req).await;
     assert!(
-        resp.status() == StatusCode::BAD_REQUEST || resp.status() == StatusCode::INTERNAL_SERVER_ERROR,
-        "Expected error status for missing file, got {:?}", resp.status()
+        resp.status() == StatusCode::BAD_REQUEST
+            || resp.status() == StatusCode::INTERNAL_SERVER_ERROR,
+        "Expected error status for missing file, got {:?}",
+        resp.status()
     );
 }
 
@@ -80,8 +91,9 @@ async fn test_import_tarifas_without_file_returns_error() {
             .app_data(TempFileConfig::default().directory("./tmp"))
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(import_tarifas)
-    ).await;
+            .service(import_tarifas),
+    )
+    .await;
 
     let req = test::TestRequest::post()
         .uri("/api/importar-tarifas")
@@ -90,8 +102,10 @@ async fn test_import_tarifas_without_file_returns_error() {
 
     let resp = test::call_service(&app, req).await;
     assert!(
-        resp.status() == StatusCode::BAD_REQUEST || resp.status() == StatusCode::INTERNAL_SERVER_ERROR,
-        "Expected error status for missing file, got {:?}", resp.status()
+        resp.status() == StatusCode::BAD_REQUEST
+            || resp.status() == StatusCode::INTERNAL_SERVER_ERROR,
+        "Expected error status for missing file, got {:?}",
+        resp.status()
     );
 }
 
@@ -104,8 +118,9 @@ async fn test_import_pedagios_without_file_returns_error() {
             .app_data(TempFileConfig::default().directory("./tmp"))
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(import_pedagios)
-    ).await;
+            .service(import_pedagios),
+    )
+    .await;
 
     let req = test::TestRequest::post()
         .uri("/api/importar-pedagios")
@@ -114,8 +129,10 @@ async fn test_import_pedagios_without_file_returns_error() {
 
     let resp = test::call_service(&app, req).await;
     assert!(
-        resp.status() == StatusCode::BAD_REQUEST || resp.status() == StatusCode::INTERNAL_SERVER_ERROR,
-        "Expected error status for missing file, got {:?}", resp.status()
+        resp.status() == StatusCode::BAD_REQUEST
+            || resp.status() == StatusCode::INTERNAL_SERVER_ERROR,
+        "Expected error status for missing file, got {:?}",
+        resp.status()
     );
 }
 
@@ -123,23 +140,24 @@ async fn test_import_pedagios_without_file_returns_error() {
 
 #[actix_rt::test]
 async fn test_index_returns_html_form() {
-    let app = test::init_service(
-        App::new()
-            .service(
-                web::resource("/")
-                    .route(web::get().to(index))
-            )
-    ).await;
+    let app =
+        test::init_service(App::new().service(web::resource("/").route(web::get().to(index))))
+            .await;
 
-    let req = test::TestRequest::get()
-        .uri("/")
-        .to_request();
+    let req = test::TestRequest::get().uri("/").to_request();
 
     let resp = test::call_service(&app, req).await;
-    assert!(resp.status().is_success(), "Expected success status, got {:?}", resp.status());
+    assert!(
+        resp.status().is_success(),
+        "Expected success status, got {:?}",
+        resp.status()
+    );
 
     let body = test::read_body(resp).await;
     let body_str = String::from_utf8(body.to_vec()).unwrap();
     assert!(body_str.contains("<form"), "Expected HTML form in response");
-    assert!(body_str.contains("multipart/form-data"), "Expected multipart form encoding");
+    assert!(
+        body_str.contains("multipart/form-data"),
+        "Expected multipart form encoding"
+    );
 }

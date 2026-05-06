@@ -48,10 +48,7 @@ pub async fn create_tarifa(
 }
 
 #[get("/api/get-tarifas")]
-pub async fn get_all_tarifas(
-    _user: UsuarioAutenticado,
-    pool: web::Data<Pool>,
-) -> impl Responder {
+pub async fn get_all_tarifas(_user: UsuarioAutenticado, pool: web::Data<Pool>) -> impl Responder {
     match db::get_all_tarifas(pool.get_ref()).await {
         Ok(tarifas) => HttpResponse::Ok().json(tarifas),
         Err(err) => err,

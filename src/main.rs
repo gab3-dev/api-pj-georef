@@ -7,38 +7,91 @@ use actix_web::{
     web::{self},
     App, HttpServer,
 };
+use env_logger::Env;
 use sqlx::postgres::PgPoolOptions;
-use std::env;
+use std::{env, io};
 
-mod auth;
-mod operadora;
-mod pedagio;
-mod models;
-mod tarifa;
-use models::*;
-mod utils;
-use utils::*;
+use bgm::{auth, models::*, utils::*};
 
-#[cfg(test)]
-mod tests;
+fn is_production() -> bool {
+    matches!(
+        env::var("APP_ENV")
+            .or_else(|_| env::var("RUST_ENV"))
+            .unwrap_or_default()
+            .to_lowercase()
+            .as_str(),
+        "production" | "prod"
+    )
+}
+
+fn env_required(name: &str) -> io::Result<String> {
+    match env::var(name) {
+        Ok(value) if !value.trim().is_empty() => Ok(value),
+        _ => Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            format!("{name} must be set"),
+        )),
+    }
+}
+
+fn env_with_default(name: &str, default: &str) -> io::Result<String> {
+    if is_production() {
+        env_required(name)
+    } else {
+        Ok(env::var(name).unwrap_or_else(|_| default.to_string()))
+    }
+}
+
+fn build_cors(allowed_origins: &str) -> Cors {
+    let origins: Vec<&str> = allowed_origins
+        .split(',')
+        .map(str::trim)
+        .filter(|origin| !origin.is_empty())
+        .collect();
+
+    let cors = if origins.iter().any(|origin| *origin == "*") {
+        Cors::default().send_wildcard().allow_any_origin()
+    } else {
+        let mut cors = Cors::default();
+        for origin in origins {
+            cors = cors.allowed_origin(origin);
+        }
+        cors
+    };
+
+    cors.block_on_origin_mismatch(false)
+        .allowed_methods(vec!["GET", "POST", "PUT", "OPTIONS"])
+        .allowed_headers(vec![
+            http::header::AUTHORIZATION,
+            http::header::ACCEPT,
+            http::header::CONTENT_TYPE,
+        ])
+        .max_age(3600)
+}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    std::env::set_var("RUST_LOG", "debug");
-    env_logger::init();
+    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
 
     log::info!("creating temporary upload directory");
-    std::fs::create_dir_all("./tmp")?;
+    let upload_dir = env::var("UPLOAD_DIR").unwrap_or_else(|_| "./tmp".to_string());
+    std::fs::create_dir_all(&upload_dir)?;
 
-    let db_host = env::var("DB_HOST").unwrap_or("localhost".into());
-    let db_port = env::var("DB_PORT").unwrap_or("5432".into());
-    let db_name = env::var("DB_NAME").unwrap_or("pj_georef".into());
-    let db_user = env::var("DB_USER").unwrap_or("root".into());
-    let db_password = env::var("DB_PASSWORD").unwrap_or("1234".into());
-    let database_url = format!(
-        "postgres://{}:{}@{}:{}/{}",
-        db_user, db_password, db_host, db_port, db_name
-    );
+    let database_url = match env::var("DATABASE_URL") {
+        Ok(url) if !url.trim().is_empty() => url,
+        _ => {
+            let db_host = env_with_default("DB_HOST", "localhost")?;
+            let db_port = env::var("DB_PORT").unwrap_or_else(|_| "5432".to_string());
+            let db_name = env_with_default("DB_NAME", "pj_georef")?;
+            let db_user = env_with_default("DB_USER", "root")?;
+            let db_password = env_with_default("DB_PASSWORD", "1234")?;
+
+            format!(
+                "postgres://{}:{}@{}:{}/{}",
+                db_user, db_password, db_host, db_port, db_name
+            )
+        }
+    };
 
     let pool_size = env::var("POOL_SIZE")
         .unwrap_or("125".to_string())
@@ -55,27 +108,31 @@ async fn main() -> std::io::Result<()> {
 
     auth::seed_admin(&pool).await;
 
-    let jwt_secret = env::var("JWT_SECRET")
-        .unwrap_or("chave_secreta_desenvolvimento".into());
-    let jwt_config = auth::JwtConfig { secret: jwt_secret };
+    let jwt_secret = env_with_default("JWT_SECRET", "chave_secreta_desenvolvimento")?;
+    let jwt_expiration_hours = env::var("JWT_EXPIRATION_HOURS")
+        .unwrap_or_else(|_| "8".to_string())
+        .parse::<usize>()
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
+    let jwt_config = auth::JwtConfig {
+        secret: jwt_secret,
+        expiration_seconds: jwt_expiration_hours * 3600,
+    };
 
     let http_port = env::var("HTTP_PORT").unwrap_or("9999".into());
+    let cors_allowed_origins = if is_production() {
+        env_required("CORS_ALLOWED_ORIGINS")?
+    } else {
+        env::var("CORS_ALLOWED_ORIGINS").unwrap_or_else(|_| "*".to_string())
+    };
 
     log::info!("Running on port {http_port}");
 
     HttpServer::new(move || {
-        let cors = Cors::default()
-            .send_wildcard()
-            .allow_any_origin()
-            .block_on_origin_mismatch(false)
-            .allowed_methods(vec!["GET", "POST", "PUT", "OPTIONS"])
-            .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
-            .allowed_header(http::header::CONTENT_TYPE)
-            .max_age(3600);
+        let cors = build_cors(&cors_allowed_origins);
         App::new()
             .wrap(cors)
             .wrap(middleware::Logger::default())
-            .app_data(TempFileConfig::default().directory("./tmp"))
+            .app_data(TempFileConfig::default().directory(upload_dir.clone()))
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(jwt_config.clone()))
             .service(auth::login)
@@ -99,7 +156,8 @@ async fn main() -> std::io::Result<()> {
             .service(update_operadora)
             .service(update_pedagio)
             .service(update_tarifa)
-            .service(                web::resource("/")
+            .service(
+                web::resource("/")
                     .route(web::get().to(index))
                     .route(web::post().to(save_files)),
             )

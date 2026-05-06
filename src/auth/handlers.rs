@@ -1,4 +1,4 @@
-use actix_web::{post, get, web, HttpResponse, Responder};
+use actix_web::{get, post, web, HttpResponse, Responder};
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
@@ -60,7 +60,7 @@ pub async fn login(
         perfil: perfil.clone(),
         nome: nome.clone(),
         iat: now,
-        exp: now + 8 * 3600, // 8 hours
+        exp: now + jwt_config.expiration_seconds,
     };
 
     let token = match encode(
@@ -109,19 +109,19 @@ pub async fn create_usuario(
         "INSERT INTO usuario (nome, email, senha_hash, perfil) VALUES ($1, $2, $3, '{}')",
         data.perfil
     ))
-        .bind(&data.nome)
-        .bind(&data.email)
-        .bind(&senha_hash)
-        .execute(pool.get_ref())
-        .await;
+    .bind(&data.nome)
+    .bind(&data.email)
+    .bind(&senha_hash)
+    .execute(pool.get_ref())
+    .await;
 
     match result {
-        Ok(_) => HttpResponse::Ok()
-            .json(serde_json::json!({"mensagem": "Usuário criado com sucesso"})),
+        Ok(_) => {
+            HttpResponse::Ok().json(serde_json::json!({"mensagem": "Usuário criado com sucesso"}))
+        }
         Err(e) => {
             if e.to_string().contains("duplicate key") {
-                HttpResponse::Conflict()
-                    .json(serde_json::json!({"erro": "Email já cadastrado"}))
+                HttpResponse::Conflict().json(serde_json::json!({"erro": "Email já cadastrado"}))
             } else {
                 HttpResponse::InternalServerError()
                     .json(serde_json::json!({"erro": "Erro ao criar usuário"}))
@@ -131,10 +131,7 @@ pub async fn create_usuario(
 }
 
 #[get("/api/get-usuarios")]
-pub async fn get_all_usuarios(
-    _admin: AdminAutenticado,
-    pool: web::Data<PgPool>,
-) -> impl Responder {
+pub async fn get_all_usuarios(_admin: AdminAutenticado, pool: web::Data<PgPool>) -> impl Responder {
     let rows = sqlx::query(
             "SELECT id_usuario, nome, email, perfil::TEXT, data_criacao FROM usuario ORDER BY data_criacao DESC",
         )
@@ -172,8 +169,15 @@ pub async fn seed_admin(pool: &PgPool) {
     .fetch_optional(pool)
     .await;
 
-    let admin_password = std::env::var("ADMIN_PASSWORD")
-        .unwrap_or_else(|_| "admin123".to_string());
+    let admin_email = std::env::var("ADMIN_EMAIL").unwrap_or_else(|_| "admin@bgm.com".to_string());
+    let admin_name = std::env::var("ADMIN_NAME").unwrap_or_else(|_| "Administrador".to_string());
+    let admin_password = match std::env::var("ADMIN_PASSWORD") {
+        Ok(password) if !password.trim().is_empty() => password,
+        _ => {
+            log::error!("SEED_ADMIN está habilitado, mas ADMIN_PASSWORD não foi definido");
+            return;
+        }
+    };
 
     match row {
         Ok(Some(_)) => {
@@ -189,14 +193,14 @@ pub async fn seed_admin(pool: &PgPool) {
             match sqlx::query(
                     "INSERT INTO usuario (nome, email, senha_hash, perfil) VALUES ($1, $2, $3, 'admin')",
                 )
-                .bind("Administrador")
-                .bind("admin@bgm.com")
+                .bind(&admin_name)
+                .bind(&admin_email)
                 .bind(&senha_hash)
                 .execute(pool)
                 .await
             {
                 Ok(_) => {
-                    log::warn!("Admin padrão criado: admin@bgm.com — ALTERE A SENHA!");
+                    log::warn!("Admin inicial criado: {}", admin_email);
                 }
                 Err(e) => {
                     log::error!("Erro ao criar admin padrão: {}", e);

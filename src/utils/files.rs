@@ -1,6 +1,7 @@
 use actix_multipart::form::{tempfile::TempFile, MultipartForm};
 
 use actix_web::{Error, HttpResponse, Responder};
+use std::path::Path;
 
 pub async fn index() -> HttpResponse {
     let html = r#"<html>
@@ -26,9 +27,17 @@ pub struct UploadForm {
 pub async fn save_files(
     MultipartForm(form): MultipartForm<UploadForm>,
 ) -> Result<impl Responder, Error> {
+    let upload_dir = std::env::var("UPLOAD_DIR").unwrap_or_else(|_| "./tmp".to_string());
     for f in form.files {
-        let path = format!("./tmp/{}", f.file_name.unwrap());
-        log::info!("saving to {path}");
+        let file_name = f
+            .file_name
+            .as_deref()
+            .and_then(|name| Path::new(name).file_name())
+            .and_then(|name| name.to_str())
+            .filter(|name| !name.trim().is_empty())
+            .unwrap_or("upload.bin");
+        let path = Path::new(&upload_dir).join(file_name);
+        log::info!("saving to {}", path.display());
         f.file.persist(path).unwrap();
     }
 

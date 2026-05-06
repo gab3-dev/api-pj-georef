@@ -4,9 +4,9 @@ use actix_web::{test, web, App};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use sqlx::postgres::PgPoolOptions;
 
-use crate::auth::JwtConfig;
-use crate::auth::models::Claims;
-use crate::models::*;
+use bgm::auth::models::Claims;
+use bgm::auth::JwtConfig;
+use bgm::models::*;
 
 const TEST_SECRET: &str = "test_secret_key";
 
@@ -28,7 +28,10 @@ async fn create_test_pool() -> sqlx::PgPool {
 }
 
 fn jwt_config() -> JwtConfig {
-    JwtConfig { secret: TEST_SECRET.to_string() }
+    JwtConfig {
+        secret: TEST_SECRET.to_string(),
+        expiration_seconds: 8 * 3600,
+    }
 }
 
 fn admin_token() -> String {
@@ -40,7 +43,12 @@ fn admin_token() -> String {
         iat: now,
         exp: now + 3600,
     };
-    encode(&Header::default(), &claims, &EncodingKey::from_secret(TEST_SECRET.as_bytes())).unwrap()
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(TEST_SECRET.as_bytes()),
+    )
+    .unwrap()
 }
 
 fn user_token() -> String {
@@ -52,7 +60,12 @@ fn user_token() -> String {
         iat: now,
         exp: now + 3600,
     };
-    encode(&Header::default(), &claims, &EncodingKey::from_secret(TEST_SECRET.as_bytes())).unwrap()
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(TEST_SECRET.as_bytes()),
+    )
+    .unwrap()
 }
 
 // ==================== TipoTarifa Tests ====================
@@ -65,8 +78,9 @@ async fn test_get_all_tipos_tarifa_returns_ok() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_tipos_tarifa)
-    ).await;
+            .service(get_all_tipos_tarifa),
+    )
+    .await;
 
     let req = test::TestRequest::get()
         .uri("/api/get-tipos-tarifa")
@@ -76,7 +90,8 @@ async fn test_get_all_tipos_tarifa_returns_ok() {
     let resp = test::call_service(&app, req).await;
     assert!(
         resp.status().is_success() || resp.status().as_u16() == 500,
-        "Expected success or 500 (db issue), got {:?}", resp.status()
+        "Expected success or 500 (db issue), got {:?}",
+        resp.status()
     );
 }
 
@@ -88,8 +103,9 @@ async fn test_create_tipo_tarifa_with_valid_json() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_tipo_tarifa)
-    ).await;
+            .service(create_tipo_tarifa),
+    )
+    .await;
 
     let tipo_tarifa_json = r#"{
         "tipo_tarifa": "tipo_tarifa",
@@ -110,7 +126,8 @@ async fn test_create_tipo_tarifa_with_valid_json() {
     let resp = test::call_service(&app, req).await;
     assert!(
         resp.status().is_success() || resp.status().as_u16() == 500,
-        "Expected success or 500 (db issue), got {:?}", resp.status()
+        "Expected success or 500 (db issue), got {:?}",
+        resp.status()
     );
 }
 
@@ -122,8 +139,9 @@ async fn test_create_tipo_tarifa_with_invalid_json() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_tipo_tarifa)
-    ).await;
+            .service(create_tipo_tarifa),
+    )
+    .await;
 
     let invalid_json = r#"{ invalid json }"#;
 
@@ -147,8 +165,9 @@ async fn test_get_all_tarifas_returns_ok() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_tarifas)
-    ).await;
+            .service(get_all_tarifas),
+    )
+    .await;
 
     let req = test::TestRequest::get()
         .uri("/api/get-tarifas")
@@ -158,7 +177,8 @@ async fn test_get_all_tarifas_returns_ok() {
     let resp = test::call_service(&app, req).await;
     assert!(
         resp.status().is_success() || resp.status().as_u16() == 500,
-        "Expected success or 500 (db issue), got {:?}", resp.status()
+        "Expected success or 500 (db issue), got {:?}",
+        resp.status()
     );
 }
 
@@ -170,8 +190,9 @@ async fn test_get_tarifa_by_id_returns_ok() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_tarifa_by_id)
-    ).await;
+            .service(get_tarifa_by_id),
+    )
+    .await;
 
     let req = test::TestRequest::get()
         .uri("/api/get-tarifa/1")
@@ -181,7 +202,8 @@ async fn test_get_tarifa_by_id_returns_ok() {
     let resp = test::call_service(&app, req).await;
     assert!(
         resp.status().is_success() || resp.status().as_u16() == 500,
-        "Expected success or 500 (db issue), got {:?}", resp.status()
+        "Expected success or 500 (db issue), got {:?}",
+        resp.status()
     );
 }
 
@@ -193,8 +215,9 @@ async fn test_create_tarifa_with_valid_json() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_tarifa)
-    ).await;
+            .service(create_tarifa),
+    )
+    .await;
 
     let tarifa_json = r#"{
         "id_tarifa": 99999,
@@ -221,7 +244,8 @@ async fn test_create_tarifa_with_valid_json() {
     let resp = test::call_service(&app, req).await;
     assert!(
         resp.status().is_success() || resp.status().as_u16() == 500,
-        "Expected success or 500 (db issue), got {:?}", resp.status()
+        "Expected success or 500 (db issue), got {:?}",
+        resp.status()
     );
 }
 
@@ -233,8 +257,9 @@ async fn test_create_tarifa_with_invalid_json() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_tarifa)
-    ).await;
+            .service(create_tarifa),
+    )
+    .await;
 
     let invalid_json = r#"{ invalid json }"#;
 

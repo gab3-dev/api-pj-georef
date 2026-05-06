@@ -1,19 +1,32 @@
-FROM rust:1.90
+FROM rust:1.90-bookworm AS builder
 
-RUN apt-get update -yqq && apt-get install -yqq cmake g++
+RUN apt-get update -yqq && \
+    apt-get install -yqq --no-install-recommends cmake g++ && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /actix
 
-RUN mkdir src; touch src/main.rs
-
 COPY Cargo.toml Cargo.lock ./
-
-RUN cargo fetch
+RUN mkdir src && echo "fn main(){}" > src/main.rs && cargo fetch
 
 COPY src/ ./src/
-
 RUN cargo build --release
+
+FROM debian:bookworm-slim AS runtime
+
+RUN apt-get update -yqq && \
+    apt-get install -yqq --no-install-recommends ca-certificates && \
+    rm -rf /var/lib/apt/lists/* && \
+    groupadd --system app && \
+    useradd --system --gid app --home-dir /actix app
+
+WORKDIR /actix
+
+COPY --from=builder /actix/target/release/bgm /usr/local/bin/bgm
+RUN mkdir -p /actix/tmp && chown -R app:app /actix
+
+USER app
 
 EXPOSE 8081
 
-CMD ["./target/release/bgm"]
+CMD ["bgm"]

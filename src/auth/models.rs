@@ -31,6 +31,7 @@ pub struct Claims {
 #[derive(Clone)]
 pub struct JwtConfig {
     pub secret: String,
+    pub expiration_seconds: usize,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
