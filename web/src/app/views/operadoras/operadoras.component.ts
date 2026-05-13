@@ -16,7 +16,7 @@ import { environment } from '../../../environments/environment';
 
 export class OperadorasComponent {
   title = 'BGM - Operadoras';
-  importUrl = `${environment.apiUrl}/importar-operadoras`;
+  importUrl = `${environment.apiUrl}/imports/operadoras`;
 
   @ViewChild(MatTabGroup) tabGroup!: MatTabGroup;
   @ViewChild(OperadorasListComponent) listComponent!: OperadorasListComponent;

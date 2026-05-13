@@ -57,7 +57,7 @@ test('login, cadastro e persistencia de operadora', async ({ page, request }) =>
     const token = await page.evaluate(() => window.localStorage.getItem('token'));
     expect(token).toBeTruthy();
 
-    const response = await request.get(`${apiUrl}/get-operadora/${codigoOperadora}`, {
+    const response = await request.get(`${apiUrl}/operadoras/${codigoOperadora}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

@@ -76,12 +76,12 @@ async fn test_get_all_pedagios_returns_ok() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_pedagio),
+            .service(get_all_pedagio_rest),
     )
     .await;
 
     let req = test::TestRequest::get()
-        .uri("/api/get-pedagios")
+        .uri("/api/pedagios")
         .insert_header(("Authorization", format!("Bearer {}", user_token())))
         .to_request();
 
@@ -101,12 +101,12 @@ async fn test_get_pedagio_by_id_returns_ok() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_pedagio_by_id),
+            .service(get_pedagio_by_id_rest),
     )
     .await;
 
     let req = test::TestRequest::get()
-        .uri("/api/get-pedagio/1")
+        .uri("/api/pedagios/1")
         .insert_header(("Authorization", format!("Bearer {}", user_token())))
         .to_request();
 
@@ -126,7 +126,7 @@ async fn test_create_pedagio_with_valid_json() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_pedagio),
+            .service(create_pedagio_rest),
     )
     .await;
 
@@ -156,7 +156,7 @@ async fn test_create_pedagio_with_valid_json() {
     }"#;
 
     let req = test::TestRequest::post()
-        .uri("/api/create-pedagio")
+        .uri("/api/pedagios")
         .insert_header(("Authorization", format!("Bearer {}", admin_token())))
         .set_payload(pedagio_json)
         .to_request();
@@ -177,14 +177,14 @@ async fn test_create_pedagio_with_invalid_json() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_pedagio),
+            .service(create_pedagio_rest),
     )
     .await;
 
     let invalid_json = r#"{ invalid json }"#;
 
     let req = test::TestRequest::post()
-        .uri("/api/create-pedagio")
+        .uri("/api/pedagios")
         .insert_header(("Authorization", format!("Bearer {}", admin_token())))
         .set_payload(invalid_json)
         .to_request();

@@ -17,7 +17,7 @@ import { environment } from '../../../environments/environment';
 
 export class PedagiosComponent {
   title = 'BGM - Pedagios';
-  importUrl = `${environment.apiUrl}/importar-pedagios`;
+  importUrl = `${environment.apiUrl}/imports/pedagios`;
 
   @ViewChild(MatTabGroup) tabGroup!: MatTabGroup;
   @ViewChild(PedagiosListComponent) listComponent!: PedagiosListComponent;

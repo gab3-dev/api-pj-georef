@@ -10,10 +10,10 @@ export class UsuarioService {
   constructor(private http: HttpClient) {}
 
   createUsuario(data: CreateUsuarioRequest) {
-    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/create-usuario`, data);
+    return this.http.post<{ mensagem: string }>(`${environment.apiUrl}/usuarios`, data);
   }
 
   getUsuarios() {
-    return this.http.get<UsuarioListItem[]>(`${environment.apiUrl}/get-usuarios`);
+    return this.http.get<UsuarioListItem[]>(`${environment.apiUrl}/usuarios`);
   }
 }

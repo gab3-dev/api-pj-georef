@@ -101,7 +101,7 @@ export class OperadoraService {
   createOperadora(data: any) {
     data = parseOperadoraJson(data);
 
-    this.http.post(`${environment.apiUrl}/create-operadora`, data, {
+    this.http.post(`${environment.apiUrl}/operadoras`, data, {
       headers: {
         'Content-Type': 'application/json'
       },
@@ -117,7 +117,7 @@ export class OperadoraService {
   }
 
   getOperadoras() {
-    return this.http.get<any[]>(`${environment.apiUrl}/get-operadoras`, {
+    return this.http.get<any[]>(`${environment.apiUrl}/operadoras`, {
       responseType: 'json',
       observe: 'response'
     });
@@ -125,7 +125,7 @@ export class OperadoraService {
 
   updateOperadora(codigoOperadora: number, data: any) {
     data = parseOperadoraJson(data);
-    return this.http.put(`${environment.apiUrl}/update-operadora/${codigoOperadora}`, data, {
+    return this.http.put(`${environment.apiUrl}/operadoras/${codigoOperadora}`, data, {
       headers: { 'Content-Type': 'application/json' },
       responseType: 'text',
     });

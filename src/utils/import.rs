@@ -83,6 +83,22 @@ pub async fn import_operadoras(
     MultipartForm(form): MultipartForm<UploadForm>,
     pool: web::Data<PgPool>,
 ) -> Result<impl Responder, actix_web::Error> {
+    import_operadoras_response(form, pool).await
+}
+
+#[post("/api/imports/operadoras")]
+pub async fn import_operadoras_rest(
+    _admin: AdminAutenticado,
+    MultipartForm(form): MultipartForm<UploadForm>,
+    pool: web::Data<PgPool>,
+) -> Result<impl Responder, actix_web::Error> {
+    import_operadoras_response(form, pool).await
+}
+
+async fn import_operadoras_response(
+    form: UploadForm,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, actix_web::Error> {
     let mut path = String::new();
     let mut path_on_server = String::new();
     for f in form.files {
@@ -160,6 +176,22 @@ pub async fn import_tarifas(
     MultipartForm(form): MultipartForm<UploadForm>,
     pool: web::Data<PgPool>,
 ) -> Result<impl Responder, actix_web::Error> {
+    import_tarifas_response(form, pool).await
+}
+
+#[post("/api/imports/tarifas")]
+pub async fn import_tarifas_rest(
+    _admin: AdminAutenticado,
+    MultipartForm(form): MultipartForm<UploadForm>,
+    pool: web::Data<PgPool>,
+) -> Result<impl Responder, actix_web::Error> {
+    import_tarifas_response(form, pool).await
+}
+
+async fn import_tarifas_response(
+    form: UploadForm,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, actix_web::Error> {
     let mut path = String::new();
     let mut path_on_server = String::new();
     for f in form.files {
@@ -321,6 +353,22 @@ pub async fn import_pedagios(
     MultipartForm(form): MultipartForm<UploadForm>,
     pool: web::Data<PgPool>,
 ) -> Result<impl Responder, actix_web::Error> {
+    import_pedagios_response(form, pool).await
+}
+
+#[post("/api/imports/pedagios")]
+pub async fn import_pedagios_rest(
+    _admin: AdminAutenticado,
+    MultipartForm(form): MultipartForm<UploadForm>,
+    pool: web::Data<PgPool>,
+) -> Result<impl Responder, actix_web::Error> {
+    import_pedagios_response(form, pool).await
+}
+
+async fn import_pedagios_response(
+    form: UploadForm,
+    pool: web::Data<PgPool>,
+) -> Result<HttpResponse, actix_web::Error> {
     let mut path = String::new();
     let mut path_on_server = String::new();
     // 1. Salva o arquivo enviado em um diretório temporário

@@ -207,7 +207,7 @@ export class PedagioService {
 
   async createPraca(data: any) {
     data = parsePracaJson(data);
-    this.http.post(`${environment.apiUrl}/create-praca`, data, {
+    this.http.post(`${environment.apiUrl}/pedagios`, data, {
       headers: {
         'Content-Type': 'application/json'
       },
@@ -233,7 +233,7 @@ export class PedagioService {
   }
 
   getPedagios() {
-    return this.http.get<any[]>(`${environment.apiUrl}/get-pedagios`, {
+    return this.http.get<any[]>(`${environment.apiUrl}/pedagios`, {
       responseType: 'json',
       observe: 'response'
     });
@@ -241,7 +241,7 @@ export class PedagioService {
 
   updatePedagio(codigoPedagio: string, data: any) {
     data = parsePracaJson(data);
-    return this.http.put(`${environment.apiUrl}/update-pedagio/${codigoPedagio}`, data, {
+    return this.http.put(`${environment.apiUrl}/pedagios/${codigoPedagio}`, data, {
       headers: { 'Content-Type': 'application/json' },
       responseType: 'text',
     });

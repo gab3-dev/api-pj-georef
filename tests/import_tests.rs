@@ -89,13 +89,13 @@ async fn post_tarifas_csv(pool: sqlx::PgPool, filename: &str, csv: &str) -> (Sta
             .app_data(TempFileConfig::default().directory(upload_dir))
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(import_tarifas),
+            .service(import_tarifas_rest),
     )
     .await;
 
     let (boundary, body) = multipart_csv(filename, csv);
     let req = test::TestRequest::post()
-        .uri("/api/importar-tarifas")
+        .uri("/api/imports/tarifas")
         .insert_header(("Authorization", format!("Bearer {}", admin_token())))
         .insert_header((
             "Content-Type",
@@ -155,12 +155,12 @@ async fn test_import_operadoras_without_file_returns_error() {
             .app_data(TempFileConfig::default().directory("./tmp"))
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(import_operadoras),
+            .service(import_operadoras_rest),
     )
     .await;
 
     let req = test::TestRequest::post()
-        .uri("/api/importar-operadoras")
+        .uri("/api/imports/operadoras")
         .insert_header(("Authorization", format!("Bearer {}", admin_token())))
         .to_request();
 
@@ -182,12 +182,12 @@ async fn test_import_tarifas_without_file_returns_error() {
             .app_data(TempFileConfig::default().directory("./tmp"))
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(import_tarifas),
+            .service(import_tarifas_rest),
     )
     .await;
 
     let req = test::TestRequest::post()
-        .uri("/api/importar-tarifas")
+        .uri("/api/imports/tarifas")
         .insert_header(("Authorization", format!("Bearer {}", admin_token())))
         .to_request();
 
@@ -298,12 +298,12 @@ async fn test_import_pedagios_without_file_returns_error() {
             .app_data(TempFileConfig::default().directory("./tmp"))
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(import_pedagios),
+            .service(import_pedagios_rest),
     )
     .await;
 
     let req = test::TestRequest::post()
-        .uri("/api/importar-pedagios")
+        .uri("/api/imports/pedagios")
         .insert_header(("Authorization", format!("Bearer {}", admin_token())))
         .to_request();
 

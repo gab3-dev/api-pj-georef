@@ -113,13 +113,11 @@ async fn test_get_operadoras_returns_401_without_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_operadoras),
+            .service(get_all_operadoras_rest),
     )
     .await;
 
-    let req = test::TestRequest::get()
-        .uri("/api/get-operadoras")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/operadoras").to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
@@ -131,12 +129,12 @@ async fn test_get_operadora_by_id_returns_401_without_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_operadora_by_id),
+            .service(get_operadora_by_id_rest),
     )
     .await;
 
     let req = test::TestRequest::get()
-        .uri("/api/get-operadora/1")
+        .uri("/api/operadoras/1")
         .to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
@@ -149,12 +147,12 @@ async fn test_create_operadora_returns_401_without_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_operadora),
+            .service(create_operadora_rest),
     )
     .await;
 
     let req = test::TestRequest::post()
-        .uri("/api/create-operadora")
+        .uri("/api/operadoras")
         .set_payload("{}")
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -168,12 +166,12 @@ async fn test_update_operadora_returns_401_without_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(update_operadora),
+            .service(update_operadora_rest),
     )
     .await;
 
     let req = test::TestRequest::put()
-        .uri("/api/update-operadora/1")
+        .uri("/api/operadoras/1")
         .set_payload("{}")
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -187,13 +185,11 @@ async fn test_get_pedagios_returns_401_without_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_pedagio),
+            .service(get_all_pedagio_rest),
     )
     .await;
 
-    let req = test::TestRequest::get()
-        .uri("/api/get-pedagios")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/pedagios").to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
@@ -205,12 +201,12 @@ async fn test_create_pedagio_returns_401_without_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_pedagio),
+            .service(create_pedagio_rest),
     )
     .await;
 
     let req = test::TestRequest::post()
-        .uri("/api/create-pedagio")
+        .uri("/api/pedagios")
         .set_payload("{}")
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -224,13 +220,11 @@ async fn test_get_tarifas_returns_401_without_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_tarifas),
+            .service(get_all_tarifas_rest),
     )
     .await;
 
-    let req = test::TestRequest::get()
-        .uri("/api/get-tarifas")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/tarifas").to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
@@ -242,12 +236,12 @@ async fn test_create_tarifa_returns_401_without_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_tarifa),
+            .service(create_tarifa_rest),
     )
     .await;
 
     let req = test::TestRequest::post()
-        .uri("/api/create-tarifa")
+        .uri("/api/tarifas")
         .set_payload("{}")
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -261,12 +255,12 @@ async fn test_get_tipos_tarifa_returns_401_without_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_tipos_tarifa),
+            .service(get_all_tipos_tarifa_rest),
     )
     .await;
 
     let req = test::TestRequest::get()
-        .uri("/api/get-tipos-tarifa")
+        .uri("/api/tipos-tarifa")
         .to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
@@ -280,12 +274,12 @@ async fn test_import_operadoras_returns_401_without_token() {
             .app_data(TempFileConfig::default().directory("./tmp"))
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(import_operadoras),
+            .service(import_operadoras_rest),
     )
     .await;
 
     let req = test::TestRequest::post()
-        .uri("/api/importar-operadoras")
+        .uri("/api/imports/operadoras")
         .to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
@@ -299,12 +293,12 @@ async fn test_import_pedagios_returns_401_without_token() {
             .app_data(TempFileConfig::default().directory("./tmp"))
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(import_pedagios),
+            .service(import_pedagios_rest),
     )
     .await;
 
     let req = test::TestRequest::post()
-        .uri("/api/importar-pedagios")
+        .uri("/api/imports/pedagios")
         .to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
@@ -318,12 +312,12 @@ async fn test_import_tarifas_returns_401_without_token() {
             .app_data(TempFileConfig::default().directory("./tmp"))
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(import_tarifas),
+            .service(import_tarifas_rest),
     )
     .await;
 
     let req = test::TestRequest::post()
-        .uri("/api/importar-tarifas")
+        .uri("/api/imports/tarifas")
         .to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
@@ -336,13 +330,11 @@ async fn test_get_usuarios_returns_401_without_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(auth::get_all_usuarios),
+            .service(auth::get_all_usuarios_rest),
     )
     .await;
 
-    let req = test::TestRequest::get()
-        .uri("/api/get-usuarios")
-        .to_request();
+    let req = test::TestRequest::get().uri("/api/usuarios").to_request();
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
 }
@@ -354,12 +346,12 @@ async fn test_create_usuario_returns_401_without_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(auth::create_usuario),
+            .service(auth::create_usuario_rest),
     )
     .await;
 
     let req = test::TestRequest::post()
-        .uri("/api/create-usuario")
+        .uri("/api/usuarios")
         .insert_header(("Content-Type", "application/json"))
         .set_payload(r#"{"nome":"x","email":"x@x.com","senha":"123456","perfil":"user"}"#)
         .to_request();
@@ -376,13 +368,13 @@ async fn test_expired_token_returns_401() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_operadoras),
+            .service(get_all_operadoras_rest),
     )
     .await;
 
     let token = generate_expired_token();
     let req = test::TestRequest::get()
-        .uri("/api/get-operadoras")
+        .uri("/api/operadoras")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -398,12 +390,12 @@ async fn test_invalid_token_returns_401() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_operadoras),
+            .service(get_all_operadoras_rest),
     )
     .await;
 
     let req = test::TestRequest::get()
-        .uri("/api/get-operadoras")
+        .uri("/api/operadoras")
         .insert_header(("Authorization", "Bearer invalid.token.here"))
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -417,7 +409,7 @@ async fn test_wrong_secret_token_returns_401() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_operadoras),
+            .service(get_all_operadoras_rest),
     )
     .await;
 
@@ -438,7 +430,7 @@ async fn test_wrong_secret_token_returns_401() {
     .unwrap();
 
     let req = test::TestRequest::get()
-        .uri("/api/get-operadoras")
+        .uri("/api/operadoras")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -452,12 +444,12 @@ async fn test_malformed_authorization_header_returns_401() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_operadoras),
+            .service(get_all_operadoras_rest),
     )
     .await;
 
     let req = test::TestRequest::get()
-        .uri("/api/get-operadoras")
+        .uri("/api/operadoras")
         .insert_header(("Authorization", "NotBearer sometoken"))
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -473,13 +465,13 @@ async fn test_create_operadora_returns_403_for_user() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_operadora),
+            .service(create_operadora_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::post()
-        .uri("/api/create-operadora")
+        .uri("/api/operadoras")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .set_payload("{}")
         .to_request();
@@ -494,13 +486,13 @@ async fn test_update_operadora_returns_403_for_user() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(update_operadora),
+            .service(update_operadora_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::put()
-        .uri("/api/update-operadora/1")
+        .uri("/api/operadoras/1")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .set_payload("{}")
         .to_request();
@@ -515,13 +507,13 @@ async fn test_create_pedagio_returns_403_for_user() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_pedagio),
+            .service(create_pedagio_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::post()
-        .uri("/api/create-pedagio")
+        .uri("/api/pedagios")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .set_payload("{}")
         .to_request();
@@ -536,13 +528,13 @@ async fn test_update_pedagio_returns_403_for_user() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(update_pedagio),
+            .service(update_pedagio_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::put()
-        .uri("/api/update-pedagio/1")
+        .uri("/api/pedagios/1")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .set_payload("{}")
         .to_request();
@@ -557,13 +549,13 @@ async fn test_create_tarifa_returns_403_for_user() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_tarifa),
+            .service(create_tarifa_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::post()
-        .uri("/api/create-tarifa")
+        .uri("/api/tarifas")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .set_payload("{}")
         .to_request();
@@ -578,13 +570,13 @@ async fn test_create_tipo_tarifa_returns_403_for_user() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_tipo_tarifa),
+            .service(create_tipo_tarifa_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::post()
-        .uri("/api/create-tipo-tarifa")
+        .uri("/api/tipos-tarifa")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .set_payload("{}")
         .to_request();
@@ -599,13 +591,13 @@ async fn test_update_tarifa_returns_403_for_user() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(update_tarifa),
+            .service(update_tarifa_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::put()
-        .uri("/api/update-tarifa/1")
+        .uri("/api/tarifas/1")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .set_payload("{}")
         .to_request();
@@ -621,13 +613,13 @@ async fn test_import_operadoras_returns_403_for_user() {
             .app_data(TempFileConfig::default().directory("./tmp"))
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(import_operadoras),
+            .service(import_operadoras_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::post()
-        .uri("/api/importar-operadoras")
+        .uri("/api/imports/operadoras")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -642,13 +634,13 @@ async fn test_import_pedagios_returns_403_for_user() {
             .app_data(TempFileConfig::default().directory("./tmp"))
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(import_pedagios),
+            .service(import_pedagios_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::post()
-        .uri("/api/importar-pedagios")
+        .uri("/api/imports/pedagios")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -663,13 +655,13 @@ async fn test_import_tarifas_returns_403_for_user() {
             .app_data(TempFileConfig::default().directory("./tmp"))
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(import_tarifas),
+            .service(import_tarifas_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::post()
-        .uri("/api/importar-tarifas")
+        .uri("/api/imports/tarifas")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -683,13 +675,13 @@ async fn test_get_usuarios_returns_403_for_user() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(auth::get_all_usuarios),
+            .service(auth::get_all_usuarios_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::get()
-        .uri("/api/get-usuarios")
+        .uri("/api/usuarios")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -703,13 +695,13 @@ async fn test_create_usuario_returns_403_for_user() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(auth::create_usuario),
+            .service(auth::create_usuario_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::post()
-        .uri("/api/create-usuario")
+        .uri("/api/usuarios")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .insert_header(("Content-Type", "application/json"))
         .set_payload(r#"{"nome":"x","email":"x@x.com","senha":"123456","perfil":"user"}"#)
@@ -727,13 +719,13 @@ async fn test_get_operadoras_returns_ok_with_user_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_operadoras),
+            .service(get_all_operadoras_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::get()
-        .uri("/api/get-operadoras")
+        .uri("/api/operadoras")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -751,13 +743,13 @@ async fn test_get_pedagios_returns_ok_with_user_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_pedagio),
+            .service(get_all_pedagio_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::get()
-        .uri("/api/get-pedagios")
+        .uri("/api/pedagios")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -775,13 +767,13 @@ async fn test_get_tarifas_returns_ok_with_user_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_tarifas),
+            .service(get_all_tarifas_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::get()
-        .uri("/api/get-tarifas")
+        .uri("/api/tarifas")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -799,13 +791,13 @@ async fn test_get_tipos_tarifa_returns_ok_with_user_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_tipos_tarifa),
+            .service(get_all_tipos_tarifa_rest),
     )
     .await;
 
     let token = generate_token("user");
     let req = test::TestRequest::get()
-        .uri("/api/get-tipos-tarifa")
+        .uri("/api/tipos-tarifa")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .to_request();
     let resp = test::call_service(&app, req).await;
@@ -826,12 +818,12 @@ async fn test_login_with_valid_credentials() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(auth::login),
+            .service(auth::login_rest),
     )
     .await;
 
     let req = test::TestRequest::post()
-        .uri("/api/login")
+        .uri("/api/auth/login")
         .insert_header(("Content-Type", "application/json"))
         .set_payload(r#"{"email":"test@test.com","senha":"12345678"}"#)
         .to_request();
@@ -851,12 +843,12 @@ async fn test_login_with_wrong_password() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(auth::login),
+            .service(auth::login_rest),
     )
     .await;
 
     let req = test::TestRequest::post()
-        .uri("/api/login")
+        .uri("/api/auth/login")
         .insert_header(("Content-Type", "application/json"))
         .set_payload(r#"{"email":"test@test.com","senha":"wrongpassword"}"#)
         .to_request();
@@ -875,12 +867,12 @@ async fn test_login_with_nonexistent_email() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(auth::login),
+            .service(auth::login_rest),
     )
     .await;
 
     let req = test::TestRequest::post()
-        .uri("/api/login")
+        .uri("/api/auth/login")
         .insert_header(("Content-Type", "application/json"))
         .set_payload(r#"{"email":"nonexistent@test.com","senha":"123456"}"#)
         .to_request();
@@ -901,13 +893,13 @@ async fn test_get_usuarios_returns_ok_with_admin_token() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(auth::get_all_usuarios),
+            .service(auth::get_all_usuarios_rest),
     )
     .await;
 
     let token = generate_token("admin");
     let req = test::TestRequest::get()
-        .uri("/api/get-usuarios")
+        .uri("/api/usuarios")
         .insert_header(("Authorization", format!("Bearer {}", token)))
         .to_request();
     let resp = test::call_service(&app, req).await;

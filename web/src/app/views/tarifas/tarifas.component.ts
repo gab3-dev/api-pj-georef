@@ -14,7 +14,7 @@ import { environment } from '../../../environments/environment';
   styleUrl: './tarifas.component.scss'
 })
 export class TarifasComponent {
-  importUrl = `${environment.apiUrl}/importar-tarifas`;
+  importUrl = `${environment.apiUrl}/imports/tarifas`;
   @ViewChild(MatTabGroup) tabGroup!: MatTabGroup;
   @ViewChild(TarifasListComponent) listComponent!: TarifasListComponent;
 

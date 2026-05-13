@@ -118,7 +118,7 @@ export class TarifasService {
       payload.data_atualizacao = `${payload.data_atualizacao}T00:00:00`;
     }
 
-    this.http.post(`${environment.apiUrl}/create-tarifa`, JSON.stringify(payload), {
+    this.http.post(`${environment.apiUrl}/tarifas`, JSON.stringify(payload), {
       headers: {
         'Content-Type': 'application/json'
       },
@@ -138,7 +138,14 @@ export class TarifasService {
   }
 
   getTarifas() {
-    return this.http.get<any[]>(`${environment.apiUrl}/get-tarifas`, {
+    return this.http.get<any[]>(`${environment.apiUrl}/tarifas`, {
+      responseType: 'json',
+      observe: 'response'
+    });
+  }
+
+  getTiposTarifa() {
+    return this.http.get<any[]>(`${environment.apiUrl}/tipos-tarifa`, {
       responseType: 'json',
       observe: 'response'
     });
@@ -163,7 +170,7 @@ export class TarifasService {
     if (payload.data_atualizacao && !payload.data_atualizacao.includes('T')) {
       payload.data_atualizacao = `${payload.data_atualizacao}T00:00:00`;
     }
-    return this.http.put(`${environment.apiUrl}/update-tarifa/${idTarifa}`, JSON.stringify(payload), {
+    return this.http.put(`${environment.apiUrl}/tarifas/${idTarifa}`, JSON.stringify(payload), {
       headers: { 'Content-Type': 'application/json' },
       responseType: 'text',
     });

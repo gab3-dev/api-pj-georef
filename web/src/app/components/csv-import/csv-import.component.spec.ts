@@ -21,7 +21,7 @@ describe('CsvImportComponent', () => {
 
     fixture = TestBed.createComponent(CsvImportComponent);
     component = fixture.componentInstance;
-    component.apiUrl = '/api/importar-tarifas';
+    component.apiUrl = '/api/imports/tarifas';
     component.entityLabel = 'Tarifas';
     httpMock = TestBed.inject(HttpTestingController);
   });
@@ -40,7 +40,7 @@ describe('CsvImportComponent', () => {
 
     component.uploadFile();
 
-    const req = httpMock.expectOne('/api/importar-tarifas');
+    const req = httpMock.expectOne('/api/imports/tarifas');
     expect(req.request.method).toBe('POST');
     req.event(new HttpResponse({
       status: 200,
@@ -60,7 +60,7 @@ describe('CsvImportComponent', () => {
 
     component.uploadFile();
 
-    const req = httpMock.expectOne('/api/importar-tarifas');
+    const req = httpMock.expectOne('/api/imports/tarifas');
     req.event(new HttpResponse({
       status: 200,
       body: '{"tarifas_importadas": 4}'

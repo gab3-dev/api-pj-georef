@@ -1,4 +1,36 @@
 <form #form="ngForm" [formGroup]="tarifasForm" (ngSubmit)="onSubmit()">
+    <mat-form-field class="search-field" appearance="outline">
+        <mat-label>Pedágio</mat-label>
+        <input matInput [formControl]="pedagioSearchControl" [matAutocomplete]="pedagioAuto"
+            placeholder="Digite o ID, código, praça ou rodovia" />
+        <mat-autocomplete #pedagioAuto="matAutocomplete" [displayWith]="displayPedagio"
+            (optionSelected)="onPedagioSelected($event.option.value)">
+            @for (pedagio of filteredPedagios; track pedagio.id_pedagio) {
+                <mat-option [value]="pedagio">
+                    {{ pedagio.id_pedagio }} - {{ pedagio.nome }}
+                    @if (pedagio.codigo_pedagio) { - Cod. {{ pedagio.codigo_pedagio }} }
+                    @if (pedagio.rodovia) { - {{ pedagio.rodovia }} }
+                </mat-option>
+            }
+        </mat-autocomplete>
+    </mat-form-field>
+
+    <mat-form-field class="search-field" appearance="outline">
+        <mat-label>Tipo de Tarifa</mat-label>
+        <input matInput [formControl]="tipoTarifaSearchControl" [matAutocomplete]="tipoTarifaAuto"
+            placeholder="Digite o ID, descrição ou rodagem" />
+        <mat-autocomplete #tipoTarifaAuto="matAutocomplete" [displayWith]="displayTipoTarifa"
+            (optionSelected)="onTipoTarifaSelected($event.option.value)">
+            @for (tipoTarifa of filteredTiposTarifa; track tipoTarifa.id_tipo_tarifa) {
+                <mat-option [value]="tipoTarifa">
+                    {{ tipoTarifa.id_tipo_tarifa }} - {{ tipoTarifa.descricao }}
+                    @if (tipoTarifa.rodagem) { - {{ tipoTarifa.rodagem }} }
+                    @if (tipoTarifa.eixos) { - {{ tipoTarifa.eixos }} eixos }
+                </mat-option>
+            }
+        </mat-autocomplete>
+    </mat-form-field>
+
     <div *ngFor="let fieldInfo of fieldInfoList" class="text-field">
         <label>{{fieldInfo.label}}</label>
         <input id="{{fieldInfo.id}}" type="{{fieldInfo.type}}" name="{{fieldInfo.name}}"

@@ -15,6 +15,23 @@ pub async fn login(
     pool: web::Data<PgPool>,
     jwt_config: web::Data<JwtConfig>,
 ) -> impl Responder {
+    login_response(data, pool, jwt_config).await
+}
+
+#[post("/api/auth/login")]
+pub async fn login_rest(
+    data: web::Json<LoginRequest>,
+    pool: web::Data<PgPool>,
+    jwt_config: web::Data<JwtConfig>,
+) -> impl Responder {
+    login_response(data, pool, jwt_config).await
+}
+
+async fn login_response(
+    data: web::Json<LoginRequest>,
+    pool: web::Data<PgPool>,
+    jwt_config: web::Data<JwtConfig>,
+) -> HttpResponse {
     let row = match sqlx::query(
         "SELECT nome, email, senha_hash, perfil::TEXT FROM usuario WHERE email = $1",
     )
@@ -91,6 +108,22 @@ pub async fn create_usuario(
     data: web::Json<CreateUsuarioRequest>,
     pool: web::Data<PgPool>,
 ) -> impl Responder {
+    create_usuario_response(data, pool).await
+}
+
+#[post("/api/usuarios")]
+pub async fn create_usuario_rest(
+    _admin: AdminAutenticado,
+    data: web::Json<CreateUsuarioRequest>,
+    pool: web::Data<PgPool>,
+) -> impl Responder {
+    create_usuario_response(data, pool).await
+}
+
+async fn create_usuario_response(
+    data: web::Json<CreateUsuarioRequest>,
+    pool: web::Data<PgPool>,
+) -> HttpResponse {
     if data.perfil != "admin" && data.perfil != "user" {
         return HttpResponse::BadRequest()
             .json(serde_json::json!({"erro": "Perfil deve ser 'admin' ou 'user'"}));
@@ -132,6 +165,18 @@ pub async fn create_usuario(
 
 #[get("/api/get-usuarios")]
 pub async fn get_all_usuarios(_admin: AdminAutenticado, pool: web::Data<PgPool>) -> impl Responder {
+    get_all_usuarios_response(pool).await
+}
+
+#[get("/api/usuarios")]
+pub async fn get_all_usuarios_rest(
+    _admin: AdminAutenticado,
+    pool: web::Data<PgPool>,
+) -> impl Responder {
+    get_all_usuarios_response(pool).await
+}
+
+async fn get_all_usuarios_response(pool: web::Data<PgPool>) -> HttpResponse {
     let rows = sqlx::query(
             "SELECT id_usuario, nome, email, perfil::TEXT, data_criacao FROM usuario ORDER BY data_criacao DESC",
         )

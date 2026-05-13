@@ -78,12 +78,12 @@ async fn test_get_all_operadoras_returns_ok() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_operadoras),
+            .service(get_all_operadoras_rest),
     )
     .await;
 
     let req = test::TestRequest::get()
-        .uri("/api/get-operadoras")
+        .uri("/api/operadoras")
         .insert_header(("Authorization", format!("Bearer {}", user_token())))
         .to_request();
 
@@ -103,12 +103,12 @@ async fn test_get_operadora_by_id_returns_ok() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_operadora_by_id),
+            .service(get_operadora_by_id_rest),
     )
     .await;
 
     let req = test::TestRequest::get()
-        .uri("/api/get-operadora/1")
+        .uri("/api/operadoras/1")
         .insert_header(("Authorization", format!("Bearer {}", user_token())))
         .to_request();
 
@@ -128,7 +128,7 @@ async fn test_create_operadora_with_valid_json() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_operadora),
+            .service(create_operadora_rest),
     )
     .await;
 
@@ -145,7 +145,7 @@ async fn test_create_operadora_with_valid_json() {
     }"#;
 
     let req = test::TestRequest::post()
-        .uri("/api/create-operadora")
+        .uri("/api/operadoras")
         .insert_header(("Authorization", format!("Bearer {}", admin_token())))
         .set_payload(operadora_json)
         .to_request();
@@ -166,14 +166,14 @@ async fn test_create_operadora_with_invalid_json() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_operadora),
+            .service(create_operadora_rest),
     )
     .await;
 
     let invalid_json = r#"{ invalid json }"#;
 
     let req = test::TestRequest::post()
-        .uri("/api/create-operadora")
+        .uri("/api/operadoras")
         .insert_header(("Authorization", format!("Bearer {}", admin_token())))
         .set_payload(invalid_json)
         .to_request();

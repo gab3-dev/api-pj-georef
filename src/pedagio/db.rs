@@ -43,7 +43,7 @@ pub async fn insert(pedagio: &Pedagio, pool: &Pool) -> Result<(), HttpResponse> 
 pub async fn get_all(pool: &Pool) -> Result<Vec<Pedagio>, HttpResponse> {
     sqlx::query_as::<_, Pedagio>(
         "SELECT
-            longitude, latitude, codigo_operadora, nome, situacao, rodovia, km,
+            id_pedagio, longitude, latitude, codigo_operadora, nome, situacao, rodovia, km,
             sentido, cidade, estado, codigo AS codigo_pedagio, orientacao, tipo,
             jurisdicao, cobranca_especial, categoria, data_alteracao, razao_social,
             cnpj, email, telefone
@@ -57,7 +57,7 @@ pub async fn get_all(pool: &Pool) -> Result<Vec<Pedagio>, HttpResponse> {
 pub async fn get_by_id(pool: &Pool, codigo_pedagio: i8) -> Result<Vec<Pedagio>, HttpResponse> {
     sqlx::query_as::<_, Pedagio>(
         "SELECT
-            longitude, latitude, codigo_operadora, nome, situacao, rodovia, km,
+            id_pedagio, longitude, latitude, codigo_operadora, nome, situacao, rodovia, km,
             sentido, cidade, estado, codigo AS codigo_pedagio, orientacao, tipo,
             jurisdicao, cobranca_especial, categoria, data_alteracao, razao_social,
             cnpj, email, telefone

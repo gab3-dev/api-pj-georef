@@ -78,12 +78,12 @@ async fn test_get_all_tipos_tarifa_returns_ok() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_tipos_tarifa),
+            .service(get_all_tipos_tarifa_rest),
     )
     .await;
 
     let req = test::TestRequest::get()
-        .uri("/api/get-tipos-tarifa")
+        .uri("/api/tipos-tarifa")
         .insert_header(("Authorization", format!("Bearer {}", user_token())))
         .to_request();
 
@@ -103,7 +103,7 @@ async fn test_create_tipo_tarifa_with_valid_json() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_tipo_tarifa),
+            .service(create_tipo_tarifa_rest),
     )
     .await;
 
@@ -118,7 +118,7 @@ async fn test_create_tipo_tarifa_with_valid_json() {
     }"#;
 
     let req = test::TestRequest::post()
-        .uri("/api/create-tipo-tarifa")
+        .uri("/api/tipos-tarifa")
         .insert_header(("Authorization", format!("Bearer {}", admin_token())))
         .set_payload(tipo_tarifa_json)
         .to_request();
@@ -139,14 +139,14 @@ async fn test_create_tipo_tarifa_with_invalid_json() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_tipo_tarifa),
+            .service(create_tipo_tarifa_rest),
     )
     .await;
 
     let invalid_json = r#"{ invalid json }"#;
 
     let req = test::TestRequest::post()
-        .uri("/api/create-tipo-tarifa")
+        .uri("/api/tipos-tarifa")
         .insert_header(("Authorization", format!("Bearer {}", admin_token())))
         .set_payload(invalid_json)
         .to_request();
@@ -165,12 +165,12 @@ async fn test_get_all_tarifas_returns_ok() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_all_tarifas),
+            .service(get_all_tarifas_rest),
     )
     .await;
 
     let req = test::TestRequest::get()
-        .uri("/api/get-tarifas")
+        .uri("/api/tarifas")
         .insert_header(("Authorization", format!("Bearer {}", user_token())))
         .to_request();
 
@@ -190,12 +190,12 @@ async fn test_get_tarifa_by_id_returns_ok() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(get_tarifa_by_id),
+            .service(get_tarifa_by_id_rest),
     )
     .await;
 
     let req = test::TestRequest::get()
-        .uri("/api/get-tarifa/1")
+        .uri("/api/tarifas/1")
         .insert_header(("Authorization", format!("Bearer {}", user_token())))
         .to_request();
 
@@ -215,7 +215,7 @@ async fn test_create_tarifa_with_valid_json() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_tarifa),
+            .service(create_tarifa_rest),
     )
     .await;
 
@@ -236,7 +236,7 @@ async fn test_create_tarifa_with_valid_json() {
     }"#;
 
     let req = test::TestRequest::post()
-        .uri("/api/create-tarifa")
+        .uri("/api/tarifas")
         .insert_header(("Authorization", format!("Bearer {}", admin_token())))
         .set_payload(tarifa_json)
         .to_request();
@@ -257,14 +257,14 @@ async fn test_create_tarifa_with_invalid_json() {
         App::new()
             .app_data(web::Data::new(pool))
             .app_data(web::Data::new(jwt_config()))
-            .service(create_tarifa),
+            .service(create_tarifa_rest),
     )
     .await;
 
     let invalid_json = r#"{ invalid json }"#;
 
     let req = test::TestRequest::post()
-        .uri("/api/create-tarifa")
+        .uri("/api/tarifas")
         .insert_header(("Authorization", format!("Bearer {}", admin_token())))
         .set_payload(invalid_json)
         .to_request();
@@ -300,7 +300,7 @@ async fn test_update_tarifa_preserves_relationships_and_updates_tarifa_fields() 
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(jwt_config()))
-            .service(update_tarifa),
+            .service(update_tarifa_rest),
     )
     .await;
 
@@ -321,7 +321,7 @@ async fn test_update_tarifa_preserves_relationships_and_updates_tarifa_fields() 
     }"#;
 
     let req = test::TestRequest::put()
-        .uri("/api/update-tarifa/120001")
+        .uri("/api/tarifas/120001")
         .insert_header(("Authorization", format!("Bearer {}", admin_token())))
         .set_payload(tarifa_json)
         .to_request();

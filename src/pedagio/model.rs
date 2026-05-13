@@ -3,6 +3,8 @@ use crate::models::*;
 #[derive(Serialize, Deserialize, FromRow)]
 #[serde(tag = "pedagio")]
 pub struct Pedagio {
+    #[serde(default)]
+    pub id_pedagio: Option<i32>,
     pub longitude: i64,
     pub latitude: i64,
     pub codigo_operadora: i32,
