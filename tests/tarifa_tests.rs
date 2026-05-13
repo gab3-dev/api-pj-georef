@@ -210,10 +210,33 @@ async fn test_get_tarifa_by_id_returns_ok() {
 #[actix_rt::test]
 async fn test_create_tarifa_with_valid_json() {
     let pool = create_test_pool().await;
+    let valor = 25.50;
+
+    sqlx::query(
+        "DELETE FROM tarifas
+         WHERE id_tipo_tarifa = 1
+           AND id_pedagio = 1
+           AND multiplicador = 1.5
+           AND valor = $1",
+    )
+    .bind(valor)
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    sqlx::query("CREATE SEQUENCE IF NOT EXISTS tarifas_id_seq START WITH 1000 INCREMENT BY 1")
+        .execute(&pool)
+        .await
+        .unwrap();
+
+    sqlx::query("SELECT setval('tarifas_id_seq', 1, false)")
+        .execute(&pool)
+        .await
+        .unwrap();
 
     let app = test::init_service(
         App::new()
-            .app_data(web::Data::new(pool))
+            .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(jwt_config()))
             .service(create_tarifa_rest),
     )
@@ -242,11 +265,35 @@ async fn test_create_tarifa_with_valid_json() {
         .to_request();
 
     let resp = test::call_service(&app, req).await;
-    assert!(
-        resp.status().is_success() || resp.status().as_u16() == 500,
-        "Expected success or 500 (db issue), got {:?}",
-        resp.status()
-    );
+    assert_eq!(resp.status().as_u16(), 200);
+
+    let created_count = sqlx::query_scalar::<_, i64>(
+        "SELECT COUNT(*)
+         FROM tarifas
+         WHERE id_tipo_tarifa = 1
+           AND id_pedagio = 1
+           AND multiplicador = 1.5
+           AND valor = $1
+           AND situacao = 'Ativo'",
+    )
+    .bind(valor)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+
+    assert_eq!(created_count, 1);
+
+    sqlx::query(
+        "DELETE FROM tarifas
+         WHERE id_tipo_tarifa = 1
+           AND id_pedagio = 1
+           AND multiplicador = 1.5
+           AND valor = $1",
+    )
+    .bind(valor)
+    .execute(&pool)
+    .await
+    .unwrap();
 }
 
 #[actix_rt::test]

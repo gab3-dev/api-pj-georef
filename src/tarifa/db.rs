@@ -29,12 +29,36 @@ pub async fn get_all_tipos_tarifa(pool: &Pool) -> Result<Vec<TipoTarifa>, HttpRe
     .map_err(|_| HttpResponse::InternalServerError().body("Erro ao buscar tipos de tarifa"))
 }
 
+async fn sync_tarifas_sequence(pool: &Pool) -> Result<(), HttpResponse> {
+    sqlx::query("CREATE SEQUENCE IF NOT EXISTS tarifas_id_seq START WITH 1000 INCREMENT BY 1")
+        .execute(pool)
+        .await
+        .map_err(|_| {
+            HttpResponse::InternalServerError().body("Erro ao criar sequência de tarifas")
+        })?;
+
+    sqlx::query(
+        "SELECT setval(
+            'tarifas_id_seq',
+            GREATEST(1000, (SELECT COALESCE(MAX(id_tarifa), 0) FROM tarifas))
+        )",
+    )
+    .execute(pool)
+    .await
+    .map(|_| ())
+    .map_err(|_| {
+        HttpResponse::InternalServerError().body("Erro ao sincronizar sequência de tarifas")
+    })
+}
+
 pub async fn insert_tarifa(tarifa: &Tarifa, pool: &Pool) -> Result<(), HttpResponse> {
+    sync_tarifas_sequence(pool).await?;
+
     sqlx::query(
         "INSERT INTO tarifas (
-            id_tipo_tarifa, id_pedagio, multiplicador, valor, data_criacao,
+            id_tarifa, id_tipo_tarifa, id_pedagio, multiplicador, valor, data_criacao,
             data_atualizacao, situacao, tipo
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ) VALUES (nextval('tarifas_id_seq'), $1, $2, $3, $4, $5, $6, $7, $8)
         ON CONFLICT DO NOTHING",
     )
     .bind(tarifa.id_tipo_tarifa)
@@ -89,6 +113,8 @@ pub async fn get_tarifa_by_id(pool: &Pool, id_tarifa: i32) -> Result<Vec<Tarifa>
 }
 
 pub async fn update_tarifa(tarifa: &Tarifa, id: i32, pool: &Pool) -> Result<(), HttpResponse> {
+    sync_tarifas_sequence(pool).await?;
+
     let mut tx = pool
         .begin()
         .await
