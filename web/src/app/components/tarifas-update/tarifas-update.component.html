@@ -1,26 +1,32 @@
 <div class="update-container">
   <mat-form-field class="search-field" appearance="outline">
-    <mat-label>Buscar Tarifa</mat-label>
-    <input matInput [formControl]="searchControl" [matAutocomplete]="auto"
-           placeholder="Digite o ID, descrição, nome ou tipo">
-    <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn"
-                      (optionSelected)="onSelected($event.option.value)">
-      @for (t of filteredTarifas; track t.id_tarifa) {
-        <mat-option [value]="t">{{ t.id_tarifa }} - {{ t.descricao || t.tipo }}</mat-option>
+    <mat-label>Buscar Pedágio ou Operadora</mat-label>
+    <input matInput [formControl]="pedagioSearchControl" [matAutocomplete]="pedagioAuto"
+           placeholder="Digite o ID, praça ou operadora">
+    <mat-autocomplete #pedagioAuto="matAutocomplete" [displayWith]="displayPedagio"
+                      (optionSelected)="onPedagioSelected($event.option.value)">
+      @for (p of filteredPedagios; track p.id_pedagio) {
+        <mat-option [value]="p">{{ p.id_pedagio }} - {{ p.nome }} @if (p.operadora) { - {{ p.operadora }} }</mat-option>
       }
     </mat-autocomplete>
   </mat-form-field>
 
+  @if (selectedPedagio) {
+    <mat-form-field class="search-field" appearance="outline">
+      <mat-label>Selecionar Tarifa do Pedágio</mat-label>
+      <input matInput [formControl]="tarifaSearchControl" [matAutocomplete]="tarifaAuto"
+             placeholder="Digite o ID, descrição ou tipo">
+      <mat-autocomplete #tarifaAuto="matAutocomplete" [displayWith]="displayTarifa"
+                        (optionSelected)="onTarifaSelected($event.option.value)">
+        @for (t of filteredTarifas; track t.id_tarifa) {
+          <mat-option [value]="t">{{ t.id_tarifa }} - {{ t.descricao || t.tipo }}</mat-option>
+        }
+      </mat-autocomplete>
+    </mat-form-field>
+  }
+
   @if (selectedTarifa) {
     <form [formGroup]="updateForm" (ngSubmit)="onSubmit()">
-      <div class="text-field">
-        <label>ID Tipo Tarifa</label>
-        <input type="number" formControlName="id_tipo_tarifa">
-      </div>
-      <div class="text-field">
-        <label>ID Pedágio</label>
-        <input type="number" formControlName="id_pedagio">
-      </div>
       <div class="text-field">
         <label>Multiplicador</label>
         <input type="number" step="any" formControlName="multiplicador">

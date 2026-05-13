@@ -58,10 +58,12 @@ pub async fn get_all_tarifas(pool: &Pool) -> Result<Vec<Tarifa>, HttpResponse> {
             tarifas.multiplicador, tarifas.valor, tarifas.data_criacao,
             tarifas.data_atualizacao, tarifas.situacao, tarifas.tipo,
             tipo_tarifa.descricao, tipo_tarifa.rodagem,
-            COALESCE(tipo_tarifa.eixos, 0) AS eixos, pedagio.nome
+            COALESCE(tipo_tarifa.eixos, 0) AS eixos, pedagio.nome,
+            pedagio.codigo_operadora, operadora.operadora
          FROM tarifas
          JOIN tipo_tarifa ON tarifas.id_tipo_tarifa = tipo_tarifa.id_tipo_tarifa
          JOIN pedagio ON tarifas.id_pedagio = pedagio.id_pedagio
+         LEFT JOIN operadora ON pedagio.codigo_operadora = operadora.codigo_operadora
          WHERE tarifas.situacao = 'Ativo'",
     )
     .fetch_all(pool)
@@ -75,7 +77,8 @@ pub async fn get_tarifa_by_id(pool: &Pool, id_tarifa: i32) -> Result<Vec<Tarifa>
             tarifas.id_tarifa, tarifas.id_tipo_tarifa, tarifas.id_pedagio,
             tarifas.multiplicador, tarifas.valor, tarifas.data_criacao,
             tarifas.data_atualizacao, tarifas.situacao, tarifas.tipo,
-            '' AS descricao, '' AS rodagem, 0 AS eixos, '' AS nome
+            '' AS descricao, '' AS rodagem, 0 AS eixos, '' AS nome,
+            NULL::INT AS codigo_operadora, NULL::TEXT AS operadora
          FROM tarifas
          WHERE tarifas.id_tarifa = $1",
     )
@@ -108,12 +111,10 @@ pub async fn update_tarifa(tarifa: &Tarifa, id: i32, pool: &Pool) -> Result<(), 
 
     sqlx::query(
         "UPDATE tarifas
-         SET id_tipo_tarifa = $1, id_pedagio = $2, multiplicador = $3, valor = $4,
-             data_criacao = $5, data_atualizacao = $6, situacao = $7, tipo = $8
-         WHERE id_tarifa = $9",
+         SET multiplicador = $1, valor = $2,
+             data_criacao = $3, data_atualizacao = $4, situacao = $5, tipo = $6
+         WHERE id_tarifa = $7",
     )
-    .bind(tarifa.id_tipo_tarifa)
-    .bind(tarifa.id_pedagio)
     .bind(tarifa.multiplicador)
     .bind(tarifa.valor)
     .bind(tarifa.data_criacao)

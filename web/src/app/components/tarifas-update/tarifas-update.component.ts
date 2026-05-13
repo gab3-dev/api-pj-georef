@@ -17,18 +17,21 @@ export class TarifasUpdateComponent {
   private tarifasService = inject(TarifasService);
 
   tarifas: any[] = [];
+  pedagios: any[] = [];
+  filteredPedagios: any[] = [];
+  selectedPedagio: any = null;
+  tarifasDoPedagio: any[] = [];
   filteredTarifas: any[] = [];
   selectedTarifa: any = null;
   originalValues: Record<string, any> = {};
 
-  searchControl = new FormControl('');
+  pedagioSearchControl = new FormControl('');
+  tarifaSearchControl = new FormControl('');
   loading = false;
   successMessage = '';
   errorMessage = '';
 
   updateForm = new FormGroup({
-    id_tipo_tarifa: new FormControl<number>(null!, { validators: [Validators.required], nonNullable: true }),
-    id_pedagio: new FormControl<number>(null!, { validators: [Validators.required], nonNullable: true }),
     multiplicador: new FormControl<number>(null!, { validators: [Validators.required], nonNullable: true }),
     valor: new FormControl<number>(null!, { validators: [Validators.required], nonNullable: true }),
     data_criacao: new FormControl('', [Validators.required]),
@@ -38,8 +41,11 @@ export class TarifasUpdateComponent {
 
   ngOnInit() {
     this.loadTarifas();
-    this.searchControl.valueChanges.subscribe(value => {
-      this.filterTarifas(value || '');
+    this.pedagioSearchControl.valueChanges.subscribe(value => {
+      this.filterPedagios(typeof value === 'string' ? value : this.displayPedagio(value));
+    });
+    this.tarifaSearchControl.valueChanges.subscribe(value => {
+      this.filterTarifas(typeof value === 'string' ? value : this.displayTarifa(value));
     });
     this.updateForm.disable();
   }
@@ -48,23 +54,79 @@ export class TarifasUpdateComponent {
     this.tarifasService.getTarifas().subscribe({
       next: (response) => {
         this.tarifas = (response.body as any[]) || [];
-        this.filteredTarifas = this.tarifas;
+        this.pedagios = this.buildPedagios(this.tarifas);
+        this.filteredPedagios = this.pedagios;
+        this.setTarifasDoPedagio(this.selectedPedagio);
       }
     });
   }
 
+  private buildPedagios(tarifas: any[]) {
+    const pedagios = new Map<number, any>();
+
+    tarifas.forEach(tarifa => {
+      if (!pedagios.has(tarifa.id_pedagio)) {
+        pedagios.set(tarifa.id_pedagio, {
+          id_pedagio: tarifa.id_pedagio,
+          nome: tarifa.nome || '',
+          codigo_operadora: tarifa.codigo_operadora,
+          operadora: tarifa.operadora || '',
+        });
+      }
+    });
+
+    return Array.from(pedagios.values()).sort((a, b) => a.id_pedagio - b.id_pedagio);
+  }
+
+  filterPedagios(search: string) {
+    const term = search.toLowerCase();
+    this.filteredPedagios = this.pedagios.filter(p =>
+      p.nome?.toLowerCase().includes(term) ||
+      p.operadora?.toLowerCase().includes(term) ||
+      String(p.id_pedagio).includes(term) ||
+      String(p.codigo_operadora ?? '').includes(term)
+    );
+  }
+
   filterTarifas(search: string) {
     const term = search.toLowerCase();
-    this.filteredTarifas = this.tarifas.filter(t =>
+    this.filteredTarifas = this.tarifasDoPedagio.filter(t =>
       t.descricao?.toLowerCase().includes(term) ||
-      t.nome?.toLowerCase().includes(term) ||
       t.tipo?.toLowerCase().includes(term) ||
       String(t.id_tarifa).includes(term)
     );
   }
 
-  displayFn(tarifa: any): string {
+  displayPedagio(pedagio: any): string {
+    if (!pedagio) return '';
+    const operadora = pedagio.operadora ? ` - ${pedagio.operadora}` : '';
+    return `${pedagio.id_pedagio} - ${pedagio.nome}${operadora}`;
+  }
+
+  displayTarifa(tarifa: any): string {
     return tarifa ? `${tarifa.id_tarifa} - ${tarifa.descricao || tarifa.tipo}` : '';
+  }
+
+  onPedagioSelected(pedagio: any) {
+    this.selectedPedagio = pedagio;
+    this.selectedTarifa = null;
+    this.successMessage = '';
+    this.errorMessage = '';
+    this.updateForm.reset();
+    this.updateForm.disable();
+    this.setTarifasDoPedagio(pedagio);
+    this.tarifaSearchControl.setValue('');
+  }
+
+  private setTarifasDoPedagio(pedagio: any) {
+    if (!pedagio) {
+      this.tarifasDoPedagio = [];
+      this.filteredTarifas = [];
+      return;
+    }
+
+    this.tarifasDoPedagio = this.tarifas.filter(t => t.id_pedagio === pedagio.id_pedagio);
+    this.filteredTarifas = this.tarifasDoPedagio;
   }
 
   private toDateInput(val: string): string {
@@ -72,14 +134,12 @@ export class TarifasUpdateComponent {
     return val.substring(0, 10);
   }
 
-  onSelected(tarifa: any) {
+  onTarifaSelected(tarifa: any) {
     this.selectedTarifa = tarifa;
     this.successMessage = '';
     this.errorMessage = '';
 
     const values = {
-      id_tipo_tarifa: tarifa.id_tipo_tarifa,
-      id_pedagio: tarifa.id_pedagio,
       multiplicador: tarifa.multiplicador,
       valor: tarifa.valor,
       data_criacao: this.toDateInput(tarifa.data_criacao),
@@ -114,6 +174,8 @@ export class TarifasUpdateComponent {
 
     const data = {
       ...this.updateForm.getRawValue(),
+      id_tipo_tarifa: this.selectedTarifa.id_tipo_tarifa,
+      id_pedagio: this.selectedTarifa.id_pedagio,
       data_atualizacao: new Date().toISOString().substring(0, 10),
       descricao: this.selectedTarifa.descricao || '',
       rodagem: this.selectedTarifa.rodagem || '',

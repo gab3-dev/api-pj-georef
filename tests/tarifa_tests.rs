@@ -272,3 +272,82 @@ async fn test_create_tarifa_with_invalid_json() {
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status().as_u16(), 400, "Expected 400 for invalid JSON");
 }
+
+#[actix_rt::test]
+async fn test_update_tarifa_preserves_relationships_and_updates_tarifa_fields() {
+    let pool = create_test_pool().await;
+    let id_tarifa = 120001;
+
+    sqlx::query("DELETE FROM tarifas WHERE id_tarifa = $1")
+        .bind(id_tarifa)
+        .execute(&pool)
+        .await
+        .unwrap();
+
+    sqlx::query(
+        "INSERT INTO tarifas (
+            id_tarifa, id_tipo_tarifa, id_pedagio, multiplicador, valor,
+            data_criacao, data_atualizacao, situacao, tipo
+        )
+        VALUES ($1, 1, 1, 1.0, 10.0, '2024-01-01', '2024-01-01', 'Ativo', 'Normal')",
+    )
+    .bind(id_tarifa)
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    let app = test::init_service(
+        App::new()
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::new(jwt_config()))
+            .service(update_tarifa),
+    )
+    .await;
+
+    let tarifa_json = r#"{
+        "id_tarifa": 120001,
+        "id_tipo_tarifa": 2,
+        "id_pedagio": 2,
+        "multiplicador": 2.0,
+        "valor": 77.70,
+        "data_criacao": "2024-01-01T00:00:00",
+        "data_atualizacao": "2024-01-02T00:00:00",
+        "situacao": "Ativo",
+        "tipo": "Normal",
+        "descricao": "",
+        "rodagem": "",
+        "eixos": 0,
+        "nome": ""
+    }"#;
+
+    let req = test::TestRequest::put()
+        .uri("/api/update-tarifa/120001")
+        .insert_header(("Authorization", format!("Bearer {}", admin_token())))
+        .set_payload(tarifa_json)
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 200);
+
+    let row = sqlx::query_as::<_, (i32, i32, f64)>(
+        "SELECT id_tipo_tarifa, id_pedagio, valor FROM tarifas WHERE id_tarifa = $1",
+    )
+    .bind(id_tarifa)
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+
+    assert_eq!(row.0, 1, "update-tarifa must not change id_tipo_tarifa");
+    assert_eq!(row.1, 1, "update-tarifa must not change id_pedagio");
+    assert_eq!(row.2, 77.70, "update-tarifa must update tarifa fields");
+
+    sqlx::query(
+        "DELETE FROM tarifas
+         WHERE id_tarifa = $1
+            OR (id_pedagio = 1 AND id_tipo_tarifa = 1 AND valor = 10.0 AND situacao = 'Inativo')",
+    )
+    .bind(id_tarifa)
+    .execute(&pool)
+    .await
+    .unwrap();
+}

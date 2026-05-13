@@ -33,6 +33,10 @@ pub struct Tarifa {
     pub rodagem: String,
     pub eixos: i32,
     pub nome: String,
+    #[serde(default)]
+    pub codigo_operadora: Option<i32>,
+    #[serde(default)]
+    pub operadora: Option<String>,
 }
 
 #[allow(unused)]
