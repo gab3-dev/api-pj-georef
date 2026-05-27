@@ -4,6 +4,6 @@ pub use serde::{Deserialize, Serialize};
 pub use sqlx::{FromRow, PgPool, Row};
 pub type Pool = PgPool;
 
-pub use crate::operadora::*;
-pub use crate::pedagio::*;
-pub use crate::tarifa::*;
+pub use crate::operadora::{handler::*, model::*};
+pub use crate::pedagio::{handler::*, model::*};
+pub use crate::tarifa::{handler::*, model::*};

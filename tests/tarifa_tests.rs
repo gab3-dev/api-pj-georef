@@ -321,11 +321,11 @@ async fn test_create_tarifa_with_invalid_json() {
 }
 
 #[actix_rt::test]
-async fn test_update_tarifa_preserves_relationships_and_updates_tarifa_fields() {
+async fn test_update_tarifa_creates_active_version_and_inactivates_previous() {
     let pool = create_test_pool().await;
     let id_tarifa = 120001;
 
-    sqlx::query("DELETE FROM tarifas WHERE id_tarifa = $1")
+    sqlx::query("DELETE FROM tarifas WHERE id_tarifa = $1 OR (id_pedagio = 1 AND id_tipo_tarifa = 1 AND valor IN (10.0, 77.70))")
         .bind(id_tarifa)
         .execute(&pool)
         .await
@@ -376,22 +376,46 @@ async fn test_update_tarifa_preserves_relationships_and_updates_tarifa_fields() 
     let resp = test::call_service(&app, req).await;
     assert_eq!(resp.status().as_u16(), 200);
 
-    let row = sqlx::query_as::<_, (i32, i32, f64)>(
-        "SELECT id_tipo_tarifa, id_pedagio, valor FROM tarifas WHERE id_tarifa = $1",
+    let previous = sqlx::query_as::<_, (i32, f64, String)>(
+        "SELECT id_tarifa, valor, situacao FROM tarifas WHERE id_tarifa = $1",
     )
     .bind(id_tarifa)
     .fetch_one(&pool)
     .await
     .unwrap();
 
-    assert_eq!(row.0, 1, "update-tarifa must not change id_tipo_tarifa");
-    assert_eq!(row.1, 1, "update-tarifa must not change id_pedagio");
-    assert_eq!(row.2, 77.70, "update-tarifa must update tarifa fields");
+    assert_eq!(previous.0, id_tarifa);
+    assert_eq!(
+        previous.1, 10.0,
+        "tarifa anterior deve manter o valor histórico"
+    );
+    assert_eq!(previous.2, "Inativo", "tarifa anterior deve ficar inativa");
+
+    let active = sqlx::query_as::<_, (i32, i32, i32, f64, String)>(
+        "SELECT id_tarifa, id_tipo_tarifa, id_pedagio, valor, situacao
+         FROM tarifas
+         WHERE id_tipo_tarifa = 1 AND id_pedagio = 1 AND valor = 77.70 AND situacao = 'Ativo'",
+    )
+    .fetch_one(&pool)
+    .await
+    .unwrap();
+
+    assert_ne!(
+        active.0, id_tarifa,
+        "nova tarifa ativa deve ter outro id_tarifa"
+    );
+    assert_eq!(active.1, 1, "update-tarifa deve manter id_tipo_tarifa");
+    assert_eq!(active.2, 1, "update-tarifa deve manter id_pedagio");
+    assert_eq!(
+        active.3, 77.70,
+        "nova tarifa ativa deve receber o novo valor"
+    );
+    assert_eq!(active.4, "Ativo");
 
     sqlx::query(
         "DELETE FROM tarifas
          WHERE id_tarifa = $1
-            OR (id_pedagio = 1 AND id_tipo_tarifa = 1 AND valor = 10.0 AND situacao = 'Inativo')",
+            OR (id_pedagio = 1 AND id_tipo_tarifa = 1 AND valor IN (10.0, 77.70))",
     )
     .bind(id_tarifa)
     .execute(&pool)

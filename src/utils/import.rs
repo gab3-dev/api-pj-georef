@@ -286,24 +286,78 @@ async fn import_tarifas_response(
                 .fetch_one(&mut *conn)
                 .await?;
 
-        let update_assignments = column_names
+        sqlx::query(
+            "CREATE TEMP TABLE import_tarifas_existentes AS \
+             SELECT tmp.id_tarifa \
+             FROM import_tarifas_tmp tmp \
+             JOIN tarifas t ON t.id_tarifa = tmp.id_tarifa",
+        )
+        .execute(&mut *conn)
+        .await?;
+
+        sqlx::query(
+            "UPDATE tarifas t \
+             SET situacao = 'Inativo' \
+             FROM import_tarifas_existentes e \
+             WHERE t.id_tarifa = e.id_tarifa",
+        )
+        .execute(&mut *conn)
+        .await?;
+
+        sqlx::query("CREATE SEQUENCE IF NOT EXISTS tarifas_id_seq START WITH 1000 INCREMENT BY 1")
+            .execute(&mut *conn)
+            .await?;
+        sqlx::query(
+            "SELECT setval( \
+                'tarifas_id_seq', \
+                GREATEST(1000, (SELECT COALESCE(MAX(id_tarifa), 0) FROM tarifas)) \
+            )",
+        )
+        .execute(&mut *conn)
+        .await?;
+
+        let insert_new_sql = format!(
+            "INSERT INTO tarifas ({columns}) \
+             SELECT {columns} \
+             FROM import_tarifas_tmp tmp \
+             WHERE NOT EXISTS ( \
+                 SELECT 1 FROM import_tarifas_existentes e WHERE e.id_tarifa = tmp.id_tarifa \
+             )"
+        );
+        sqlx::query(&insert_new_sql).execute(&mut *conn).await?;
+
+        let version_columns = column_names
             .iter()
             .filter(|column| **column != "id_tarifa")
-            .map(|column| format!("{column} = EXCLUDED.{column}"))
-            .collect::<Vec<String>>()
-            .join(", ");
-        let conflict_action = if update_assignments.is_empty() {
-            "DO NOTHING".to_string()
-        } else {
-            format!("DO UPDATE SET {update_assignments}")
-        };
+            .copied()
+            .collect::<Vec<&str>>();
+        if !version_columns.is_empty() {
+            let version_columns_sql = version_columns.join(", ");
+            let version_select_sql = version_columns
+                .iter()
+                .map(|column| {
+                    if *column == "situacao" {
+                        "'Ativo'".to_string()
+                    } else {
+                        format!("tmp.{column}")
+                    }
+                })
+                .collect::<Vec<String>>()
+                .join(", ");
+            let insert_versions_sql = format!(
+                "INSERT INTO tarifas (id_tarifa, {version_columns_sql}) \
+                 SELECT nextval('tarifas_id_seq'), {version_select_sql} \
+                 FROM import_tarifas_tmp tmp \
+                 JOIN import_tarifas_existentes e ON e.id_tarifa = tmp.id_tarifa"
+            );
+            sqlx::query(&insert_versions_sql)
+                .execute(&mut *conn)
+                .await?;
+        }
 
-        let upsert_sql = format!(
-            "INSERT INTO tarifas ({columns}) \
-             SELECT {columns} FROM import_tarifas_tmp \
-             ON CONFLICT (id_tarifa) {conflict_action}"
-        );
-        sqlx::query(&upsert_sql).execute(&mut *conn).await?;
+        sqlx::query("DROP TABLE IF EXISTS import_tarifas_existentes")
+            .execute(&mut *conn)
+            .await?;
         sqlx::query(reset_temp_table).execute(&mut *conn).await?;
 
         Ok::<Result<(i64, i64), i32>, sqlx::Error>(Ok((

@@ -146,6 +146,24 @@ async fn tarifa_valor(pool: &sqlx::PgPool, id_tarifa: i32) -> f64 {
         .unwrap()
 }
 
+async fn active_tarifa_valor(pool: &sqlx::PgPool, id_tarifa: i32) -> f64 {
+    sqlx::query_scalar::<_, f64>(
+        "SELECT nova.valor
+         FROM tarifas anterior
+         JOIN tarifas nova
+           ON nova.id_tipo_tarifa = anterior.id_tipo_tarifa
+          AND nova.id_pedagio = anterior.id_pedagio
+         WHERE anterior.id_tarifa = $1
+           AND anterior.situacao = 'Inativo'
+           AND nova.situacao = 'Ativo'
+           AND nova.id_tarifa <> anterior.id_tarifa",
+    )
+    .bind(id_tarifa)
+    .fetch_one(pool)
+    .await
+    .unwrap()
+}
+
 #[actix_rt::test]
 async fn test_import_operadoras_without_file_returns_error() {
     let pool = create_test_pool().await;
@@ -246,9 +264,14 @@ async fn test_import_tarifas_csv_updates_existing_rows() {
     assert_eq!(body["tarifas_inseridas"], 0);
     assert_eq!(body["tarifas_atualizadas"], 1);
     assert_eq!(body["tarifas_importadas"], 1);
-    assert_eq!(tarifa_valor(&pool, 110002).await, 77.70);
+    assert_eq!(tarifa_valor(&pool, 110002).await, 10.0);
+    assert_eq!(active_tarifa_valor(&pool, 110002).await, 77.70);
 
-    reset_tarifas(&pool, &[110002]).await;
+    sqlx::query("DELETE FROM tarifas WHERE id_tarifa = $1 OR (id_pedagio = 1 AND id_tipo_tarifa = 1 AND valor = 77.70)")
+        .bind(110002)
+        .execute(&pool)
+        .await
+        .unwrap();
 }
 
 #[actix_rt::test]
@@ -266,10 +289,15 @@ async fn test_import_tarifas_csv_mixed_response_includes_all_counters() {
     assert_eq!(body["tarifas_inseridas"], 1);
     assert_eq!(body["tarifas_atualizadas"], 1);
     assert_eq!(body["tarifas_importadas"], 2);
-    assert_eq!(tarifa_valor(&pool, 110003).await, 33.30);
+    assert_eq!(tarifa_valor(&pool, 110003).await, 10.0);
+    assert_eq!(active_tarifa_valor(&pool, 110003).await, 33.30);
     assert_eq!(tarifa_valor(&pool, 110004).await, 44.40);
 
-    reset_tarifas(&pool, &[110003, 110004]).await;
+    sqlx::query("DELETE FROM tarifas WHERE id_tarifa = ANY($1) OR (id_pedagio = 1 AND id_tipo_tarifa = 1 AND valor = 33.30)")
+        .bind(&[110003, 110004])
+        .execute(&pool)
+        .await
+        .unwrap();
 }
 
 #[actix_rt::test]

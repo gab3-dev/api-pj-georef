@@ -120,37 +120,33 @@ pub async fn update_tarifa(tarifa: &Tarifa, id: i32, pool: &Pool) -> Result<(), 
         .await
         .map_err(|_| HttpResponse::InternalServerError().body("Erro ao iniciar transação"))?;
 
-    sqlx::query(
-        "INSERT INTO tarifas (
+    let result = sqlx::query(
+        "WITH tarifa_anterior AS (
+            UPDATE tarifas
+            SET situacao = 'Inativo'
+            WHERE id_tarifa = $6
+            RETURNING id_tipo_tarifa, id_pedagio
+        )
+        INSERT INTO tarifas (
             id_tarifa, id_tipo_tarifa, id_pedagio, multiplicador, valor,
             data_criacao, data_atualizacao, situacao, tipo
         )
-        SELECT nextval('tarifas_id_seq'), id_tipo_tarifa, id_pedagio, multiplicador, valor,
-               data_criacao, data_atualizacao, 'Inativo', tipo
-        FROM tarifas
-        WHERE id_tarifa = $1",
-    )
-    .bind(id)
-    .execute(&mut *tx)
-    .await
-    .map_err(|_| HttpResponse::InternalServerError().body("Erro ao atualizar tarifa"))?;
-
-    sqlx::query(
-        "UPDATE tarifas
-         SET multiplicador = $1, valor = $2,
-             data_criacao = $3, data_atualizacao = $4, situacao = $5, tipo = $6
-         WHERE id_tarifa = $7",
+        SELECT nextval('tarifas_id_seq'), id_tipo_tarifa, id_pedagio, $1, $2, $3, $4, 'Ativo', $5
+        FROM tarifa_anterior",
     )
     .bind(tarifa.multiplicador)
     .bind(tarifa.valor)
     .bind(tarifa.data_criacao)
     .bind(tarifa.data_atualizacao)
-    .bind(&tarifa.situacao)
     .bind(&tarifa.tipo)
     .bind(id)
     .execute(&mut *tx)
     .await
     .map_err(|_| HttpResponse::InternalServerError().body("Erro ao atualizar tarifa"))?;
+
+    if result.rows_affected() == 0 {
+        return Err(HttpResponse::NotFound().body("Tarifa não encontrada"));
+    }
 
     tx.commit()
         .await

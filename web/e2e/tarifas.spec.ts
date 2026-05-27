@@ -14,7 +14,9 @@ function dbClient() {
   });
 }
 
-test('atualiza tarifa selecionada a partir do pedagio sem trocar tipo ou pedagio', async ({ page }) => {
+test('atualiza tarifa selecionada a partir do pedagio sem trocar tipo ou pedagio', async ({
+  page,
+}) => {
   const idTarifa = 130001;
   const client = dbClient();
 
@@ -26,8 +28,7 @@ test('atualiza tarifa selecionada a partir do pedagio sem trocar tipo ou pedagio
       `DELETE FROM tarifas
        WHERE id_tipo_tarifa = 1
          AND id_pedagio = 1
-         AND valor = 10.0
-         AND situacao = 'Inativo'
+         AND valor IN (10.0, 77.7)
          AND data_criacao = '2024-01-01'`,
     );
     await client.query(
@@ -48,20 +49,30 @@ test('atualiza tarifa selecionada a partir do pedagio sem trocar tipo ou pedagio
     await page.goto('/tarifas');
     await page.getByRole('tab', { name: 'Atualizar Tarifa' }).click();
 
-    await page.getByPlaceholder('Digite o ID, praça ou operadora').fill('Pedágio 1');
+    await page
+      .getByPlaceholder('Digite o ID, praça ou operadora')
+      .fill('Pedágio 1');
     await page.getByRole('option', { name: /1 - Pedágio 1/ }).click();
 
-    await page.getByPlaceholder('Digite o ID, descrição ou tipo').fill(String(idTarifa));
-    await page.getByRole('option', { name: new RegExp(`^${idTarifa}\\b`) }).click();
+    await page
+      .getByPlaceholder('Digite o ID, descrição ou tipo')
+      .fill(String(idTarifa));
+    await page
+      .getByRole('option', { name: new RegExp(`^${idTarifa}\\b`) })
+      .click();
 
     await page.locator('input[formcontrolname="multiplicador"]').fill('2');
     await page.locator('input[formcontrolname="valor"]').fill('77.7');
-    await page.locator('input[formcontrolname="data_criacao"]').fill('2024-01-01');
+    await page
+      .locator('input[formcontrolname="data_criacao"]')
+      .fill('2024-01-01');
     await page.locator('input[formcontrolname="situacao"]').fill('Ativo');
     await page.locator('input[formcontrolname="tipo"]').fill('Normal');
     await page.getByRole('button', { name: 'Atualizar Tarifa' }).click();
 
-    await expect(page.getByText('Tarifa atualizada com sucesso!')).toBeVisible();
+    await expect(
+      page.getByText('Tarifa atualizada com sucesso!'),
+    ).toBeVisible();
 
     const result = await client.query(
       `SELECT id_tipo_tarifa, id_pedagio, multiplicador, valor, situacao, tipo
@@ -74,19 +85,39 @@ test('atualiza tarifa selecionada a partir do pedagio sem trocar tipo ou pedagio
     expect(result.rows[0]).toMatchObject({
       id_tipo_tarifa: 1,
       id_pedagio: 1,
+      multiplicador: 1,
+      valor: 10,
+      situacao: 'Inativo',
+      tipo: 'Normal',
+    });
+
+    const active = await client.query(
+      `SELECT id_tarifa, id_tipo_tarifa, id_pedagio, multiplicador, valor, situacao, tipo
+       FROM tarifas
+       WHERE id_tipo_tarifa = 1
+         AND id_pedagio = 1
+         AND valor = 77.7
+         AND situacao = 'Ativo'
+         AND data_criacao = '2024-01-01'`,
+    );
+
+    expect(active.rowCount).toBe(1);
+    expect(active.rows[0]).toMatchObject({
+      id_tipo_tarifa: 1,
+      id_pedagio: 1,
       multiplicador: 2,
       valor: 77.7,
       situacao: 'Ativo',
       tipo: 'Normal',
     });
+    expect(active.rows[0].id_tarifa).not.toBe(idTarifa);
   } finally {
     await client.query('DELETE FROM tarifas WHERE id_tarifa = $1', [idTarifa]);
     await client.query(
       `DELETE FROM tarifas
        WHERE id_tipo_tarifa = 1
          AND id_pedagio = 1
-         AND valor = 10.0
-         AND situacao = 'Inativo'
+         AND valor IN (10.0, 77.7)
          AND data_criacao = '2024-01-01'`,
     );
     await client.end();
