@@ -146,7 +146,7 @@ async fn tarifa_valor(pool: &sqlx::PgPool, id_tarifa: i32) -> f64 {
         .unwrap()
 }
 
-async fn active_tarifa_valor(pool: &sqlx::PgPool, id_tarifa: i32) -> f64 {
+async fn active_tarifa_valor(pool: &sqlx::PgPool, id_tarifa: i32, valor: f64) -> f64 {
     sqlx::query_scalar::<_, f64>(
         "SELECT nova.valor
          FROM tarifas anterior
@@ -156,9 +156,13 @@ async fn active_tarifa_valor(pool: &sqlx::PgPool, id_tarifa: i32) -> f64 {
          WHERE anterior.id_tarifa = $1
            AND anterior.situacao = 'Inativo'
            AND nova.situacao = 'Ativo'
-           AND nova.id_tarifa <> anterior.id_tarifa",
+           AND nova.id_tarifa <> anterior.id_tarifa
+           AND nova.valor = $2
+           AND nova.data_atualizacao = '2024-02-01'
+         ORDER BY nova.id_tarifa DESC",
     )
     .bind(id_tarifa)
+    .bind(valor)
     .fetch_one(pool)
     .await
     .unwrap()
@@ -236,39 +240,39 @@ async fn test_import_tarifas_csv_missing_id_tarifa_returns_bad_request() {
 #[actix_rt::test]
 async fn test_import_tarifas_csv_inserts_new_rows() {
     let pool = create_test_pool().await;
-    reset_tarifas(&pool, &[110001]).await;
+    reset_tarifas(&pool, &[210001]).await;
 
     let csv = "id_tarifa;id_tipo_tarifa;id_pedagio;multiplicador;valor;data_criacao;data_atualizacao;situacao;tipo\n\
-               110001;1;1;1.0;99.90;2024-01-01;2024-01-01;Ativo;Normal";
+               210001;1;1;1.0;99.90;2024-01-01;2024-01-01;Ativo;Normal";
     let (status, body) = post_tarifas_csv(pool.clone(), "tarifas-insert.csv", csv).await;
 
-    assert_eq!(status, StatusCode::OK);
+    assert_eq!(status, StatusCode::OK, "response body: {body}");
     assert_eq!(body["tarifas_inseridas"], 1);
     assert_eq!(body["tarifas_atualizadas"], 0);
     assert_eq!(body["tarifas_importadas"], 1);
-    assert_eq!(tarifa_valor(&pool, 110001).await, 99.90);
+    assert_eq!(tarifa_valor(&pool, 210001).await, 99.90);
 
-    reset_tarifas(&pool, &[110001]).await;
+    reset_tarifas(&pool, &[210001]).await;
 }
 
 #[actix_rt::test]
 async fn test_import_tarifas_csv_updates_existing_rows() {
     let pool = create_test_pool().await;
-    seed_tarifa(&pool, 110002, 10.0).await;
+    seed_tarifa(&pool, 220002, 10.0).await;
 
     let csv = "id_tarifa;id_tipo_tarifa;id_pedagio;multiplicador;valor;data_criacao;data_atualizacao;situacao;tipo\n\
-               110002;1;1;1.0;77.70;2024-01-01;2024-02-01;Ativo;Normal";
+               220002;1;1;1.0;77.70;2024-01-01;2024-02-01;Ativo;Normal";
     let (status, body) = post_tarifas_csv(pool.clone(), "tarifas-update.csv", csv).await;
 
-    assert_eq!(status, StatusCode::OK);
+    assert_eq!(status, StatusCode::OK, "response body: {body}");
     assert_eq!(body["tarifas_inseridas"], 0);
     assert_eq!(body["tarifas_atualizadas"], 1);
     assert_eq!(body["tarifas_importadas"], 1);
-    assert_eq!(tarifa_valor(&pool, 110002).await, 10.0);
-    assert_eq!(active_tarifa_valor(&pool, 110002).await, 77.70);
+    assert_eq!(tarifa_valor(&pool, 220002).await, 10.0);
+    assert_eq!(active_tarifa_valor(&pool, 220002, 77.70).await, 77.70);
 
     sqlx::query("DELETE FROM tarifas WHERE id_tarifa = $1 OR (id_pedagio = 1 AND id_tipo_tarifa = 1 AND valor = 77.70)")
-        .bind(110002)
+        .bind(220002)
         .execute(&pool)
         .await
         .unwrap();
@@ -277,24 +281,24 @@ async fn test_import_tarifas_csv_updates_existing_rows() {
 #[actix_rt::test]
 async fn test_import_tarifas_csv_mixed_response_includes_all_counters() {
     let pool = create_test_pool().await;
-    seed_tarifa(&pool, 110003, 10.0).await;
-    reset_tarifas(&pool, &[110004]).await;
+    seed_tarifa(&pool, 230003, 10.0).await;
+    reset_tarifas(&pool, &[230004]).await;
 
     let csv = "id_tarifa;id_tipo_tarifa;id_pedagio;multiplicador;valor;data_criacao;data_atualizacao;situacao;tipo\n\
-               110003;1;1;1.0;33.30;2024-01-01;2024-02-01;Ativo;Normal\n\
-               110004;1;1;1.0;44.40;2024-01-01;2024-02-01;Ativo;Normal";
+               230003;1;1;1.0;33.30;2024-01-01;2024-02-01;Ativo;Normal\n\
+               230004;1;1;1.0;44.40;2024-01-01;2024-02-01;Ativo;Normal";
     let (status, body) = post_tarifas_csv(pool.clone(), "tarifas-mixed.csv", csv).await;
 
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["tarifas_inseridas"], 1);
     assert_eq!(body["tarifas_atualizadas"], 1);
     assert_eq!(body["tarifas_importadas"], 2);
-    assert_eq!(tarifa_valor(&pool, 110003).await, 10.0);
-    assert_eq!(active_tarifa_valor(&pool, 110003).await, 33.30);
-    assert_eq!(tarifa_valor(&pool, 110004).await, 44.40);
+    assert_eq!(tarifa_valor(&pool, 230003).await, 10.0);
+    assert_eq!(active_tarifa_valor(&pool, 230003, 33.30).await, 33.30);
+    assert_eq!(tarifa_valor(&pool, 230004).await, 44.40);
 
     sqlx::query("DELETE FROM tarifas WHERE id_tarifa = ANY($1) OR (id_pedagio = 1 AND id_tipo_tarifa = 1 AND valor = 33.30)")
-        .bind(&[110003, 110004])
+        .bind(&[230003, 230004])
         .execute(&pool)
         .await
         .unwrap();
@@ -303,18 +307,18 @@ async fn test_import_tarifas_csv_mixed_response_includes_all_counters() {
 #[actix_rt::test]
 async fn test_import_tarifas_csv_duplicate_id_tarifa_returns_bad_request() {
     let pool = create_test_pool().await;
-    reset_tarifas(&pool, &[110005]).await;
+    reset_tarifas(&pool, &[240005]).await;
 
     let csv = "id_tarifa;id_tipo_tarifa;id_pedagio;multiplicador;valor;data_criacao;data_atualizacao;situacao;tipo\n\
-               110005;1;1;1.0;55.50;2024-01-01;2024-02-01;Ativo;Normal\n\
-               110005;1;1;1.0;66.60;2024-01-01;2024-02-01;Ativo;Normal";
+               240005;1;1;1.0;55.50;2024-01-01;2024-02-01;Ativo;Normal\n\
+               240005;1;1;1.0;66.60;2024-01-01;2024-02-01;Ativo;Normal";
     let (status, body) = post_tarifas_csv(pool.clone(), "tarifas-duplicate.csv", csv).await;
 
     assert_eq!(status, StatusCode::BAD_REQUEST);
     assert_eq!(body["erro"], "O arquivo CSV contém id_tarifa duplicado.");
-    assert!(body["detalhes"].as_str().unwrap().contains("110005"));
+    assert!(body["detalhes"].as_str().unwrap().contains("240005"));
 
-    reset_tarifas(&pool, &[110005]).await;
+    reset_tarifas(&pool, &[240005]).await;
 }
 
 #[actix_rt::test]

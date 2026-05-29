@@ -304,6 +304,16 @@ async fn import_tarifas_response(
         .execute(&mut *conn)
         .await?;
 
+        let insert_new_sql = format!(
+            "INSERT INTO tarifas ({columns}) \
+             SELECT {columns} \
+             FROM import_tarifas_tmp tmp \
+             WHERE NOT EXISTS ( \
+                 SELECT 1 FROM import_tarifas_existentes e WHERE e.id_tarifa = tmp.id_tarifa \
+             )"
+        );
+        sqlx::query(&insert_new_sql).execute(&mut *conn).await?;
+
         sqlx::query("CREATE SEQUENCE IF NOT EXISTS tarifas_id_seq START WITH 1000 INCREMENT BY 1")
             .execute(&mut *conn)
             .await?;
@@ -315,16 +325,6 @@ async fn import_tarifas_response(
         )
         .execute(&mut *conn)
         .await?;
-
-        let insert_new_sql = format!(
-            "INSERT INTO tarifas ({columns}) \
-             SELECT {columns} \
-             FROM import_tarifas_tmp tmp \
-             WHERE NOT EXISTS ( \
-                 SELECT 1 FROM import_tarifas_existentes e WHERE e.id_tarifa = tmp.id_tarifa \
-             )"
-        );
-        sqlx::query(&insert_new_sql).execute(&mut *conn).await?;
 
         let version_columns = column_names
             .iter()
