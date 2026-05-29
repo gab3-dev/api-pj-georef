@@ -1,180 +1,327 @@
-# Projeto Georef
+# Projeto Georef / BGM
 
-## Informações Principais
-Este projeto tem todas as configurações e arquivos necessários para ser executado em um container **[Docker](https://www.docker.com/)**.
+API e aplicação web para gestão de dados georreferenciados de pedágios no Brasil. O projeto mantém cadastro de operadoras, praças de pedágio, tipos de tarifa e tarifas cobradas por praça.
 
-### Links de Instalação
-**[Docker Desktop Windows](https://docs.docker.com/desktop/install/windows-install/)** <br>
-**[Docker Desktop Linux](https://docs.docker.com/desktop/install/linux-install/)**
+A regra principal de tarifas é preservar histórico: quando uma tarifa é atualizada, o registro anterior é marcado como `Inativo` e uma nova tarifa `Ativo` é criada.
 
-### Package Manager
-Caso você esteja utilizando uma distribuição linux pode instalar o docker e docker compose via linha de comando.
-Os comandos que deixei de exemplo podem gerar erros variando de máquina para máquina.
+## Stack
 
-#### Ubuntu
-```bash
-# Add Docker's official GPG key:
-sudo apt-get update
-sudo apt-get install ca-certificates curl
-sudo install -m 0755 -d /etc/apt/keyrings
-sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-sudo chmod a+r /etc/apt/keyrings/docker.asc
+- Backend: Rust, Actix Web, SQLx e PostgreSQL
+- Frontend: Angular 19, Angular Material, PrimeNG e AG Grid
+- Banco: PostgreSQL
+- Proxy: Nginx
+- Testes E2E: Playwright
+- Orquestração: Docker Compose
 
-# Add the repository to Apt sources:
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
+## Domínio
+
+- `operadora`: concessionárias/operadoras de pedágio.
+- `pedagio`: praças de pedágio, vinculadas a uma operadora.
+- `tipo_tarifa`: categorias de tarifa por tipo de veículo/rodagem/eixos.
+- `tarifas`: valores cobrados por praça e tipo de tarifa.
+
+## Estrutura
+
+```text
+src/
+  auth/        autenticação JWT, usuários e seed de administrador
+  operadora/   handlers, modelos e queries de operadoras
+  pedagio/     handlers, modelos e queries de pedágios
+  tarifa/      handlers, modelos e queries de tipos de tarifa e tarifas
+  utils/       importação CSV e upload de arquivos
+web/           aplicação Angular
+tests/         testes de integração da API
+init.sql       schema inicial e dados de exemplo
+nginx*.conf    configuração do proxy
 ```
 
-#### Arch
-```bash
-sudo pacman -S docker docker-compose
-sudo systemctl start docker.service
-sudo systemctl enable docker.service
-```
+## Execução Local Com Docker
 
-### Próximos passos
-Agora com o docker instalado você já pode executar o container.
-Abra um terminal e navegue até a pasta desse projeto, em seguida rode o comando abaixo.
+Pré-requisitos:
+
+- Docker
+- Docker Compose
+
+Suba o ambiente de desenvolvimento:
 
 ```bash
-docker compose up -d
+docker compose -f docker-compose.yaml up --build
 ```
 
-Após isso rode ```docker ps``` e verifique se todos os containers estão rodando.
+Serviços principais:
+
+- API: `http://localhost:8081`
+- Nginx: `http://localhost:9999`
+- Frontend: `http://localhost:4200`, quando servido pelo Angular
+- PostgreSQL: `localhost:5432`
+
+O compose local usa `network_mode: host`. Em Linux isso permite que API, frontend, Nginx e PostgreSQL conversem via `localhost`.
+
+Administrador inicial em desenvolvimento:
+
+- E-mail: `admin@bgm.com`
+- Senha padrão: valor de `ADMIN_PASSWORD` ou `admin123`
+
+## Execução Local Sem Docker
+
+Pré-requisitos:
+
+- Rust estável
+- PostgreSQL disponível
+- Node.js para o frontend
+
+Compile a API:
+
 ```bash
-CONTAINER ID   IMAGE                 COMMAND                  CREATED      STATUS                    PORTS     NAMES
-ca3db8011f55   nginx:latest          "/docker-entrypoint.…"   6 days ago   Up 38 seconds                       api-pj-georef-nginx-1
-7b2f3c5dd7c7   api-pj-georef-api01   "/bin/sh -c ./target…"   6 days ago   Up 39 seconds                       api-pj-georef-api01-1
-cd0988c04b9c   api-pj-georef-api02   "/bin/sh -c ./target…"   6 days ago   Up 39 seconds                       api-pj-georef-api02-1
-bafac24683f2   postgres              "docker-entrypoint.s…"   6 days ago   Up 39 seconds (healthy)             api-pj-georef-db-1
+cargo build
 ```
-Acima temos um exemplo de todos os containers rodando, deve haver 4 containers listados.
 
-## Testes E2E Web
-Os testes E2E usam Playwright em um ambiente Docker isolado, definido em `docker-compose.test.yml`.
-Esse compose cria rede própria, banco separado e volumes exclusivos de teste; a API e o banco não expõem portas para o host.
+Execute a API:
 
-Para executar:
+```bash
+cargo run
+```
+
+Execute o frontend:
+
+```bash
+cd web
+npm install
+npm start
+```
+
+## Variáveis De Ambiente
+
+A API aceita `DATABASE_URL` ou as variáveis separadas de conexão.
+
+| Variável               | Padrão em desenvolvimento       | Descrição                                                             |
+| ---------------------- | ------------------------------- | --------------------------------------------------------------------- |
+| `DATABASE_URL`         | vazio                           | URL completa do PostgreSQL. Se definida, tem prioridade.              |
+| `DB_HOST`              | `localhost`                     | Host do PostgreSQL.                                                   |
+| `DB_PORT`              | `5432`                          | Porta do PostgreSQL.                                                  |
+| `DB_NAME`              | `pj_georef`                     | Nome do banco.                                                        |
+| `DB_USER`              | `root`                          | Usuário do banco.                                                     |
+| `DB_PASSWORD`          | `1234`                          | Senha do banco.                                                       |
+| `HTTP_PORT`            | `9999`                          | Porta HTTP da API quando executada diretamente.                       |
+| `POOL_SIZE`            | `125`                           | Tamanho máximo do pool SQLx.                                          |
+| `JWT_SECRET`           | `chave_secreta_desenvolvimento` | Segredo usado para assinar tokens JWT.                                |
+| `JWT_EXPIRATION_HOURS` | `8`                             | Validade dos tokens em horas.                                         |
+| `CORS_ALLOWED_ORIGINS` | `*`                             | Origens liberadas para CORS. Em produção é obrigatório.               |
+| `UPLOAD_DIR`           | `./tmp`                         | Diretório onde a API salva uploads CSV.                               |
+| `DB_UPLOAD_DIR`        | `/uploaded`                     | Caminho do mesmo arquivo visto pelo container do banco.               |
+| `SEED_ADMIN`           | `false`                         | Cria administrador inicial quando `true`.                             |
+| `ADMIN_EMAIL`          | `admin@bgm.com`                 | E-mail do administrador inicial.                                      |
+| `ADMIN_NAME`           | `Administrador`                 | Nome do administrador inicial.                                        |
+| `ADMIN_PASSWORD`       | vazio                           | Senha do administrador inicial. Obrigatória quando `SEED_ADMIN=true`. |
+
+Em produção, variáveis sensíveis não têm fallback e devem ser definidas explicitamente.
+
+## Autenticação
+
+A API usa JWT Bearer token.
+
+Login:
+
+```http
+POST /api/auth/login
+```
+
+Payload:
+
+```json
+{
+  "email": "admin@bgm.com",
+  "senha": "admin123"
+}
+```
+
+Use o token retornado nos endpoints protegidos:
+
+```http
+Authorization: Bearer <token>
+```
+
+Perfis:
+
+- `admin`: pode criar, atualizar e importar dados.
+- `user`: pode consultar dados.
+
+## Endpoints Principais
+
+Todos os endpoints ficam sob `/api`.
+
+### Autenticação E Usuários
+
+| Método | Rota              | Descrição                     |
+| ------ | ----------------- | ----------------------------- |
+| `POST` | `/api/auth/login` | Login e emissão de JWT.       |
+| `POST` | `/api/usuarios`   | Cria usuário. Requer admin.   |
+| `GET`  | `/api/usuarios`   | Lista usuários. Requer admin. |
+
+### Operadoras
+
+| Método | Rota                                 | Descrição                         |
+| ------ | ------------------------------------ | --------------------------------- |
+| `GET`  | `/api/operadoras`                    | Lista operadoras.                 |
+| `GET`  | `/api/operadoras/{codigo_operadora}` | Busca operadora por código.       |
+| `POST` | `/api/operadoras`                    | Cria operadora. Requer admin.     |
+| `PUT`  | `/api/operadoras/{codigo_operadora}` | Atualiza operadora. Requer admin. |
+
+Filtros em `/api/operadoras`: `q`, `codigo_operadora`, `operadora`, `grupo`, `cnpj`, `email`.
+
+### Pedágios
+
+| Método | Rota                         | Descrição                     |
+| ------ | ---------------------------- | ----------------------------- |
+| `GET`  | `/api/pedagios`              | Lista praças de pedágio.      |
+| `GET`  | `/api/pedagios/{id_pedagio}` | Busca praça por ID.           |
+| `POST` | `/api/pedagios`              | Cria praça. Requer admin.     |
+| `PUT`  | `/api/pedagios/{id_pedagio}` | Atualiza praça. Requer admin. |
+
+Filtros em `/api/pedagios`: `q`, `id_pedagio`, `codigo_operadora`, `nome`, `situacao`, `rodovia`, `cidade`, `estado`, `codigo`.
+
+### Tarifas
+
+| Método | Rota                       | Descrição                                                         |
+| ------ | -------------------------- | ----------------------------------------------------------------- |
+| `GET`  | `/api/tipos-tarifa`        | Lista tipos de tarifa.                                            |
+| `POST` | `/api/tipos-tarifa`        | Cria tipo de tarifa. Requer admin.                                |
+| `GET`  | `/api/tarifas`             | Lista apenas tarifas ativas.                                      |
+| `GET`  | `/api/tarifas/{id_tarifa}` | Busca tarifa por ID.                                              |
+| `POST` | `/api/tarifas`             | Cria tarifa. Requer admin.                                        |
+| `PUT`  | `/api/tarifas/{id_tarifa}` | Inativa a tarifa anterior e cria nova versão ativa. Requer admin. |
+
+Filtros em `/api/tipos-tarifa`: `q`, `id_tipo_tarifa`, `id_padrao_tarifa`, `descricao`, `rodagem`, `eixos`.
+
+Filtros em `/api/tarifas`: `q`, `id_tarifa`, `id_tipo_tarifa`, `id_pedagio`, `codigo_operadora`, `situacao`, `tipo`, `descricao`, `nome`, `operadora`, `incluir_inativas`.
+
+Por padrão, `/api/tarifas` retorna apenas `situacao=Ativo`. Para consultar histórico, use `situacao=Inativo` ou `incluir_inativas=true`.
+
+### Importação CSV
+
+| Método | Rota                      | Descrição                                 |
+| ------ | ------------------------- | ----------------------------------------- |
+| `POST` | `/api/imports/operadoras` | Importa operadoras via CSV. Requer admin. |
+| `POST` | `/api/imports/pedagios`   | Importa pedágios via CSV. Requer admin.   |
+| `POST` | `/api/imports/tarifas`    | Importa tarifas via CSV. Requer admin.    |
+
+As rotas antigas (`/api/create-*`, `/api/get-*`, `/api/update-*`, `/api/importar-*`) ainda existem para compatibilidade, mas as rotas REST acima são as preferenciais.
+
+## Regra De Histórico De Tarifas
+
+Ao atualizar uma tarifa existente por `PUT /api/tarifas/{id_tarifa}`:
+
+1. A tarifa encontrada por `id_tarifa` é marcada como `Inativo`.
+2. Os dados históricos do registro antigo são preservados.
+3. Uma nova linha é inserida em `tarifas` com novo `id_tarifa` e `situacao = 'Ativo'`.
+4. `id_tipo_tarifa` e `id_pedagio` permanecem os mesmos da tarifa anterior.
+
+Na importação CSV de tarifas, quando o arquivo contém um `id_tarifa` já existente, o comportamento é o mesmo: a tarifa anterior é inativada e uma nova versão ativa é inserida.
+
+## Importação CSV
+
+Os endpoints de importação recebem `multipart/form-data` com campo `file`.
+
+Exemplo:
+
+```bash
+curl -X POST http://localhost:9999/api/imports/tarifas \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@tarifas.csv"
+```
+
+Os arquivos usam `;` como delimitador e devem conter cabeçalho. Para tarifas, a coluna `id_tarifa` é obrigatória.
+
+Durante a importação, a API salva o arquivo em `UPLOAD_DIR` e o PostgreSQL lê o arquivo pelo caminho equivalente em `DB_UPLOAD_DIR`, usando `COPY`.
+
+## Testes
+
+Testes de integração da API:
+
+```bash
+cargo test
+```
+
+Os testes usam PostgreSQL. Por padrão tentam conectar em:
+
+```text
+postgres://root:1234@localhost:5432/pj_georef
+```
+
+É possível sobrescrever com:
+
+- `DB_HOST`
+- `DB_PORT`
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASSWORD`
+
+Testes E2E web com ambiente Docker isolado:
+
 ```bash
 cd web
 npm run e2e:docker
 ```
 
-Para limpar containers e volumes do ambiente E2E:
+Limpar ambiente E2E:
+
 ```bash
 cd web
 npm run e2e:docker:down
 ```
 
-O compose de teste carrega apenas as variáveis de `.env.test` pelo comando `docker compose --env-file ../.env.test -f ../docker-compose.test.yml`.
-O serviço `api-test` roda com `SEED_ADMIN=true` somente nesse ambiente e cria `admin@bgm.com` usando `ADMIN_PASSWORD` de `.env.test`.
+O ambiente E2E usa `.env.test`, banco separado, volumes próprios e seed automático de administrador.
 
 ## Produção
-O compose de produção é apenas para a infraestrutura da Oracle: API, PostgreSQL e Nginx. O frontend deve ser publicado separadamente na Vercel.
 
-Crie um arquivo `.env.production` e ajuste pelo menos:
-- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
-- `JWT_SECRET`
-- `CORS_ALLOWED_ORIGINS` com a origem pública da Vercel, por exemplo `https://seu-app.vercel.app`
+Use o compose de produção para API, PostgreSQL e Nginx:
 
-Suba a infraestrutura:
 ```bash
+cp .env.production.example .env.production
 docker compose --env-file .env.production -f docker-compose-production.yaml up -d --build
 ```
 
-O Nginx publica a API em `http://<host>:9999/api/*` por padrão. Para criar um administrador inicial, defina `SEED_ADMIN=true` e `ADMIN_PASSWORD` somente no primeiro deploy; depois volte `SEED_ADMIN=false`.
+Variáveis mínimas em `.env.production`:
 
-Como o frontend usa `/api` no browser, configure a Vercel para encaminhar `/api/*` para a URL pública do Nginx na Oracle, ou ajuste o build do frontend para usar a URL absoluta da API.
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `POSTGRES_DB`
+- `JWT_SECRET`
+- `CORS_ALLOWED_ORIGINS`
 
-## Vamos para os Testes - API Methods
-POST - Para criar operadora, passe o json como o exemplo.
-```bash
-curl https://zany-halibut-9xjwppwwxwfp7w-9999.app.github.dev/create-operadora \
-    --include \
-    --header "Content-Type: application/json" \
-    --request "POST" \
-    --data '{
-      "data_operacao": "26/03/2024 13:46:159",
-      "responsavel": "John Doe",
-      "grupo": "Grupo A",
-      "codigo_operadora": 30,
-      "operadora": "ABC Telecom",
-      "razao_social": "ABC Company",
-      "cnpj": "1234567890",
-      "email": "teste@teste.com",
-      "telefone": "123-456-7890"
-    }'
+O Nginx publica a API em:
+
+```text
+http://<host>:9999/api/*
 ```
 
-POST - Para criar praça, passe o json como o exemplo.
-```bash
-# Create variables with random values
-longitude=$(shuf -i 180-180 -n 1)
-latitude=$(shuf -i 90-90 -n 1)
-id_operadora=$(openssl rand -hex 4)
-km=$(shuf -i 0-100 -n 1)
-codigo_praca=$(shuf -i 0-180 -n 1)
+Para criar um administrador inicial no primeiro deploy:
 
-# Send POST request
-curl http://localhost:9999/create-praca \
-    --include \
-    --header "Content-Type: application/json" \
-    --request "POST" \
-    --data '{
-    "longitude": '$longitude',
-    "latitude": '$latitude',
-    "id_operadora": "'"$id_operadora"'",
-    "nome": "random_nome",
-    "situacao": "random_situacao",
-    "rodovia": "random_rodovia",
-    "km": '$km',
-    "sentido": "random_sentido",
-    "cidade": "random_cidade",
-    "estado": "random_estado",
-    "codigo_praca": '$codigo_praca',
-    "orientacao": "random_orientacao",
-    "tipo": "random_tipo",
-    "jurisdicao": "random_jurisdicao",
-    "cobranca_especial": false,
-    "categoria": "random_categoria",
-    "data_de_alteracao": "random_data_de_alteracao",
-    "razao_social": "ABC Company",
-    "cnpj": "1234567890",
-    "email": "teste@teste.com",
-    "telefone": "123-456-7890"
-}'
+```env
+SEED_ADMIN=true
+ADMIN_EMAIL=admin@bgm.com
+ADMIN_NAME=Administrador
+ADMIN_PASSWORD=<senha-forte>
 ```
 
+Depois do primeiro deploy, volte `SEED_ADMIN=false`.
+
+## Comandos Úteis
+
+Build release da API:
+
 ```bash
-curl http://localhost:9999/upload_stats -X POST -F 'file=@Cargo.toml'
+make target
 ```
 
+Acessar o banco local via Docker:
+
 ```bash
-curl http://localhost:9999/upload_stats -X POST -F 'file=@Cargo.toml' -F 'layout=advanced'
+docker exec -it api-pj-georef-db-1 psql -U root -d pj_georef
 ```
 
-## Executar comandos direto no banco de dados(Terminal)
-
-Abri o terminal do container do banco de dados
-```bash
-docker exec -it api-pj-georef-db-1 sh
-```
+Ver containers:
 
 ```bash
-psql -U root -h localhost -p 5432 -d pj_georef
-```
-
-```bash
-\copy operadora from '/uploaded/pedagios-modelo.csv' delimiter ';' csv header;
-```
-
-```bash
-\copy operadora (codigo_operadora,operadora,CNPJ,razao_social,data_alteracao,email,telefone,grupo,responsavel) from '/uploaded/operadora.csv' delimiter ';' csv header encoding 'ISO88599';
-```
-
-```bash
-\copy pedagio from '/uploaded/pedagios2.csv' delimiter ';' csv header encoding 'ISO88599';
+docker ps
 ```

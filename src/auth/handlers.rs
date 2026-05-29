@@ -4,10 +4,19 @@ use argon2::{
     Argon2,
 };
 use jsonwebtoken::{encode, EncodingKey, Header};
-use sqlx::{PgPool, Row};
+use serde::Deserialize;
+use sqlx::{PgPool, Postgres, QueryBuilder, Row};
 
 use super::middleware::AdminAutenticado;
 use super::models::*;
+
+#[derive(Deserialize, Default)]
+pub struct UsuarioFilter {
+    pub q: Option<String>,
+    pub nome: Option<String>,
+    pub email: Option<String>,
+    pub perfil: Option<String>,
+}
 
 #[post("/api/login")]
 pub async fn login(
@@ -164,22 +173,57 @@ async fn create_usuario_response(
 }
 
 #[get("/api/get-usuarios")]
-pub async fn get_all_usuarios(_admin: AdminAutenticado, pool: web::Data<PgPool>) -> impl Responder {
-    get_all_usuarios_response(pool).await
+pub async fn get_all_usuarios(
+    _admin: AdminAutenticado,
+    pool: web::Data<PgPool>,
+    filter: web::Query<UsuarioFilter>,
+) -> impl Responder {
+    get_all_usuarios_response(pool, filter.into_inner()).await
 }
 
 #[get("/api/usuarios")]
 pub async fn get_all_usuarios_rest(
     _admin: AdminAutenticado,
     pool: web::Data<PgPool>,
+    filter: web::Query<UsuarioFilter>,
 ) -> impl Responder {
-    get_all_usuarios_response(pool).await
+    get_all_usuarios_response(pool, filter.into_inner()).await
 }
 
-async fn get_all_usuarios_response(pool: web::Data<PgPool>) -> HttpResponse {
-    let rows = sqlx::query(
-            "SELECT id_usuario, nome, email, perfil::TEXT, data_criacao FROM usuario ORDER BY data_criacao DESC",
-        )
+async fn get_all_usuarios_response(pool: web::Data<PgPool>, filter: UsuarioFilter) -> HttpResponse {
+    let mut query = QueryBuilder::<Postgres>::new(
+        "SELECT id_usuario, nome, email, perfil::TEXT, data_criacao FROM usuario",
+    );
+
+    let mut has_filter = false;
+
+    if let Some(nome) = filter.nome.as_deref().filter(|value| !value.is_empty()) {
+        query
+            .push(" WHERE nome ILIKE ")
+            .push_bind(format!("%{nome}%"));
+        has_filter = true;
+    }
+    if let Some(email) = filter.email.as_deref().filter(|value| !value.is_empty()) {
+        query.push(if has_filter { " AND " } else { " WHERE " });
+        query.push("email ILIKE ").push_bind(format!("%{email}%"));
+        has_filter = true;
+    }
+    if let Some(perfil) = filter.perfil.as_deref().filter(|value| !value.is_empty()) {
+        query.push(if has_filter { " AND " } else { " WHERE " });
+        query.push("perfil::TEXT = ").push_bind(perfil);
+        has_filter = true;
+    }
+    if let Some(q) = filter.q.as_deref().filter(|value| !value.is_empty()) {
+        let pattern = format!("%{q}%");
+        query.push(if has_filter { " AND " } else { " WHERE " });
+        query.push("(nome ILIKE ").push_bind(pattern.clone());
+        query.push(" OR email ILIKE ").push_bind(pattern);
+        query.push(")");
+    }
+
+    let rows = query
+        .push(" ORDER BY data_criacao DESC")
+        .build()
         .fetch_all(pool.get_ref())
         .await;
 

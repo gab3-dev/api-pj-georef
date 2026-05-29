@@ -33,20 +33,28 @@ async fn create_pedagio_response(data: String, pool: web::Data<Pool>) -> HttpRes
 }
 
 #[get("/api/get-pedagios")]
-pub async fn get_all_pedagio(_user: UsuarioAutenticado, pool: web::Data<Pool>) -> impl Responder {
-    get_all_pedagio_response(pool).await
+pub async fn get_all_pedagio(
+    _user: UsuarioAutenticado,
+    pool: web::Data<Pool>,
+    filter: web::Query<db::PedagioFilter>,
+) -> impl Responder {
+    get_all_pedagio_response(pool, filter.into_inner()).await
 }
 
 #[get("/api/pedagios")]
 pub async fn get_all_pedagio_rest(
     _user: UsuarioAutenticado,
     pool: web::Data<Pool>,
+    filter: web::Query<db::PedagioFilter>,
 ) -> impl Responder {
-    get_all_pedagio_response(pool).await
+    get_all_pedagio_response(pool, filter.into_inner()).await
 }
 
-async fn get_all_pedagio_response(pool: web::Data<Pool>) -> HttpResponse {
-    match db::get_all(pool.get_ref()).await {
+async fn get_all_pedagio_response(
+    pool: web::Data<Pool>,
+    filter: db::PedagioFilter,
+) -> HttpResponse {
+    match db::get_all(pool.get_ref(), &filter).await {
         Ok(pedagios) => HttpResponse::Ok().json(pedagios),
         Err(err) => err,
     }

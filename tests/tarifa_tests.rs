@@ -2,6 +2,7 @@
 
 use actix_web::{test, web, App};
 use jsonwebtoken::{encode, EncodingKey, Header};
+use serde_json::Value;
 use sqlx::postgres::PgPoolOptions;
 
 use bgm::auth::models::Claims;
@@ -180,6 +181,32 @@ async fn test_get_all_tarifas_returns_ok() {
         "Expected success or 500 (db issue), got {:?}",
         resp.status()
     );
+}
+
+#[actix_rt::test]
+async fn test_get_tarifas_accepts_rest_filters() {
+    let pool = create_test_pool().await;
+
+    let app = test::init_service(
+        App::new()
+            .app_data(web::Data::new(pool))
+            .app_data(web::Data::new(jwt_config()))
+            .service(get_all_tarifas_rest),
+    )
+    .await;
+
+    let req = test::TestRequest::get()
+        .uri("/api/tarifas?id_pedagio=2&id_tipo_tarifa=1&situacao=Ativo")
+        .insert_header(("Authorization", format!("Bearer {}", user_token())))
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 200);
+
+    let body: Vec<Value> = test::read_body_json(resp).await;
+    assert!(body.iter().all(|item| item["id_pedagio"] == 2));
+    assert!(body.iter().all(|item| item["id_tipo_tarifa"] == 1));
+    assert!(body.iter().all(|item| item["situacao"] == "Ativo"));
 }
 
 #[actix_rt::test]
@@ -377,7 +404,7 @@ async fn test_update_tarifa_creates_active_version_and_inactivates_previous() {
     assert_eq!(resp.status().as_u16(), 200);
 
     let previous = sqlx::query_as::<_, (i32, f64, String)>(
-        "SELECT id_tarifa, valor, situacao FROM tarifas WHERE id_tarifa = $1",
+        "SELECT id_tarifa, valor, situacao::TEXT AS situacao FROM tarifas WHERE id_tarifa = $1",
     )
     .bind(id_tarifa)
     .fetch_one(&pool)
@@ -392,7 +419,7 @@ async fn test_update_tarifa_creates_active_version_and_inactivates_previous() {
     assert_eq!(previous.2, "Inativo", "tarifa anterior deve ficar inativa");
 
     let active = sqlx::query_as::<_, (i32, i32, i32, f64, String)>(
-        "SELECT id_tarifa, id_tipo_tarifa, id_pedagio, valor, situacao
+        "SELECT id_tarifa, id_tipo_tarifa, id_pedagio, valor, situacao::TEXT AS situacao
          FROM tarifas
          WHERE id_tipo_tarifa = 1 AND id_pedagio = 1 AND valor = 77.70 AND situacao = 'Ativo'",
     )

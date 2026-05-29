@@ -7,6 +7,7 @@ use std::path::Path;
 use std::{fs, fs::File, fs::Permissions, os::unix::fs::PermissionsExt};
 
 use crate::auth::AdminAutenticado;
+use crate::utils::ensure_situacao_enum;
 
 #[derive(Debug, MultipartForm)]
 pub struct UploadForm {
@@ -230,6 +231,15 @@ async fn import_tarifas_response(
         })));
     }
 
+    if let Err(e) = ensure_situacao_enum(pool.get_ref()).await {
+        log::error!("error preparing situacao enum for tarifas import: {e}");
+        remove_uploaded_file(&path, "tarifas");
+        return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+            "erro": "Falha ao preparar enum de situação.",
+            "detalhes": e.to_string()
+        })));
+    }
+
     log::info!("importing tarifas from {path_on_server}");
     let mut conn = match pool.acquire().await {
         Ok(conn) => conn,
@@ -242,6 +252,18 @@ async fn import_tarifas_response(
             })));
         }
     };
+
+    if let Err(e) = sqlx::query("SELECT pg_advisory_lock(hashtext('tarifas_import'))")
+        .execute(&mut *conn)
+        .await
+    {
+        log::error!("error acquiring tarifas import lock: {e}");
+        remove_uploaded_file(&path, "tarifas");
+        return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+            "erro": "Falha ao importar o arquivo de tarifas.",
+            "detalhes": e.to_string()
+        })));
+    }
 
     let reset_temp_table = "DROP TABLE IF EXISTS import_tarifas_tmp";
     let result = async {
@@ -369,6 +391,9 @@ async fn import_tarifas_response(
 
     match result {
         Ok(Ok((tarifas_inseridas, tarifas_atualizadas))) => {
+            let _ = sqlx::query("SELECT pg_advisory_unlock(hashtext('tarifas_import'))")
+                .execute(&mut *conn)
+                .await;
             log::info!(
                 "tarifas importadas com sucesso, {} inserted and {} updated",
                 tarifas_inseridas,
@@ -383,6 +408,9 @@ async fn import_tarifas_response(
         }
         Ok(Err(id_tarifa)) => {
             let _ = sqlx::query(reset_temp_table).execute(&mut *conn).await;
+            let _ = sqlx::query("SELECT pg_advisory_unlock(hashtext('tarifas_import'))")
+                .execute(&mut *conn)
+                .await;
             remove_uploaded_file(&path, "tarifas");
             Ok(HttpResponse::BadRequest().json(serde_json::json!({
                 "erro": "O arquivo CSV contém id_tarifa duplicado.",
@@ -391,6 +419,9 @@ async fn import_tarifas_response(
         }
         Err(e) => {
             let _ = sqlx::query(reset_temp_table).execute(&mut *conn).await;
+            let _ = sqlx::query("SELECT pg_advisory_unlock(hashtext('tarifas_import'))")
+                .execute(&mut *conn)
+                .await;
             log::error!("error importing tarifas: {e}");
             remove_uploaded_file(&path, "tarifas");
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({

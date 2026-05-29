@@ -2,6 +2,7 @@
 
 use actix_web::{test, web, App};
 use jsonwebtoken::{encode, EncodingKey, Header};
+use serde_json::Value;
 use sqlx::postgres::PgPoolOptions;
 
 use bgm::auth::models::Claims;
@@ -91,6 +92,31 @@ async fn test_get_all_pedagios_returns_ok() {
         "Expected success or 500 (db issue), got {:?}",
         resp.status()
     );
+}
+
+#[actix_rt::test]
+async fn test_get_pedagios_accepts_rest_filters() {
+    let pool = create_test_pool().await;
+
+    let app = test::init_service(
+        App::new()
+            .app_data(web::Data::new(pool))
+            .app_data(web::Data::new(jwt_config()))
+            .service(get_all_pedagio_rest),
+    )
+    .await;
+
+    let req = test::TestRequest::get()
+        .uri("/api/pedagios?codigo_operadora=1&estado=SP&q=Ped%C3%A1gio")
+        .insert_header(("Authorization", format!("Bearer {}", user_token())))
+        .to_request();
+
+    let resp = test::call_service(&app, req).await;
+    assert_eq!(resp.status().as_u16(), 200);
+
+    let body: Vec<Value> = test::read_body_json(resp).await;
+    assert!(body.iter().all(|item| item["codigo_operadora"] == 1));
+    assert!(body.iter().all(|item| item["estado"] == "SP"));
 }
 
 #[actix_rt::test]

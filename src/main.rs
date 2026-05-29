@@ -106,6 +106,9 @@ async fn main() -> std::io::Result<()> {
         .unwrap();
     println!("postgres pool succesfully created");
 
+    ensure_situacao_enum(&pool)
+        .await
+        .map_err(io::Error::other)?;
     auth::seed_admin(&pool).await;
 
     let jwt_secret = env_with_default("JWT_SECRET", "chave_secreta_desenvolvimento")?;

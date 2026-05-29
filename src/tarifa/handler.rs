@@ -36,20 +36,25 @@ async fn create_tipo_tarifa_response(data: String, pool: web::Data<Pool>) -> Htt
 pub async fn get_all_tipos_tarifa(
     _user: UsuarioAutenticado,
     pool: web::Data<Pool>,
+    filter: web::Query<db::TipoTarifaFilter>,
 ) -> impl Responder {
-    get_all_tipos_tarifa_response(pool).await
+    get_all_tipos_tarifa_response(pool, filter.into_inner()).await
 }
 
 #[get("/api/tipos-tarifa")]
 pub async fn get_all_tipos_tarifa_rest(
     _user: UsuarioAutenticado,
     pool: web::Data<Pool>,
+    filter: web::Query<db::TipoTarifaFilter>,
 ) -> impl Responder {
-    get_all_tipos_tarifa_response(pool).await
+    get_all_tipos_tarifa_response(pool, filter.into_inner()).await
 }
 
-async fn get_all_tipos_tarifa_response(pool: web::Data<Pool>) -> HttpResponse {
-    match db::get_all_tipos_tarifa(pool.get_ref()).await {
+async fn get_all_tipos_tarifa_response(
+    pool: web::Data<Pool>,
+    filter: db::TipoTarifaFilter,
+) -> HttpResponse {
+    match db::get_all_tipos_tarifa(pool.get_ref(), &filter).await {
         Ok(tipos_tarifa) => HttpResponse::Ok().json(tipos_tarifa),
         Err(err) => err,
     }
@@ -86,20 +91,25 @@ async fn create_tarifa_response(data: String, pool: web::Data<Pool>) -> HttpResp
 }
 
 #[get("/api/get-tarifas")]
-pub async fn get_all_tarifas(_user: UsuarioAutenticado, pool: web::Data<Pool>) -> impl Responder {
-    get_all_tarifas_response(pool).await
+pub async fn get_all_tarifas(
+    _user: UsuarioAutenticado,
+    pool: web::Data<Pool>,
+    filter: web::Query<db::TarifaFilter>,
+) -> impl Responder {
+    get_all_tarifas_response(pool, filter.into_inner()).await
 }
 
 #[get("/api/tarifas")]
 pub async fn get_all_tarifas_rest(
     _user: UsuarioAutenticado,
     pool: web::Data<Pool>,
+    filter: web::Query<db::TarifaFilter>,
 ) -> impl Responder {
-    get_all_tarifas_response(pool).await
+    get_all_tarifas_response(pool, filter.into_inner()).await
 }
 
-async fn get_all_tarifas_response(pool: web::Data<Pool>) -> HttpResponse {
-    match db::get_all_tarifas(pool.get_ref()).await {
+async fn get_all_tarifas_response(pool: web::Data<Pool>, filter: db::TarifaFilter) -> HttpResponse {
+    match db::get_all_tarifas(pool.get_ref(), &filter).await {
         Ok(tarifas) => HttpResponse::Ok().json(tarifas),
         Err(err) => err,
     }

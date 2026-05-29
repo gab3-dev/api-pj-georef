@@ -247,7 +247,7 @@ async fn test_import_tarifas_csv_inserts_new_rows() {
     let (status, body) = post_tarifas_csv(pool.clone(), "tarifas-insert.csv", csv).await;
 
     assert_eq!(status, StatusCode::OK, "response body: {body}");
-    assert_eq!(body["tarifas_inseridas"], 1);
+    assert_eq!(body["tarifas_inseridas"], 1, "response body: {body}");
     assert_eq!(body["tarifas_atualizadas"], 0);
     assert_eq!(body["tarifas_importadas"], 1);
     assert_eq!(tarifa_valor(&pool, 210001).await, 99.90);
@@ -281,24 +281,39 @@ async fn test_import_tarifas_csv_updates_existing_rows() {
 #[actix_rt::test]
 async fn test_import_tarifas_csv_mixed_response_includes_all_counters() {
     let pool = create_test_pool().await;
-    seed_tarifa(&pool, 230003, 10.0).await;
-    reset_tarifas(&pool, &[230004]).await;
+    let id_atualizar =
+        1_000_000_000 + (chrono::Utc::now().timestamp_subsec_nanos() as i32 % 100_000_000);
+    let id_inserir = id_atualizar + 100_000;
 
-    let csv = "id_tarifa;id_tipo_tarifa;id_pedagio;multiplicador;valor;data_criacao;data_atualizacao;situacao;tipo\n\
-               230003;1;1;1.0;33.30;2024-01-01;2024-02-01;Ativo;Normal\n\
-               230004;1;1;1.0;44.40;2024-01-01;2024-02-01;Ativo;Normal";
-    let (status, body) = post_tarifas_csv(pool.clone(), "tarifas-mixed.csv", csv).await;
+    sqlx::query(
+        "DELETE FROM tarifas
+         WHERE id_tarifa = ANY($1)
+            OR (id_pedagio = 1 AND id_tipo_tarifa = 1 AND valor IN (33.30, 44.40))",
+    )
+    .bind(&[id_atualizar, id_inserir])
+    .execute(&pool)
+    .await
+    .unwrap();
+
+    seed_tarifa(&pool, id_atualizar, 10.0).await;
+
+    let csv = format!(
+        "id_tarifa;id_tipo_tarifa;id_pedagio;multiplicador;valor;data_criacao;data_atualizacao;situacao;tipo\n\
+         {id_atualizar};1;1;1.0;33.30;2024-01-01;2024-02-01;Ativo;Normal\n\
+         {id_inserir};1;1;1.0;44.40;2024-01-01;2024-02-01;Ativo;Normal"
+    );
+    let (status, body) = post_tarifas_csv(pool.clone(), "tarifas-mixed.csv", &csv).await;
 
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["tarifas_inseridas"], 1);
     assert_eq!(body["tarifas_atualizadas"], 1);
     assert_eq!(body["tarifas_importadas"], 2);
-    assert_eq!(tarifa_valor(&pool, 230003).await, 10.0);
-    assert_eq!(active_tarifa_valor(&pool, 230003, 33.30).await, 33.30);
-    assert_eq!(tarifa_valor(&pool, 230004).await, 44.40);
+    assert_eq!(tarifa_valor(&pool, id_atualizar).await, 10.0);
+    assert_eq!(active_tarifa_valor(&pool, id_atualizar, 33.30).await, 33.30);
+    assert_eq!(tarifa_valor(&pool, id_inserir).await, 44.40);
 
-    sqlx::query("DELETE FROM tarifas WHERE id_tarifa = ANY($1) OR (id_pedagio = 1 AND id_tipo_tarifa = 1 AND valor = 33.30)")
-        .bind(&[230003, 230004])
+    sqlx::query("DELETE FROM tarifas WHERE id_tarifa = ANY($1) OR (id_pedagio = 1 AND id_tipo_tarifa = 1 AND valor IN (33.30, 44.40))")
+        .bind(&[id_atualizar, id_inserir])
         .execute(&pool)
         .await
         .unwrap();

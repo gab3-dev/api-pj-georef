@@ -36,20 +36,25 @@ async fn create_operadora_response(data: String, pool: web::Data<Pool>) -> HttpR
 pub async fn get_all_operadoras(
     _user: UsuarioAutenticado,
     pool: web::Data<Pool>,
+    filter: web::Query<db::OperadoraFilter>,
 ) -> impl Responder {
-    get_all_operadoras_response(pool).await
+    get_all_operadoras_response(pool, filter.into_inner()).await
 }
 
 #[get("/api/operadoras")]
 pub async fn get_all_operadoras_rest(
     _user: UsuarioAutenticado,
     pool: web::Data<Pool>,
+    filter: web::Query<db::OperadoraFilter>,
 ) -> impl Responder {
-    get_all_operadoras_response(pool).await
+    get_all_operadoras_response(pool, filter.into_inner()).await
 }
 
-async fn get_all_operadoras_response(pool: web::Data<Pool>) -> HttpResponse {
-    match db::get_all(pool.get_ref()).await {
+async fn get_all_operadoras_response(
+    pool: web::Data<Pool>,
+    filter: db::OperadoraFilter,
+) -> HttpResponse {
+    match db::get_all(pool.get_ref(), &filter).await {
         Ok(operadoras) => HttpResponse::Ok().json(operadoras),
         Err(err) => err,
     }

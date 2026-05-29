@@ -18,6 +18,14 @@ VALUES
     ('2021-06-01', 'Fernando', 'Grupo 1', 2, 'CCR', 'CCR S.A.', '02.846.056/0001-97', 'email@teste.com', '(11) 99999-9999'),
     ('2021-06-01', 'Fernando', 'Grupo 1', 3, 'Arteris', 'Arteris S.A.', '02.919.555/0001-67', 'email@teste.com', '(11) 99999-9999');
 
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'situacao_registro') THEN
+        CREATE TYPE situacao_registro AS ENUM ('Ativo', 'Inativo');
+    END IF;
+END
+$$;
+
 CREATE TABLE IF NOT EXISTS pedagio (
     id_pedagio INT,
     longitude BIGINT,
@@ -25,7 +33,7 @@ CREATE TABLE IF NOT EXISTS pedagio (
     nome VARCHAR(50),
     codigo_operadora INT,
     concessionaria VARCHAR(100),
-    situacao VARCHAR(20),
+    situacao situacao_registro,
     sigla VARCHAR(20),
     rodovia VARCHAR(100),
     km DOUBLE PRECISION,
@@ -94,7 +102,7 @@ CREATE TABLE IF NOT EXISTS tarifas (
     valor DOUBLE PRECISION,
     data_criacao TIMESTAMP,
     data_atualizacao TIMESTAMP,
-    situacao VARCHAR(20),
+    situacao situacao_registro,
     tipo VARCHAR(20),
     CONSTRAINT fk_tipo_tarifa
       FOREIGN KEY(id_tipo_tarifa)
