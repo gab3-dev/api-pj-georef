@@ -15,7 +15,10 @@ function dbClient() {
   });
 }
 
-test('login, cadastro e persistencia de operadora', async ({ page, request }) => {
+test('login, cadastro e persistencia de operadora', async ({
+  page,
+  request,
+}) => {
   const timestamp = Date.now();
   const codigoOperadora = Number(String(timestamp).slice(-8));
   const nomeOperadora = `Operadora E2E ${codigoOperadora}`;
@@ -37,31 +40,58 @@ test('login, cadastro e persistencia de operadora', async ({ page, request }) =>
     await page.locator('input[name="data_alteracao"]').fill('2026-04-29');
     await page.locator('input[name="responsavel"]').fill('Responsavel E2E');
     await page.locator('input[name="grupo"]').fill('Grupo E2E');
-    await page.locator('input[name="codigo_operadora"]').fill(String(codigoOperadora));
+    await page
+      .locator('input[name="codigo_operadora"]')
+      .fill(String(codigoOperadora));
     await page.locator('input[name="operadora"]').fill(nomeOperadora);
-    await page.locator('input[name="razao_social"]').fill(`Razao Social E2E ${codigoOperadora}`);
+    await page
+      .locator('input[name="razao_social"]')
+      .fill(`Razao Social E2E ${codigoOperadora}`);
     await page.locator('input[name="cnpj"]').fill('12.345.678/0001-90');
-    await page.locator('input[name="email"]').fill(`operadora-${codigoOperadora}@e2e.test`);
+    await page
+      .locator('input[name="email"]')
+      .fill(`operadora-${codigoOperadora}@e2e.test`);
     await page.locator('input[name="telefone"]').fill('(11) 99999-9999');
 
-    const dialogPromise = page.waitForEvent('dialog');
+    const dialogMessages: string[] = [];
+    page.on('dialog', async (dialog) => {
+      dialogMessages.push(dialog.message());
+      await dialog.accept();
+    });
+
+    const createResponsePromise = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/operadoras') &&
+        response.request().method() === 'POST',
+    );
+
     await page.getByRole('button', { name: 'Enviar' }).click();
-    const dialog = await dialogPromise;
-    expect(dialog.message()).toContain('Operadora inserida com sucesso');
-    await dialog.accept();
+    const createResponse = await createResponsePromise;
+    expect(createResponse.ok()).toBeTruthy();
+    expect(await createResponse.text()).toContain(
+      'Operadora inserida com sucesso',
+    );
+    await expect
+      .poll(() => dialogMessages)
+      .toContain('Operadora inserida com sucesso');
 
     await page.reload();
     await page.getByRole('tab', { name: 'Listar Operadoras' }).click();
     await expect(page.getByText(nomeOperadora)).toBeVisible();
 
-    const token = await page.evaluate(() => window.localStorage.getItem('token'));
+    const token = await page.evaluate(() =>
+      window.localStorage.getItem('token'),
+    );
     expect(token).toBeTruthy();
 
-    const response = await request.get(`${apiUrl}/operadoras/${codigoOperadora}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const response = await request.get(
+      `${apiUrl}/operadoras/${codigoOperadora}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
     expect(response.ok()).toBeTruthy();
     const operadoras = await response.json();
     expect(operadoras).toEqual(
@@ -83,7 +113,9 @@ test('login, cadastro e persistencia de operadora', async ({ page, request }) =>
       operadora: nomeOperadora,
     });
   } finally {
-    await client.query('DELETE FROM operadora WHERE codigo_operadora = $1', [codigoOperadora]);
+    await client.query('DELETE FROM operadora WHERE codigo_operadora = $1', [
+      codigoOperadora,
+    ]);
     await client.end();
   }
 });
